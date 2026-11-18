@@ -1,0 +1,830 @@
+{
+  "storyId": "DOCREDUX-PILOTO",
+  "gatheredAt": "2026-11-18T20:00:00-03:00",
+  "source": "existing",
+  "gatheredBy": "@pm",
+  "elicitationVersion": "2.0",
+  "sources": {
+    "piloto": "saas/piloto.md (PL1-PL5, §2 participantes, §3 escopo, §4 critérios)",
+    "processos": "saas/processos.md (P1-P16, D1-D17)",
+    "margem": "saas/margem.md §10 (escada de créditos v3, D15)",
+    "plano": "docs/plano-de-execucao.md (unidades 1-8, precedentes Engram, riscos)",
+    "revisao": "saas/revisao-template-novo.md §6 (auditoria Opus)",
+    "log": "LOG.md (resultados dos ex. 01-05)"
+  },
+  "functional": [
+    {
+      "id": "FR-1",
+      "description": "Login por e-mail e senha (DT-19, Q12: sem SMTP no piloto; o link mágico volta quando houver domínio e SMTP). Sem Google e sem B2B no piloto. Só participantes com conta criada pelo admin entram (10 usuários).",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P1",
+        "PL1",
+        "processos P1",
+        "Q12 (resposta 2026-11-18)"
+      ],
+      "acceptance": [
+        "Conta criada pelo admin com senha provisória entra e é obrigada a trocar a senha no primeiro acesso",
+        "Cadastro aberto desligado: ninguém cria conta pela API pública",
+        "Senha errada e e-mail inexistente dão a mesma mensagem"
+      ]
+    },
+    {
+      "id": "FR-2",
+      "description": "Saldo de créditos e extrato (ledger) visíveis ao usuário, com débito, estorno e recarga.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P1",
+        "piloto §3 P9",
+        "processos P1"
+      ],
+      "acceptance": [
+        "Extrato lista cada movimento com data, tipo, valor, documento e saldo resultante"
+      ]
+    },
+    {
+      "id": "FR-3",
+      "description": "Concessão automática de 150 créditos grátis a cada participante na criação da conta; sem pagamento.",
+      "priority": "P0",
+      "traces": [
+        "piloto §2",
+        "PL3"
+      ],
+      "acceptance": [
+        "Conta nova aparece com saldo 150 e um lançamento de concessão no extrato"
+      ]
+    },
+    {
+      "id": "FR-4",
+      "description": "Upload de PDF com limite de 300 páginas e 80 MB; arquivos acima de 42 MB sobem em partes (DT-18, limite de 50 MB por objeto no Supabase Free).",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P2",
+        "processos P2"
+      ],
+      "acceptance": [
+        "PDF de 80 MB (2 partes) e o ex. 05 (62 MB) sobem sem erro e chegam íntegros ao worker",
+        "Arquivo acima de 80 MB ou de 300 páginas é recusado com mensagem clara"
+      ]
+    },
+    {
+      "id": "FR-5",
+      "description": "Recusa de PDF escaneado, com senha ou corrompido, com aviso do motivo e sem cobrança.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P2",
+        "processos P2",
+        "D5"
+      ],
+      "acceptance": [
+        "Cada um dos três casos mostra motivo próprio; nenhum crédito é reservado"
+      ]
+    },
+    {
+      "id": "FR-6",
+      "description": "Opções do documento: conteúdo (texto original ou síntese extrativa 20/35/50%), manter capa e elementos (liga/desliga), formato de entrega (PDF ou DOCX).",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P2",
+        "processos P2",
+        "U-B",
+        "U-C",
+        "U-E",
+        "D7",
+        "D8"
+      ],
+      "acceptance": [
+        "As três opções existem e alteram a saída e o custo"
+      ]
+    },
+    {
+      "id": "FR-7",
+      "description": "Custo em créditos exibido, item a item, antes da confirmação, calculado pela tabela v3 em escada.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P2",
+        "piloto §3 P3",
+        "processos P9",
+        "margem §10",
+        "D15"
+      ],
+      "acceptance": [
+        "O custo exibido é igual ao calculado pela fórmula da margem §10 para os casos de teste (ex. 02 = 8; ex. 05 = 34; ex. 05 + síntese forte = 89)"
+      ]
+    },
+    {
+      "id": "FR-8",
+      "description": "Triagem automática após o upload: tipo (ficha × relatório), template conhecido (perfil em perfis/) ou novo, páginas e palavras, estimativa de créditos.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P3",
+        "processos P3"
+      ],
+      "acceptance": [
+        "PDFs dos ex. 01-05 são classificados com tipo e perfil corretos"
+      ]
+    },
+    {
+      "id": "FR-9",
+      "description": "Reserva de créditos na confirmação, débito (captura) na entrega e estorno automático em falha ou cancelamento.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P3",
+        "piloto §3 P9",
+        "processos P9"
+      ],
+      "acceptance": [
+        "Saldo insuficiente impede a confirmação",
+        "Job que falha devolve 100% da reserva"
+      ]
+    },
+    {
+      "id": "FR-10",
+      "description": "Template novo (Q3): no piloto, é recusado na triagem sem reserva e vira pedido de perfil no backoffice (prazo avisado: até 2 meses). Se o responsável anexar o perfil enquanto o documento existe, o documento volta à triagem e o usuário confirma com a sobretaxa.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P4",
+        "processos P3",
+        "processos P4",
+        "D1 (fase piloto)",
+        "processos conflito 5",
+        "Q3 (resposta 2026-11-18)"
+      ],
+      "acceptance": [
+        "Documento de template desconhecido é recusado com motivo template_novo, sem reserva, e aparece na fila do backoffice",
+        "Após o anexo do perfil, o documento chega a aguardando_confirmacao com a sobretaxa da P9"
+      ]
+    },
+    {
+      "id": "FR-11",
+      "description": "Processamento assíncrono em fila no Postgres, por worker com o pipeline atual (extração, render DOCX, PDF via LibreOffice) e a síntese extrativa; status visível ao usuário.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P5",
+        "PL4",
+        "processos P5"
+      ],
+      "acceptance": [
+        "Status passa por na fila → processando → pronto e aparece na tela sem recarregar a página"
+      ]
+    },
+    {
+      "id": "FR-12",
+      "description": "Verificação pelos scripts verify* (cobertura e estrutura); no modo texto original, cobertura abaixo de 99,5% bloqueia a entrega e manda o documento para a fila do backoffice.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P6",
+        "processos P6",
+        "piloto §4 cobertura"
+      ],
+      "acceptance": [
+        "Saída com cobertura 99,4% não é entregue e aparece na fila com motivo 'gate de cobertura'"
+      ]
+    },
+    {
+      "id": "FR-13",
+      "description": "Na síntese, o selo de integridade é substituído pelo relatório de síntese (% real atingida e o que foi condensado).",
+      "priority": "P1",
+      "traces": [
+        "processos P6",
+        "processos conflito 1"
+      ],
+      "acceptance": [
+        "Entrega em síntese mostra a % real e a lista do que saiu; não mostra selo de integridade"
+      ]
+    },
+    {
+      "id": "FR-14",
+      "description": "Entrega: visualizador de PDF, impressão, download do PDF e do DOCX (só se pago), relatório simples de modificações e de economia, histórico de documentos.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P7",
+        "processos P7",
+        "U-G",
+        "U-H",
+        "D9"
+      ],
+      "acceptance": [
+        "PDF abre no visualizador no desktop e em 375 px",
+        "Botão imprimir funciona",
+        "DOCX só aparece quando foi comprado",
+        "Nenhum outro formato é oferecido"
+      ]
+    },
+    {
+      "id": "FR-15",
+      "description": "Avaliação do usuário por entrega: nota 1-5, comentário opcional e 'marcar problema' (página e tipo: erro ou formato). Sem correção automática e sem cobrança de formato no piloto.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P8",
+        "PL5",
+        "processos P8",
+        "U-F"
+      ],
+      "acceptance": [
+        "Nota, comentário e problemas ficam gravados e entram nas métricas e na fila do backoffice"
+      ]
+    },
+    {
+      "id": "FR-16",
+      "description": "Juiz automático Opus em 100% das entregas, comparando original × entrega: cobertura, núcleo preservado, dados numéricos, frases órfãs e layout; custo e tokens registrados.",
+      "priority": "P0",
+      "traces": [
+        "PL5",
+        "D17",
+        "processos P10",
+        "processos P15 (política de modelos)",
+        "D14",
+        "margem §10.3"
+      ],
+      "acceptance": [
+        "Toda entrega pronta ganha uma avaliação do juiz",
+        "Tokens e custo de cada chamada ficam na tabela de métricas",
+        "10 entregas com defeito plantado → juiz aponta ≥ 9"
+      ]
+    },
+    {
+      "id": "FR-17",
+      "description": "Backoffice: fila de avaliação (nota baixa, divergência juiz × usuário, template novo, gate de cobertura, problema marcado), tela de revisão com o diagnóstico do juiz pronto, recarga de créditos e reprocessamento.",
+      "priority": "P0",
+      "traces": [
+        "PL2",
+        "piloto §3 P10",
+        "processos P10"
+      ],
+      "acceptance": [
+        "Só o papel admin acessa",
+        "Revisão humana registra veredito, concordância com o juiz e minutos gastos",
+        "Recarga gera lançamento no ledger"
+      ]
+    },
+    {
+      "id": "FR-18",
+      "description": "Termo do piloto aceito antes do primeiro upload: uso só para o teste, retenção de 30 dias, avaliação por pessoa e por LLM (Anthropic), opção de apagar a qualquer momento.",
+      "priority": "P0",
+      "traces": [
+        "piloto §2",
+        "piloto §3 P11",
+        "processos P11"
+      ],
+      "acceptance": [
+        "Sem aceite registrado (versão + data), o upload é bloqueado"
+      ]
+    },
+    {
+      "id": "FR-19",
+      "description": "Retenção de 30 dias: original, saídas e evidências textuais do juiz são apagados automaticamente; o usuário pode apagar um documento ou a própria conta a qualquer momento (Q7).",
+      "priority": "P0",
+      "traces": [
+        "piloto §2",
+        "piloto §3 P11",
+        "processos P11",
+        "Q7 (resposta 2026-11-18)"
+      ],
+      "acceptance": [
+        "Documento com 31 dias não tem mais arquivos no Storage",
+        "Exclusão pelo usuário remove os arquivos na hora",
+        "Métricas numéricas permanecem",
+        "Exclusão da conta bloqueia o login na hora, apaga documentos, e-mail e textos livres e remove o usuário do Auth; métricas ficam com id pseudônimo"
+      ]
+    },
+    {
+      "id": "FR-20",
+      "description": "Métricas por entrega: tempo, páginas antes/depois, cobertura, tokens e custo do juiz, nota, intervenção humana (sim/não, minutos); agregados dos critérios de sucesso do piloto; exportação para análise.",
+      "priority": "P0",
+      "traces": [
+        "piloto §3 P12",
+        "piloto §4",
+        "processos P12"
+      ],
+      "acceptance": [
+        "Cada entrega tem uma linha completa de métricas; o backoffice mostra os agregados do §4 e exporta CSV"
+      ]
+    },
+    {
+      "id": "FR-21",
+      "description": "Cancelamento pelo usuário enquanto o documento está na fila, com estorno.",
+      "priority": "P2",
+      "traces": [
+        "DT-13 (derivado)",
+        "processos P9 (estorno)"
+      ],
+      "rationale": "Feature derivada, não citada literalmente nas fontes: o usuário que desiste antes do processamento sai sem perder créditos. Com Q3 não há mais espera por template novo. Registrada como DT-13 na spec.",
+      "acceptance": [
+        "Cancelar na fila devolve a reserva; cancelar durante o processamento não é permitido"
+      ]
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "NFR-1",
+      "description": "Jobs sobrevivem a queda ou reinício do worker: retomada automática por heartbeat, máximo de 3 tentativas e timeout por job.",
+      "category": "reliability",
+      "traces": [
+        "plano §3 riscos (adr-001)",
+        "plano verificação unidade 4"
+      ]
+    },
+    {
+      "id": "NFR-2",
+      "description": "Upload idempotente e retomável; falha deixa estado 'upload_falhou' e permite nova tentativa sem duplicar documento.",
+      "category": "reliability",
+      "traces": [
+        "plano §2 FU-001",
+        "plano §3 riscos"
+      ]
+    },
+    {
+      "id": "NFR-3",
+      "description": "Saldo e ledger escritos só pela service role; papel de admin não pode ser alterado pelo usuário; teste de RLS com dois usuários obrigatório.",
+      "category": "security",
+      "traces": [
+        "plano §2 despensa-auditoria",
+        "plano unidade 3",
+        "piloto §3 P11 (RLS por conta)"
+      ]
+    },
+    {
+      "id": "NFR-4",
+      "description": "Isolamento por conta: um usuário nunca lê documento, arquivo, avaliação ou extrato de outro.",
+      "category": "security",
+      "traces": [
+        "piloto §3 P11",
+        "D2"
+      ]
+    },
+    {
+      "id": "NFR-5",
+      "description": "Minimização no juiz: a API Anthropic recebe só o necessário (folha de contato, trechos críticos e relatório do verify), nunca o documento inteiro por padrão.",
+      "category": "security",
+      "traces": [
+        "plano §3 riscos (P11)",
+        "margem §10.3",
+        "revisao §6"
+      ]
+    },
+    {
+      "id": "NFR-6",
+      "description": "O motor como biblioteca reproduz os ex. 01-05 com as mesmas páginas e cobertura ≥ à registrada no LOG.md (regressão manual antes de cada merge no motor).",
+      "category": "reliability",
+      "traces": [
+        "plano §1 restrições",
+        "plano unidade 2",
+        "processos P10 regressão",
+        "piloto §3 P10"
+      ]
+    },
+    {
+      "id": "NFR-7",
+      "description": "Telas do usuário funcionam em 375 px e no desktop.",
+      "category": "usability",
+      "traces": [
+        "plano unidade 5 critério"
+      ]
+    },
+    {
+      "id": "NFR-8",
+      "description": "Capacidade para ~200-300 entregas em 4 semanas com documentos de até 300 páginas; ex. 05 (294 págs.) processa em ~1 min de CPU no host do worker (Oracle A1 ou PC, DT-17).",
+      "category": "performance",
+      "traces": [
+        "PL1",
+        "LOG.md sessão 5b (extração 39 s, DOCX 15 s, PDF 6 s)"
+      ]
+    },
+    {
+      "id": "NFR-9",
+      "description": "Plataforma só em PDF: nenhuma exportação em outro formato além do DOCX pago.",
+      "category": "usability",
+      "traces": [
+        "D9",
+        "U-H",
+        "processos P7"
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "CON-1",
+      "type": "technical",
+      "description": "Stack FastAPI + Supabase (auth, Postgres, Storage) + Next.js em monorepo engine/ api/ web/ db/.",
+      "traces": [
+        "PL4"
+      ]
+    },
+    {
+      "id": "CON-2",
+      "type": "technical",
+      "description": "Worker em host Docker próprio por causa do LibreOffice. Na fase de testes, sem custo: PC do responsável ou Oracle Always Free em São Paulo (DT-17, Q2/Q14); Hetzner fica para depois.",
+      "traces": [
+        "PL4",
+        "Q2, Q14 (respostas 2026-11-18)"
+      ]
+    },
+    {
+      "id": "CON-3",
+      "type": "business",
+      "description": "Créditos grátis no piloto; o sistema de créditos funciona igual ao do produto; Pix (Asaas) e pacotes ficam fora.",
+      "traces": [
+        "PL3",
+        "piloto §3 P9"
+      ]
+    },
+    {
+      "id": "CON-4",
+      "type": "business",
+      "description": "Fora do piloto: Google, B2B, corretor (U-A), presets de saída, estimativa de páginas finais, C1-C4 automáticos, orquestrador P15, QA visual separado, prévia lado a lado, correção automática, cobrança de formato, regressão em CI, LGPD completa, painel financeiro, biblioteca automática (P16).",
+      "traces": [
+        "piloto §3 (coluna 'fica de fora')"
+      ]
+    },
+    {
+      "id": "CON-5",
+      "type": "technical",
+      "description": "Juiz usa Opus (base Opus da D14; auditoria com Opus como juiz na política de modelos).",
+      "traces": [
+        "PL5",
+        "D14",
+        "processos P15",
+        "revisao §6"
+      ]
+    },
+    {
+      "id": "CON-6",
+      "type": "technical",
+      "description": "Serviço padrão e síntese são script, sem LLM no processamento; LLM só no juiz.",
+      "traces": [
+        "D16",
+        "piloto §3 P5 (orquestrador fora)"
+      ]
+    },
+    {
+      "id": "CON-7",
+      "type": "business",
+      "description": "git push e deploy são exclusivos do @devops; nesta unidade não se escreve código de produção.",
+      "traces": [
+        "plano §1 restrições",
+        "tarefa da unidade 1"
+      ]
+    },
+    {
+      "id": "CON-8",
+      "type": "regulatory",
+      "description": "Documentos podem conter dados de alunos (LGPD): termo do piloto, retenção de 30 dias, exclusão pelo usuário, RLS por conta.",
+      "traces": [
+        "plano §1 restrições",
+        "piloto §3 P11",
+        "processos P11"
+      ]
+    },
+    {
+      "id": "CON-9",
+      "type": "business",
+      "description": "P16 no piloto é registro manual em perfis/ e REGRAS.md, fora da plataforma.",
+      "traces": [
+        "piloto §3 P16"
+      ]
+    },
+    {
+      "id": "CON-10",
+      "type": "business",
+      "description": "Sem custo fixo de infraestrutura nos testes iniciais: Supabase Free, Vercel Hobby, worker gratuito; o único custo variável é o juiz (API Anthropic).",
+      "traces": [
+        "Q18, Q2 (respostas 2026-11-18)",
+        "D17 (custo do juiz)"
+      ]
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "ASM-1",
+      "risk": "medium",
+      "description": "A síntese extrativa só é oferecida para tipo 'relatório' no piloto: o protótipo foi testado só em capítulos do ex. 05 (pergunta Q4)."
+    },
+    {
+      "id": "ASM-2",
+      "risk": "low",
+      "description": "A tabela vigente é a v3 da margem §10 (D15 aprovada); a tabela 'Exemplos com os documentos reais' em processos P9 ainda mostra valores da v2 (ex. 05 = 20) e está desatualizada (pergunta Q9)."
+    },
+    {
+      "id": "ASM-3",
+      "risk": "medium",
+      "description": "Os perfis existentes em perfis/ (mathema-saeb, mec-sase-relatorio) são sementes visíveis para a triagem de todas as contas; perfis gerados a partir de documento de participante são privados da conta (D2) (pergunta Q5)."
+    },
+    {
+      "id": "ASM-4",
+      "risk": "medium",
+      "description": "O juiz roda depois da entrega, sem bloqueá-la; o gate bloqueante do piloto é só a cobertura do verify (piloto §3 P6)."
+    },
+    {
+      "id": "ASM-5",
+      "risk": "medium",
+      "description": "Supabase Free em sa-east-1: 50 MB por objeto (DT-18 divide o original), 1 GB de Storage (DT-20), 500 MB de banco, sem backups automáticos, pausa após 7 dias sem atividade (/health por cron)."
+    },
+    {
+      "id": "ASM-6",
+      "risk": "low",
+      "description": "Contas dos 10 participantes criadas pelo admin no painel do Supabase (confirmadas, senha provisória entregue por canal privado; DT-19); o gatilho de criação do perfil concede os 150 créditos."
+    },
+    {
+      "id": "ASM-7",
+      "risk": "medium",
+      "description": "Haverá capacidade de Ampere A1 na Oracle Always Free em São Paulo para o worker 24 h; senão, o worker roda no PC do responsável em horário comercial (DT-17)."
+    }
+  ],
+  "domainModel": [
+    {
+      "entity": "perfis_usuario",
+      "description": "Conta do participante: papel (usuario|admin), interno, termo aceito (versão, data), senha_provisoria, exclusao_conta_em.",
+      "relationships": [
+        "1:1 auth.users",
+        "1:N documentos",
+        "1:N creditos_ledger"
+      ]
+    },
+    {
+      "entity": "perfis_template",
+      "description": "Perfil de template (JSON do motor): semente global ou privado da conta.",
+      "relationships": [
+        "N:1 perfis_usuario (dono, opcional)"
+      ]
+    },
+    {
+      "entity": "documentos",
+      "description": "Envio do usuário com triagem, opções, orçamento, status, reprocessando, exclusao_pendente e caminhos no Storage. Original em partes (partes, DT-18); recusa template_novo vira pedido de perfil.",
+      "relationships": [
+        "1:N jobs",
+        "1:N entregas (versao)",
+        "N:1 perfis_template"
+      ]
+    },
+    {
+      "entity": "jobs",
+      "description": "Fila no Postgres (triagem | processar | juiz) com prioridade, heartbeat, tentativas, erro, origem (usuario|reprocessar) e estado_origem (em_revisao|pronto|falhou, só em reprocessar).",
+      "relationships": [
+        "N:1 documentos",
+        "N:1 workers (opcional)"
+      ]
+    },
+    {
+      "entity": "workers",
+      "description": "Processos de worker vivos: worker_id, host, iniciado_em, visto_em (DT-15; coletor de jobs órfãos).",
+      "relationships": [
+        "1:N jobs"
+      ]
+    },
+    {
+      "entity": "creditos_ledger",
+      "description": "Lançamentos append-only (concessao, recarga, reserva, captura, estorno, ajuste na exclusão da conta); saldo = soma.",
+      "relationships": [
+        "N:1 perfis_usuario",
+        "N:1 documentos (opcional)"
+      ]
+    },
+    {
+      "entity": "entregas",
+      "description": "Saída pronta, versionada (DT-16): versao, arquivos, relatório do motor (modificações, economia, cobertura).",
+      "relationships": [
+        "N:1 documentos (pk documento_id, versao)"
+      ]
+    },
+    {
+      "entity": "avaliacoes_juiz",
+      "description": "Veredito e critérios do juiz Opus, tokens e custo, por versão da entrega.",
+      "relationships": [
+        "N:1 entregas"
+      ]
+    },
+    {
+      "entity": "feedback_usuario",
+      "description": "Nota 1-5 e comentário por versão (pk documento_id, versao).",
+      "relationships": [
+        "1:1 entregas (versao)"
+      ]
+    },
+    {
+      "entity": "problemas_marcados",
+      "description": "Página, tipo (erro|formato), descrição e versão da entrega.",
+      "relationships": [
+        "N:1 entregas (versao)"
+      ]
+    },
+    {
+      "entity": "revisoes_humanas",
+      "description": "Veredito do responsável, concordância com o juiz, minutos.",
+      "relationships": [
+        "N:1 documentos"
+      ]
+    },
+    {
+      "entity": "metricas_entrega",
+      "description": "Linha de P12 por entrega.",
+      "relationships": [
+        "1:1 documentos"
+      ]
+    }
+  ],
+  "interactions": [
+    {
+      "flow": "Envio",
+      "description": "Upload em partes → triagem (recusa, inclusive template novo) → opções com custo → confirmação (reserva).",
+      "states": [
+        "aguardando_upload",
+        "upload_falhou",
+        "triagem",
+        "recusado",
+        "aguardando_confirmacao"
+      ]
+    },
+    {
+      "flow": "Processamento",
+      "description": "Fila → worker → verify → entrega ou fila do backoffice.",
+      "states": [
+        "na_fila",
+        "processando",
+        "em_revisao",
+        "pronto",
+        "falhou",
+        "cancelado"
+      ]
+    },
+    {
+      "flow": "Pós-entrega",
+      "description": "Visualizar, imprimir, baixar, avaliar, marcar problema; juiz em paralelo.",
+      "states": [
+        "pronto"
+      ]
+    },
+    {
+      "flow": "Ciclo de vida",
+      "description": "Exclusão de documento ou da conta pelo usuário, ou expiração em 30 dias.",
+      "states": [
+        "excluido",
+        "expirado"
+      ]
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "Q1",
+      "question": "Onde fica o repositório: git init na pasta DocRedux ou repositório novo?",
+      "owner": "responsável",
+      "blocks": "unidade 2",
+      "status": "respondida",
+      "answer": "Repositório novo https://github.com/ianbenicio/Nexa_DocRedux.git; PDFs dos exemplos fora do git.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q2",
+      "question": "VPS (Hetzner CPX31?) e domínio da plataforma.",
+      "owner": "responsável + @devops",
+      "blocks": "unidade 7",
+      "status": "respondida",
+      "answer": "Ainda sem VPS e domínio: soluções gratuitas (DT-17).",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q3",
+      "question": "Prazo avisado para template novo (fila manual).",
+      "owner": "responsável",
+      "blocks": "unidade 4 (texto) e 5",
+      "status": "respondida",
+      "answer": "2 meses → template novo recusado na triagem e vira pedido de perfil (FR-10).",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q4",
+      "question": "Síntese só para relatório no piloto?",
+      "owner": "responsável",
+      "blocks": "unidade 2",
+      "status": "respondida",
+      "answer": "Sim.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q5",
+      "question": "Perfis semente (mathema-saeb, mec-sase) visíveis a todas as contas?",
+      "owner": "responsável",
+      "blocks": "unidade 3",
+      "status": "respondida",
+      "answer": "Sim, nesta primeira fase.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q6",
+      "question": "Limiares de 'nota baixa' e de 'divergência juiz × usuário'.",
+      "owner": "responsável",
+      "blocks": "unidade 6",
+      "status": "respondida",
+      "answer": "Definido pelo @pm: nota ≤ 3; divergência como no §9; juiz reprovou sem nota em 48 h entra.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q7",
+      "question": "'Apagar a qualquer momento' cobre só documentos ou também a conta?",
+      "owner": "responsável",
+      "blocks": "unidade 5",
+      "status": "respondida",
+      "answer": "Documentos e conta.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q8",
+      "question": "Notificação por e-mail de 'pronto' (P13 está fora do escopo do piloto)?",
+      "owner": "responsável",
+      "blocks": "unidade 4",
+      "status": "respondida",
+      "answer": "Não no piloto (sem SMTP); status na tela.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q9",
+      "question": "Corrigir a tabela de exemplos v2 em processos P9? Síntese arredonda com teto (ex. 05 leve = 92) ou arredondamento comum (= 91, como na margem)?",
+      "owner": "responsável",
+      "blocks": "unidade 4",
+      "status": "respondida",
+      "answer": "Corrigir P9 (feito); teto (DT-10).",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q10",
+      "question": "Região do Supabase (São Paulo, sa-east-1, para LGPD)?",
+      "owner": "responsável + @devops",
+      "blocks": "unidade 7",
+      "status": "respondida",
+      "answer": "Criar em sa-east-1.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q11",
+      "question": "Revisar também uma amostra aleatória de entregas sem marca (padrão 10%), para a concordância juiz × humano não ficar enviesada?",
+      "owner": "responsável",
+      "blocks": "unidade 6",
+      "status": "respondida",
+      "answer": "Sim, 10%.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q12",
+      "question": "SMTP do Auth: provedor e remetente (o padrão do Supabase não entrega a participantes de fora da equipe)?",
+      "owner": "responsável + @devops",
+      "blocks": "unidade 7",
+      "status": "respondida",
+      "answer": "Sem SMTP: login com senha criada pelo admin (DT-19).",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q13",
+      "question": "Aceitar Carlito no lugar da Calibri no Linux e um novo baseline de páginas dos ex. 01-05, se mudar?",
+      "owner": "responsável",
+      "blocks": "unidade 2",
+      "status": "respondida",
+      "answer": "Aceito.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q14",
+      "question": "VPS fora do Brasil (Hetzner) processa dados de alunos: aceitar e citar no termo, ou VPS no Brasil?",
+      "owner": "responsável",
+      "blocks": "unidade 7",
+      "status": "respondida",
+      "answer": "Agora não: tudo no Brasil, exceto a Anthropic.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q15",
+      "question": "Marcar usuários internos (dry-run) e excluí-los das métricas do piloto? Apagar os dados do dry-run?",
+      "owner": "responsável",
+      "blocks": "unidade 3",
+      "status": "respondida",
+      "answer": "Marcar como interno e excluir das métricas.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q16",
+      "question": "Backups do Supabase guardam textos além dos 30 dias: aceitar e citar no termo?",
+      "owner": "responsável",
+      "blocks": "unidade 7",
+      "status": "respondida",
+      "answer": "Não guardar: sem backups no plano gratuito.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q17",
+      "question": "O que acontece com contas, métricas e comentários no fim do piloto?",
+      "owner": "responsável",
+      "blocks": "unidade 7 (termo)",
+      "status": "respondida",
+      "answer": "Contas mantidas até segunda ordem.",
+      "answeredAt": "2026-11-18"
+    },
+    {
+      "id": "Q18",
+      "question": "Aprovar o custo fixo do Supabase Pro (e, se preciso, o add-on de IPv4)?",
+      "owner": "responsável",
+      "blocks": "unidade 7",
+      "status": "respondida",
+      "answer": "Sem custo: Supabase Free (DT-17, DT-18, DT-20).",
+      "answeredAt": "2026-11-18"
+    }
+  ]
+}

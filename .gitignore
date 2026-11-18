@@ -1,0 +1,49 @@
+# Documentos: nenhum PDF/DOCX/imagem de documento vai para o git (repositório público).
+# Os fixtures dos ex. 01-05 ficam fora do repositório, em DOCREDUX_FIXTURES.
+*.pdf
+*.PDF
+*.docx
+*.doc
+fixtures/
+
+# Saídas do motor e da regressão
+saida/
+saidas/
+out/
+engine/tests/_saida/
+*.jpg
+*.jpeg
+!web/public/**/*.jpg
+
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+
+# Node / Next
+node_modules/
+.next/
+.vercel/
+
+# Supabase local
+db/supabase/.branches/
+db/supabase/.temp/
+
+# SO / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

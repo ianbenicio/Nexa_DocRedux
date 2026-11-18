@@ -1,0 +1,331 @@
+{
+  "storyId": "DOCREDUX-PILOTO",
+  "critiquedAt": "2026-11-18T19:13:12-03:00",
+  "critiquedBy": "@qa",
+  "specVersion": "1.1",
+  "round": 2,
+  "previousRound": {
+    "averageScore": 3.8,
+    "verdict": "NEEDS_REVISION"
+  },
+  "dimensions": {
+    "accuracy": {
+      "score": 5,
+      "notes": "Recalculei todos os casos novos do §5. Fronteiras 5/6/15/16/20/21/40/41/60/61 = 2/4/4/6/6/8/8/10/10/12; 15 págs. + DOCX + capa = 6; 16 págs. + DOCX + capa = 11; template novo 15/16/60/61 = 12/18/22/28; síntese em 2.000 palavras = +2 nos 3 níveis; 400 palavras a 20% = +1; ex. 05 = 55/73/92 → 89/107/126. O cálculo em inteiros, teto(6 × 91.037 / 10.000) = 55, também confere. A divergência com a margem (92 × 91) está declarada (DT-10, Q9). FR-21 virou DT-13 com rationale. O que vai além das fontes está como DT ou Q, e o termo item 7 rastreia para P11 (transferência internacional)."
+    },
+    "completeness": {
+      "score": 4,
+      "notes": "O §16 agora cobre os 21 FR e os 9 NFR, inclusive os caminhos do ciclo do crédito. O §3 tem as dependências. O §18 traz as 9 perguntas que faltavam (Q9 arredondamento, Q12–Q18), e a política de reprocessamento foi resolvida direto no §5. Falta só \"apagar conteúdo\" parar os jobs vivos (C-22), mais detalhes menores (C-24)."
+    },
+    "consistency": {
+      "score": 4,
+      "notes": "Os caminhos de exceção da rodada 1 agora fecham entre §5, §7, §8, §9, §14 e §16: falha final, cancelamento, exclusão por estado, expiração, amostra e juiz em em_revisao. Sobra uma contradição: reprocessar a partir de pronto muda o status no §8, mas não no §5/§14 (C-21). O domainModel do requirements.json ficou desatualizado (C-23). As referências de seção renumeradas (§13–§18) conferem."
+    },
+    "feasibility": {
+      "score": 4,
+      "notes": "Os riscos técnicos da rodada 1 foram tratados com soluções corretas: Carlito e regressão no container, Supavisor em modo sessão (IPv4 e prepared statements), blob no pdf.js, funções em schema privado com REVOKE de PUBLIC, SMTP próprio, detalhes do TUS, tabela workers. Restam pontos menores: o papel do banco que recebe o GRANT e o tamanho do pool (C-25). A paridade de páginas no Linux continua empírica, mas tem caminho de saída (Q13)."
+    },
+    "alignment": {
+      "score": 5,
+      "notes": "Sem mudança: segue o PL4, o monorepo engine/api/web/db, os precedentes do plano e D9/D14/D16/D17. As DTs novas (11–16) seguem o padrão \"decisão + motivo + fonte\"."
+    }
+  },
+  "averageScore": 4.4,
+  "weightedAverageScore": 4.4,
+  "verdict": "APPROVED",
+  "verdictReason": "Média 4,4 (ponderada 4,4), todas as dimensões ≥ 4, nenhuma issue HIGH. As duas HIGH da rodada 1 foram tratadas: C-2 resolvida; C-1 resolvida no crédito, com um resíduo de estado rebaixado para C-21 (MEDIUM). [AUTO-DECISION] O spec-critique.md põe \"tem MEDIUM\" entre as condições de NEEDS_REVISION, mas a regra do orquestrador (APPROVED se média ≥ 4,0 e todas ≥ 3) prevalece → APPROVED com condições (motivo: C-21 e C-22 são ajustes de regra em seções já existentes e não mudam a arquitetura nem o plano). Condição: C-21 e C-22 entram como critérios de aceite das stories das unidades 3 e 4 (ou numa v1.2 curta da spec) antes da implementação do reprocessamento e da exclusão.",
+  "postCritique": {
+    "specVersion": "1.2",
+    "date": "2026-11-18",
+    "by": "@pm",
+    "conditionMet": true,
+    "note": "C-21 a C-25 tratadas pelo autor na spec v1.2 e levadas aos critérios de aceite das stories 3.1, 3.2, 4.4, 4.5, 6.1 e 6.2 do implementation.yaml (condição do veredito). Sem nova rodada de critique: o @qa confere no *qa-gate das stories."
+  },
+  "issues": [
+    {
+      "id": "C-1",
+      "severity": "HIGH",
+      "dimension": "consistency",
+      "location": "spec.md §5 (ciclo do crédito), §7 (tabela de jobs), §8 (estados), §9 POST /admin/documentos/{id}/reprocessar",
+      "description": "O reprocessamento não tem regra de crédito nem de estado. O §9 não diz de quais estados se pode reprocessar, e o §8 só mostra em_revisao → na_fila. Se o admin reprocessa um documento 'pronto' (já capturado) e o job falha, o §7 manda 'falhou + credito_estornar': o usuário recebe estorno de algo entregue e perde a entrega anterior. Se reprocessa um 'falhou' (já estornado) e o job dá certo, o §7 chama credito_capturar sobre uma reserva estornada: o serviço sai de graça e o ledger fica incoerente (reserva, estorno, captura). Além disso, entregas e metricas_entrega são 1:1 com documentos e são sobrescritas, o que apaga a primeira entrega das métricas P12 (justo a que o usuário avaliou).",
+      "suggestedFix": "No §5, acrescentar uma tabela 'reprocessar' por estado de origem. em_revisao: reserva intacta; sucesso → captura; falha → estorno. pronto: crédito já capturado; falha → volta para pronto com a entrega anterior, sem estorno; sucesso → nova entrega, sem nova captura. falhou: exige nova reserva sem custo, ou reprocessar só com ação explícita 'reprocessar como cortesia', registrada no ledger com valor 0. No §8, desenhar as transições pronto|falhou|em_revisao → na_fila (reprocessar). No §6, versionar a saída: entregas com pk (documento_id, versao) e metricas_entrega com uma linha por tentativa de entrega, ou com coluna versao. Adicionar ao §15 testes pgTAP/E2E dos três caminhos.",
+      "status": "parcial",
+      "statusNote": "Créditos fechados: tabela por estado de origem (§5), reserva nova em falhou, ledger por reserva_id, entregas versionadas (DT-16), métricas da 1ª passagem. Sobra uma contradição de estado no reprocessamento a partir de pronto (§8 × §5/§14), rebaixada e rastreada em C-21 (MEDIUM).",
+      "round": 1
+    },
+    {
+      "id": "C-2",
+      "severity": "HIGH",
+      "dimension": "feasibility",
+      "location": "spec.md §3 (Dockerfile 'Python 3.12 + LibreOffice + fontes'), §4 (Regressão NFR-6), §15 (FR-8/NFR-6)",
+      "description": "O motor foi validado no Windows. O render usa a fonte Calibri (scripts/render_docx.py:17, CFG 'fonte': 'Calibri') e o soffice do Windows (scripts/render_relatorio.py:23). Na imagem Linux, a Calibri não existe; sem substituto com a mesma métrica, o LibreOffice muda a quebra de linhas e de páginas, e o NFR-6 ('as mesmas páginas: 52→19, 34→14...') falha ou passa só no Windows. A spec não diz em que ambiente a regressão roda nem quais fontes a imagem leva.",
+      "suggestedFix": "No §3/§4, fixar fonts-crosextra-carlito (métrica idêntica à Calibri) e fonts-liberation na imagem, e declarar que a regressão do NFR-6 roda dentro do container de produção. Prever na unidade 2 um passo de recalibração: se o Linux mudar páginas mesmo com Carlito, o responsável aprova o novo baseline e registra no LOG.md. Opcional: tornar a fonte parâmetro do perfil.",
+      "status": "resolvida",
+      "statusNote": "DT-11: Carlito + Liberation no Dockerfile (§3); regressão na imagem Linux (§4, §16); novo baseline com aprovação (Q13); cobertura nunca cai.",
+      "round": 1
+    },
+    {
+      "id": "C-3",
+      "severity": "MEDIUM",
+      "dimension": "consistency",
+      "location": "spec.md §13 (exclusão pelo usuário, 4º item)",
+      "description": "'pronto, em_revisao, falhou, cancelado: ... créditos já capturados não voltam.' Em em_revisao o crédito está só reservado: não foi capturado nem estornado. Excluir nesse estado deixa a reserva pendurada para sempre: o usuário paga por algo que nunca recebeu, e a reserva fica sem par no ledger.",
+      "suggestedFix": "Tirar em_revisao desse item e tratá-lo como na_fila/aguardando_perfil: cancelar, estornar e apagar. Acrescentar ao §15 um teste da invariante 'toda reserva termina em captura ou estorno' (sem reserva órfã em documento de estado final).",
+      "status": "resolvida",
+      "statusNote": "§14: em_revisao entra com na_fila/aguardando_perfil (cancela, estorna, apaga); invariante de reserva sem par testada (§5, §16 FR-9).",
+      "round": 1
+    },
+    {
+      "id": "C-4",
+      "severity": "MEDIUM",
+      "dimension": "consistency",
+      "location": "spec.md §7 (coletor e timeout duro)",
+      "description": "O coletor diz que o job sem heartbeat 'vira falhou' quando as tentativas acabam, mas não leva o documento a falhou nem chama credito_estornar. O timeout duro diz só 'conta como tentativa', sem dizer se volta para a fila. Nesse caminho, o documento fica em 'processando' para sempre, com a reserva presa; e um job juiz que morre sem heartbeat não gera o motivo juiz_falhou.",
+      "suggestedFix": "Definir um único tratador de falha final por tipo de job, chamado pelo worker, pelo timeout e pelo coletor. processar: documento falhou + estorno (ou exclusão, se exclusao_pendente). triagem: upload_falhou. juiz: motivo juiz_falhou. O timeout volta para a fila com backoff igual ao do coletor. Testar no §15: matar o worker na última tentativa → documento falhou e saldo devolvido.",
+      "status": "resolvida",
+      "statusNote": "§7: mesma regra de nova tentativa para coletor e timeout; tratador único (worker/falhas.py) por tipo; teste da última tentativa no §16. O estado de origem do reprocessamento entra em C-21.",
+      "round": 1
+    },
+    {
+      "id": "C-5",
+      "severity": "MEDIUM",
+      "dimension": "completeness",
+      "location": "spec.md §8 (expiração), §13 (retenção), §6 (expira_em)",
+      "description": "No §8, só pronto|falhou|cancelado|recusado vão para expirado. Documentos parados em aguardando_upload, upload_falhou, aguardando_confirmacao, aguardando_perfil e em_revisao nunca expiram, e o original fica no Storage além de 30 dias, contra o item 2 do termo e o FR-19 ('documento com 31 dias não tem mais arquivos'). O §13 diz 'expira_em < now()' para todos, o que contradiz o §8. Também falta dizer o que acontece com o crédito reservado de aguardando_perfil e em_revisao na expiração.",
+      "suggestedFix": "Expirar todos os estados não finais com expira_em vencido. Em aguardando_perfil e em_revisao: cancelar e estornar antes de apagar. Em processando: marcar exclusao_pendente. Alinhar o diagrama do §8 com o §13. Outra opção: alertar o admin no dia 25 sobre documentos ainda na fila do backoffice.",
+      "status": "resolvida",
+      "statusNote": "§8 expira qualquer estado; §14 trata processando/triagem (exclusao_pendente), reserva aberta (estorno) e os demais estados; A1 destaca < 5 dias.",
+      "round": 1
+    },
+    {
+      "id": "C-6",
+      "severity": "MEDIUM",
+      "dimension": "consistency",
+      "location": "spec.md §9 (motivo 'amostra') × §17 Q11",
+      "description": "O §9 diz 'padrão 0%, ver Q11'; a Q11 diz que o padrão, 'vale até a resposta', é 10% (config.amostra_revisao = 0,10). A unidade 6 não sabe qual implementar, e o valor muda a métrica de concordância do piloto §4.",
+      "suggestedFix": "Escolher um valor e usar o mesmo nos dois lugares. Sugestão: 10%, porque sem amostra a concordância juiz × humano só é medida em casos já suspeitos, que é o viés que a Q11 aponta. Mesma chave em config nos dois lugares.",
+      "status": "resolvida",
+      "statusNote": "10% no §9 e na Q11 (config.amostra_revisao = 0,10).",
+      "round": 1
+    },
+    {
+      "id": "C-7",
+      "severity": "MEDIUM",
+      "dimension": "accuracy",
+      "location": "spec.md §5 (linha Síntese e casos de teste)",
+      "description": "A margem §10.3 não diz como arredondar (só 'mínimo 1'). A spec escolheu teto sem marcar como DT. O teto acerta a ficha de ~2 mil palavras (1,2 → 2), mas no ex. 05 com síntese leve dá teto(1,0 × 91,037) = 92, contra 91 na tabela da margem. O caso 'ficha ~2 mil palavras' é ambíguo (com 2.100 palavras, o nível leve dá 3). Ele também contradiz a Q4, cujo padrão esconde a síntese em ficha. Faltam ainda testes de fronteira: 5/6, 15/16, 20/21, 40/41, 60/61 páginas, e DOCX, capa e template novo em cada faixa.",
+      "suggestedFix": "Registrar 'teto' como DT-10, com o motivo (bate com o exemplo da ficha) e a divergência conhecida (ex. 05 leve = 92 × 91 na margem), ou pôr na Q9 para o responsável decidir. Trocar '~2 mil palavras' por um número exato (ex.: 2.000 → 2 em todos os níveis) e testar em relatório, não em ficha. Acrescentar uma tabela de casos de fronteira com os extras (ex.: 15 págs. + DOCX + capa = 4 + 1 + 1 = 6; 16 págs. + DOCX + capa = 6 + 3 + 2 = 11; 61 págs. com template novo = 6 + 2·teto(41/20) + 16 = 6 + 6 + 16 = 28).",
+      "status": "resolvida",
+      "statusNote": "DT-10 (teto) com a divergência explícita; Q9; casos de fronteira, extras, template novo, 400 palavras e ex. 05 nos 3 níveis: todos recalculados e corretos.",
+      "round": 1
+    },
+    {
+      "id": "C-8",
+      "severity": "MEDIUM",
+      "dimension": "feasibility",
+      "location": "spec.md §6 (Storage: URL assinada de 60 s), §9 GET /documentos/{id}/arquivo, §10 U5 (visualizador pdf.js)",
+      "description": "Por padrão, o pdf.js carrega o PDF por faixas (range requests) e por streaming, sob demanda. Numa saída de 142 páginas, o usuário que rola o documento depois de 60 s recebe 400/403 da URL expirada, e o visualizador quebra. O mesmo vale para 'Imprimir', que precisa do arquivo inteiro.",
+      "suggestedFix": "Escolher entre: (a) baixar o arquivo inteiro uma vez (disableRange/disableStream, ou fetch → blob → pdf.js), mantendo os 60 s; (b) uma URL do visualizador com validade maior (10–15 min) e a de download com 60 s; ou (c) proxy pela API. Registrar como DT e incluir no roteiro do §15 (FR-14): abrir, esperar 2 min, rolar até o fim e imprimir.",
+      "status": "resolvida",
+      "statusNote": "DT-12: URL usada uma vez → blob; imprimir a partir do blob; teste de 2 min no §16.",
+      "round": 1
+    },
+    {
+      "id": "C-9",
+      "severity": "MEDIUM",
+      "dimension": "feasibility",
+      "location": "spec.md §6 (Invariantes e funções; gatilho em auth.users)",
+      "description": "'EXECUTE revogado de anon e authenticated' não basta: no Postgres, função nova dá EXECUTE a PUBLIC, e anon e authenticated herdam de PUBLIC. No Supabase, há ainda default privileges no schema public, e o PostgREST expõe as funções do schema public como RPC. Função SECURITY DEFINER sem search_path fixo é vetor conhecido de escalada. E se o gatilho em auth.users falhar (ex.: config sem a chave de créditos iniciais), o convite falha com 'Database error saving new user'. É o mesmo risco do precedente despensa-auditoria.",
+      "suggestedFix": "No §6: criar as funções credito_* num schema não exposto (ex.: private), com 'SET search_path = '''' e nomes qualificados; 'REVOKE EXECUTE ... FROM PUBLIC, anon, authenticated' e GRANT só a service_role; o gatilho de auth.users com SECURITY DEFINER e um valor padrão para a falta da chave em config. Manter no §6 o teste 'A não executa credito_*' via /rest/v1/rpc.",
+      "status": "resolvida",
+      "statusNote": "Schema private, SET search_path = '', REVOKE de PUBLIC/anon/authenticated, coalesce no gatilho, testes via /rest/v1/rpc. Nota menor sobre o papel do banco em C-25.",
+      "round": 1
+    },
+    {
+      "id": "C-10",
+      "severity": "MEDIUM",
+      "dimension": "feasibility",
+      "location": "spec.md §7 ('Conexão direta ao Postgres (não pelo pooler em modo transação)'), §17 Q2",
+      "description": "A conexão direta do Supabase (db.<ref>.supabase.co:5432) só tem IPv6, a menos que se contrate o add-on de IPv4. O VPS Hetzner tem IPv6, mas o Docker não liga IPv6 nos containers por padrão, e a API e o worker não conectam. Vale lembrar: o UPDATE ... FOR UPDATE SKIP LOCKED de um comando só funciona também em modo transação; o que o modo transação quebra são os prepared statements dos drivers (asyncpg/psycopg).",
+      "suggestedFix": "No §7, prever o Supavisor em modo sessão (porta 5432 do pooler, IPv4) como padrão, ou IPv6 ligado no docker-compose (enable_ipv6 + daemon.json), ou o add-on de IPv4. Desligar o cache de prepared statements se usar o pooler. Pôr na lista de verificação da unidade 7.",
+      "status": "resolvida",
+      "statusNote": "DT-14: Supavisor em modo sessão (IPv4); alternativas e custo na Q18.",
+      "round": 1
+    },
+    {
+      "id": "C-11",
+      "severity": "MEDIUM",
+      "dimension": "completeness",
+      "location": "spec.md §14 (Segurança) / §1 FR-1 (login por link mágico), §17",
+      "description": "O provedor de e-mail padrão do Supabase só entrega a endereços da equipe do projeto e tem limite de poucos e-mails por hora. Sem SMTP próprio, o convite e o link mágico não chegam aos 10 participantes, e o FR-1 falha em produção. A spec e as perguntas abertas não tratam disso.",
+      "suggestedFix": "Acrescentar ao §14/unidade 7 o SMTP próprio (Resend, SES ou similar), com remetente no domínio da Q2 e o rate limit de e-mail ajustado no Auth; incluir no dry-run do §15 um convite real para um endereço de fora da equipe. Para 'e-mail não convidado → mensagem neutra', usar signInWithOtp com shouldCreateUser: false.",
+      "status": "resolvida",
+      "statusNote": "§13 SMTP próprio, U1 com shouldCreateUser: false, Q12, convite real no §16 FR-1.",
+      "round": 1
+    },
+    {
+      "id": "C-12",
+      "severity": "MEDIUM",
+      "dimension": "completeness",
+      "location": "spec.md §15 (Verificação por requisito)",
+      "description": "Só 9 dos 21 FR têm forma de prova. Não têm teste: FR-1 (convite e não convidado), FR-2/FR-3 (concessão e extrato), FR-4/FR-5/NFR-2 (80 MB, 300 págs., escaneado, senha, corrompido, nova tentativa sem duplicar), FR-6/FR-13 (opções e relatório de síntese), FR-10 (template novo ponta a ponta sem nova cobrança), FR-15/FR-17 (avaliação, problema, fila, revisão, recarga), FR-18 (upload bloqueado sem termo), FR-21 (cancelamento com estorno) e NFR-5/8/9. O método (comp-2) pede pelo menos um cenário por FR.",
+      "suggestedFix": "Completar o §15 com uma linha por FR/NFR, reaproveitando os critérios de aceite do requirements.json e incluindo os caminhos do ciclo do crédito (falha, cancelamento, exclusão em cada estado, em_revisao, reprocessamento). O NFR-5 se prova com um log da requisição ao juiz que mostre só imagens e trechos; o NFR-8, com o ex. 05 no CPX31 dentro do timeout.",
+      "status": "resolvida",
+      "statusNote": "§16 cobre FR-1 a FR-21 e NFR-1 a NFR-9, com os caminhos do ciclo do crédito.",
+      "round": 1
+    },
+    {
+      "id": "C-13",
+      "severity": "MEDIUM",
+      "dimension": "completeness",
+      "location": "spec.md §12 (Métricas) e §17",
+      "description": "O piloto §5 prevê dry-run com 2 usuários internos, e o responsável vai testar em produção. Sem marcar contas internas, essas entregas entram em v_criterios_piloto (nota média, erros, concordância) e contaminam os critérios que decidem descer de 100% para 25% (D17).",
+      "suggestedFix": "Acrescentar perfis_usuario.interno bool (ou coorte), filtrar v_criterios_piloto por padrão para participantes e incluir uma pergunta aberta sobre limpar ou manter os dados do dry-run.",
+      "status": "resolvida",
+      "statusNote": "perfis_usuario.interno, filtro em v_criterios_piloto e em /admin/metricas, Q15.",
+      "round": 1
+    },
+    {
+      "id": "C-14",
+      "severity": "LOW",
+      "dimension": "accuracy",
+      "location": "spec.md §9 POST /documentos/{id}/cancelar, §16 FR-21",
+      "description": "As fontes não citam cancelamento pelo usuário: P9 fala de estorno 'se falhar', e o piloto §3 P4 só fala em 'prazo avisado'. É uma feature derivada, rastreada por inferência.",
+      "suggestedFix": "Marcar FR-21 como DT, com o motivo (o usuário que não aceita o prazo do template novo precisa sair sem perder créditos), ou levar à aprovação do responsável numa Q.",
+      "status": "resolvida",
+      "statusNote": "FR-21 como DT-13, com rationale no requirements.json e no §17.",
+      "round": 1
+    },
+    {
+      "id": "C-15",
+      "severity": "LOW",
+      "dimension": "consistency",
+      "location": "spec.md §4 (Triagem.recusa), §8, §7, §13",
+      "description": "Detalhes soltos: excede_tamanho aparece no §8, mas não no Literal Triagem.recusa; limpeza é job no §7, mas não está em jobs.tipo nem tem agendador definido (cron no worker? pg_cron?); o estado 'triagem' falta na lista de exclusão do §13; o §8 chama aguardando_perfil e em_revisao de 'estados finais'; a seta upload_falhou → 'nova tentativa' é ambígua no diagrama; 'determinística' no §4 não vale byte a byte (o PDF do LibreOffice traz data de criação).",
+      "suggestedFix": "Acrescentar excede_tamanho ao Literal (ou deixar a recusa de tamanho só no 413 da API); definir o agendador da limpeza (laço do worker, com trava por advisory lock); incluir triagem no §13 (marcar exclusao_pendente); chamar os dois estados de 'estados de espera'; dizer que upload_falhou volta a aguardando_upload; trocar 'mesma saída' por 'mesmas páginas, cobertura e relatório'.",
+      "status": "resolvida",
+      "statusNote": "excede_tamanho no Literal; limpeza no laço do worker com pg_try_advisory_lock; triagem na exclusão; estados em andamento/espera/finais; upload_falhou → aguardando_upload; \"reprodutível\" no lugar de \"determinística\". O fim do job triagem com exclusao_pendente entra em C-22.",
+      "round": 1
+    },
+    {
+      "id": "C-16",
+      "severity": "LOW",
+      "dimension": "completeness",
+      "location": "spec.md §11 (Quando) e §9 motivos gate_cobertura/template_novo",
+      "description": "O juiz roda só em 'pronto'. Os itens gate_cobertura (em_revisao, com saída gerada) chegam à tela A2 sem o diagnóstico do juiz, que o PL2 pede 'pronto'. Nesses itens, concorda_juiz não tem sentido e distorce a concordância do §12.",
+      "suggestedFix": "Enfileirar o juiz também em em_revisao (a saída existe; o custo é pequeno, ~ R$ 0,60) ou permitir concorda_juiz nulo e excluir os nulos da métrica. Dizer também que GET /documentos/{id} não expõe a entrega em em_revisao.",
+      "status": "resolvida",
+      "statusNote": "Juiz também em em_revisao (DT-6, §11); concorda_juiz nulo e fora do denominador; entrega invisível em em_revisao (§9, RLS).",
+      "round": 1
+    },
+    {
+      "id": "C-17",
+      "severity": "LOW",
+      "dimension": "feasibility",
+      "location": "spec.md §9 GET /health, §7 (heartbeat)",
+      "description": "O heartbeat é por job. Um worker ocioso não atualiza nada, e o /health ('worker com heartbeat < 60 s') fica vermelho sempre que não há fila.",
+      "suggestedFix": "Criar a tabela workers (worker_id, visto_em), atualizada no laço de 2 s, e usá-la no /health.",
+      "status": "resolvida",
+      "statusNote": "DT-15: tabela workers com visto_em; /health usa visto_em < 60 s.",
+      "round": 1
+    },
+    {
+      "id": "C-18",
+      "severity": "LOW",
+      "dimension": "feasibility",
+      "location": "spec.md §10 (tus-js-client com o JWT), DT-3",
+      "description": "O JWT do Supabase expira em 1 h por padrão. Um upload retomado de 80 MB numa rede ruim pode passar desse prazo. O TUS do Supabase exige chunks de 6 MB e recomenda o host de storage direto. Uma nova tentativa depois de upload concluído sem a chamada upload-concluido dá 409 (o objeto já existe, e o usuário não tem UPDATE para upsert).",
+      "suggestedFix": "Na unidade 5: renovar o token no onBeforeRequest do tus-js-client, chunkSize de 6 MB e endpoint <ref>.storage.supabase.co. No cliente, tratar o 409 chamando upload-concluido em vez de reenviar.",
+      "status": "resolvida",
+      "statusNote": "U4: chunks de 6 MB, host de storage direto, token renovado em onBeforeRequest, 409 → upload-concluido.",
+      "round": 1
+    },
+    {
+      "id": "C-19",
+      "severity": "LOW",
+      "dimension": "completeness",
+      "location": "spec.md §12 (agregado 'Cobertura (modo original)')",
+      "description": "Como o gate bloqueia toda saída abaixo de 99,5%, a métrica 'entregas originais com cobertura ≥ 0,995 / entregas originais' dá sempre 100% e não mede nada. O que interessa calibrar é quantas vezes o gate dispara na primeira tentativa.",
+      "suggestedFix": "Medir também 'processamentos que pararam no gate / processamentos em modo original' (primeira passagem), com base no histórico de versões proposto em C-1.",
+      "status": "resolvida",
+      "statusNote": "gate_primeira_passagem e a métrica \"Gate na primeira passagem\"; a cobertura fica como alarme.",
+      "round": 1
+    },
+    {
+      "id": "C-20",
+      "severity": "LOW",
+      "dimension": "completeness",
+      "location": "spec.md §3 / §10 (dependências)",
+      "description": "As dependências não têm versão (Next.js, supabase-js, tus-js-client, pdf.js, PyMuPDF, python-docx, LibreOffice, FastAPI), e o método (comp-3) pede versão.",
+      "suggestedFix": "Acrescentar uma tabela de dependências com a versão mínima ou fixada, sobretudo LibreOffice (a mesma versão do baseline do Windows, se possível) e PyMuPDF (triagem e verify dependem dela).",
+      "status": "resolvida",
+      "statusNote": "Tabela de dependências no §3; versão exata do LibreOffice registrada na unidade 2.",
+      "round": 1
+    },
+    {
+      "id": "C-21",
+      "severity": "MEDIUM",
+      "dimension": "consistency",
+      "status": "tratada pelo autor (v1.2, sem re-critique)",
+      "round": 2,
+      "location": "spec.md §8 (linha \"reprocessar (admin)\") × §5 (Reprocessar, \"documentos.reprocessando\") × §14 (exclusão \"pronto (mesmo com reprocessando)\", retenção por estado) × §9 (cancelar do usuário) × §6 jobs.origem",
+      "description": "Reprocessar a partir de pronto tem dois modelos que se contradizem. O §8 leva o documento a na_fila → processando; o §5 e o §14 dizem que ele continua pronto, com reprocessando = true e a versão atual visível. Se o status muda (§8): (a) o usuário pode cancelar em na_fila (DT-13) e o §8 manda estornar uma reserva já capturada, mas o índice único em reserva_id barra o estorno e o documento perde a entrega; (b) GET /documentos/{id}, /arquivo, avaliação e problemas só valem em pronto, então o usuário perde o acesso à versão atual; (c) a retenção trata na_fila como \"reserva aberta: estorna\". Além disso, o tratador de falha final precisa do estado de origem (a coluna \"Falha final\" do §5 depende dele), e jobs.origem só guarda usuario|reprocessar.",
+      "suggestedFix": "Adotar um modelo só. Sugestão: reprocessar a partir de pronto não muda documentos.status (fica pronto com reprocessando = true, e só o job anda); em_revisao e falhou passam por na_fila. Corrigir a linha do §8. Gravar jobs.estado_origem (em_revisao|pronto|falhou) e usá-lo no tratador. Nas regras de cancelar, expirar e excluir, decidir o estorno pelo estado da reserva no ledger (aberta ou não), e não pelo status. Acrescentar ao §16 (FR-17): o usuário tenta cancelar durante o reprocessamento de algo pronto → 409, e a versão atual continua acessível.",
+      "statusNote": "v1.2: modelo único (de pronto o status não muda, reprocessando = true); jobs.estado_origem; estorno pela reserva no ledger; §8 e §16 FR-17 corrigidos."
+    },
+    {
+      "id": "C-22",
+      "severity": "MEDIUM",
+      "dimension": "completeness",
+      "status": "tratada pelo autor (v1.2, sem re-critique)",
+      "round": 2,
+      "location": "spec.md §14 (exclusão: \"pronto (mesmo com reprocessando) ... apaga conteúdo na hora\"; retenção: \"demais estados: apaga conteúdo\"), §7 (\"Se exclusao_pendente estiver marcado no fim do processar\")",
+      "description": "\"Apagar conteúdo\" não para os jobs vivos do documento. Excluir (ou expirar) um pronto com reprocessamento em curso apaga os arquivos agora, mas o processar em andamento sobe a versão nova ao terminar e enfileira o juiz. O documento fica excluido com arquivos no Storage, e partes dele vão à Anthropic depois da exclusão (LGPD, itens 2 e 4 do termo). O mesmo vale para um job juiz na fila ou rodando de um pronto recém-excluído, que no melhor caso vira juiz_falhou na fila do backoffice. E o §7 só confere exclusao_pendente no fim do processar, mas o §14 marca também documentos em triagem.",
+      "suggestedFix": "Em \"Apagar conteúdo\": (1) cancelar os jobs na_fila do documento (processar e juiz); (2) marcar exclusao_pendente se houver job processando, de qualquer tipo. No worker: conferir exclusao_pendente/excluido no fim de todo job (triagem, processar, juiz) e antes de chamar a API Anthropic; se marcado, descartar as saídas e não enviar nada. Ignorar documentos excluidos/expirados nos motivos da fila. Teste no §16 (FR-19): excluir durante um reprocessamento e durante um juiz → nada no Storage e nenhuma chamada ao juiz depois da exclusão.",
+      "statusNote": "v1.2: apagar conteúdo cancela jobs na_fila e marca exclusao_pendente; worker confere no fim de todo job e antes de chamar a Anthropic; excluido/expirado fora da fila; §16 FR-19."
+    },
+    {
+      "id": "C-23",
+      "severity": "LOW",
+      "dimension": "consistency",
+      "status": "tratada pelo autor (v1.2, sem re-critique)",
+      "round": 2,
+      "location": "requirements.json domainModel (jobs, entregas) e interactions",
+      "description": "O requirements.json ainda descreve jobs como \"(processar | juiz)\" (falta triagem), entregas como \"1:1 documentos\" (a spec v1.1 versiona; DT-16) e não tem a entidade workers. É pequeno, mas o requirements é a fonte da rastreabilidade.",
+      "suggestedFix": "Atualizar o domainModel: jobs (triagem|processar|juiz, origem/estado_origem); entregas N:1 documentos (versao); workers; feedback/problemas com versao.",
+      "statusNote": "v1.2: domainModel com jobs (triagem|processar|juiz, origem, estado_origem), entregas N:1 por versao, workers, feedback/problemas por versao."
+    },
+    {
+      "id": "C-24",
+      "severity": "LOW",
+      "dimension": "completeness",
+      "status": "tratada pelo autor (v1.2, sem re-critique)",
+      "round": 2,
+      "location": "spec.md §5 (tabela Reprocessar, linha falhou) e §6 feedback_usuario",
+      "description": "Na linha falhou da tabela de reprocessamento, a coluna \"Gate bloqueado\" está vazia (\"—\"); pela regra geral, deveria ir para em_revisao com a nova reserva aberta. Essa nova reserva é feita pelo admin sem confirmação do usuário: o extrato precisa explicar o motivo. E como feedback_usuario tem pk documento_id, a nota da versão 2 sobrescreve a da versão 1, que é a nota da primeira entrega usada no critério do piloto.",
+      "suggestedFix": "Preencher a célula: em_revisao, reserva aberta. Gravar a reserva do admin com motivo \"reprocessamento de documento que falhou\" e criado_por = admin. Mudar a pk de feedback_usuario para (documento_id, versao), ou guardar nota_primeira_entrega em metricas_entrega.",
+      "statusNote": "v1.2: falhou × gate = em_revisao com reserva aberta; reserva do admin com motivo e criado_por; feedback_usuario pk (documento_id, versao)."
+    },
+    {
+      "id": "C-25",
+      "severity": "LOW",
+      "dimension": "feasibility",
+      "status": "tratada pelo autor (v1.2, sem re-critique)",
+      "round": 2,
+      "location": "spec.md §6 (GRANT EXECUTE só ao service_role), DT-14",
+      "description": "service_role é o papel que o PostgREST assume com o JWT de serviço. A API e o worker conectam pelo Supavisor com um usuário Postgres (normalmente postgres, ou um papel próprio), não como service_role. O GRANT só a service_role não cobre esse caminho, a não ser que o usuário da conexão seja dono das funções ou tenha o grant. O modo sessão também ocupa uma conexão do banco por cliente: o pool da API e os 2 workers precisam caber no limite do pooler do plano.",
+      "suggestedFix": "Dizer no §6 qual papel a DATABASE_URL usa (sugestão: papel próprio docredux_backend, com GRANT EXECUTE nas funções private.* e BYPASSRLS ou políticas próprias) e dar o grant a esse papel. Fixar o tamanho do pool da API (ex.: ≤ 5) e conferir o limite do pooler na unidade 7.",
+      "statusNote": "v1.2: papel docredux_backend (BYPASSRLS) com GRANT nas funções; pool API ≤ 5 e 1 por processo do worker; limite do pooler conferido na unidade 7."
+    }
+  ],
+  "strengths": [
+    "A revisão endereçou as 20 issues uma a uma, com o mapa C-n → correção no Histórico, e todas as correções conferem no texto.",
+    "O ciclo do crédito ficou auditável: ledger por reserva_id com índice único entre captura e estorno, a invariante \"nenhuma reserva aberta em estado final\" e os testes por caminho (falha, cancelamento, exclusão por estado, expiração, reprocessamento).",
+    "DT-11 (Carlito + regressão no container) transforma um risco silencioso de regressão numa verificação explícita, com saída governada (Q13).",
+    "Saída versionada (DT-16) com métricas da primeira passagem preserva a entrega avaliada e o dado de calibração do gate.",
+    "O §16 virou um plano de testes de verdade: um cenário por FR/NFR, incluindo testes de RLS por REST/RPC e o log de requisição do juiz para o NFR-5.",
+    "O §18 cobre as decisões de deploy e LGPD (SMTP, região do VPS, backup, fim do piloto, custo fixo), cada uma com padrão proposto e unidade que bloqueia.",
+    "Todos os casos numéricos do §5 conferem com a margem §10, e a única divergência (ex. 05 leve 92 × 91) está declarada."
+  ],
+  "missingQuestions": []
+}

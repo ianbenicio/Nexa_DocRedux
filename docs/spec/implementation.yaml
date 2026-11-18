@@ -1,0 +1,478 @@
+# Plano de implementação — plataforma de testes do piloto do DocRedux
+# Fase 6 do Spec Pipeline (@architect). Quebra as unidades 2–8 de docs/plano-de-execucao.md
+# em stories prontas para o @sm (*draft). Cada story rastreia para requirements.json (FR/NFR/CON)
+# e para as seções de spec.md. Nenhuma story inventa feature: as decisões estão em spec.md §18.
+# v1.3 (2026-11-18): respostas Q1–Q18 aplicadas; infraestrutura gratuita (DT-17 a DT-20).
+
+storyId: DOCREDUX-PILOTO
+plannedAt: "2026-11-18T21:00:00-03:00"
+plannedBy: "@architect"
+specVersion: "1.3"
+complexity: STANDARD
+workflow: "SDC por story (@sm *draft → @po *validate → executor → @qa *qa-gate); push/deploy só @devops"
+
+convencoes:
+  ids: "{unidade}.{n} — ex.: 2.3"
+  local_das_stories: "docs/stories/ do repositório https://github.com/ianbenicio/Nexa_DocRedux.git (Q1)"
+  regressao_motor: "toda story que toca engine/ roda a regressão dos ex. 01–05 antes do merge (NFR-6)"
+  sem_push: "nenhuma story faz git push nem deploy; isso é da unidade 7 (@devops)"
+  contexto_por_sessao: "cada unidade cabe numa sessão (D9); limites em plano-de-execucao.md §3"
+  custo_fixo_zero: "nenhuma story contrata serviço pago (CON-10); o único custo variável é o juiz (Anthropic)"
+
+dependencias_entre_unidades:
+  "2": []
+  "3": []            # só precisa dos JSON de perfis/ para o seed; pode rodar em paralelo à 2
+  "4": ["2", "3"]
+  "5": ["4"]         # pode começar com a API mockada depois da 4.1, mas o aceite exige a 4 pronta
+  "6": ["4", "5"]    # 6.1 e 6.2 dependem só da 4; 6.3 usa o esqueleto do web da 5.1
+  "7": ["4", "5", "6"]
+  "8": ["7"]
+
+# Q1–Q18 respondidas em 2026-11-18 (spec §18): nenhuma story está bloqueada por pergunta.
+perguntas_que_bloqueiam: {}
+
+# Pendências só de execução, conferidas na unidade 7 (spec §18):
+pendencias_de_execucao:
+  - "Capacidade da Oracle Always Free A1 em São Paulo e verificação por cartão no cadastro (ASM-7); sem capacidade, o worker do piloto fica no PC do responsável"
+  - "Limites de conexão do Supavisor no plano gratuito (worker em modo sessão, API em modo transação)"
+  - "Limites das funções Python na Vercel Hobby (tamanho do corpo, duração) contra as rotas do spec §9"
+
+unidades:
+
+  - unidade: 2
+    nome: Motor como biblioteca
+    executor: "@dev"
+    contexto: "~180k"
+    stories:
+      - id: "2.1"
+        titulo: "Repositório e esqueleto do monorepo"
+        rastreia: [CON-1, CON-7]
+        spec: ["§3"]
+        tarefas:
+          - "Clonar https://github.com/ianbenicio/Nexa_DocRedux.git (Q1), ou git init com esse remote se estiver vazio; commits locais; push só pelo @devops"
+          - "Esqueleto engine/ api/ web/ db/ deploy/ docs/ com README de cada pasta"
+          - ".gitignore: PDFs de exemplos, .env, saídas; fixtures dos ex. 01–05 fora do git, apontadas por DOCREDUX_FIXTURES"
+          - "Copiar docs/spec/ e docs/plano-de-execucao.md para o repositório"
+        criterios_aceite:
+          - "git status limpo após o commit inicial; nenhum PDF nem segredo versionado"
+          - "Estrutura igual à do spec.md §3"
+
+      - id: "2.2"
+        titulo: "Migrar scripts/ para o pacote docredux_engine, sem mudar comportamento"
+        rastreia: [NFR-6, CON-6]
+        spec: ["§3 (dependências)", "§4 regras do contrato", "DT-11"]
+        depende_de: ["2.1"]
+        tarefas:
+          - "pyproject.toml (Python ≥ 3.12, PyMuPDF 1.28.x, python-docx 1.2.x); módulos ficha/, relatorio/, verify/, folha.py a partir de scripts/*.py"
+          - "Caminho do LibreOffice por DOCREDUX_SOFFICE (hoje fixo em scripts/render_relatorio.py:23); -env:UserInstallation por chamada"
+          - "cli.py: python -m docredux_engine processar|folha com saída JSON"
+          - "Imagem base Linux (Python + LibreOffice da mesma linha do baseline + fonts-crosextra-carlito + fonts-liberation); registrar a versão do LibreOffice do Windows"
+          - "render_docx.py passa a usar Carlito no lugar da Calibri (Q13, aceito)"
+          - "engine/tests/regressao.py: roda ex. 01–05 e compara páginas e cobertura com o LOG.md, no Windows e no container"
+        criterios_aceite:
+          - "Ex. 01–05 no container: 52→19, 34→14, 16→5, 26→12, 294→142 páginas; se a Carlito mudar alguma contagem, novo baseline registrado no LOG.md (Q13)"
+          - "Cobertura ≥ 99,96%, 100%, 100%, 100%, 99,97% em qualquer caso"
+        verificacao: "saída do regressao.py (Windows e container) anexada à story"
+
+      - id: "2.3"
+        titulo: "Contrato público: triar, processar, folha_contato, validar_perfil"
+        rastreia: [FR-5, FR-6, FR-8, FR-12, FR-13, FR-14]
+        spec: ["§4"]
+        depende_de: ["2.2"]
+        tarefas:
+          - "Tipos Opcoes, Triagem, Modificacao, Relatorio, Resultado e exceções (spec §4)"
+          - "triar: recusa escaneado (sem camada de texto), protegido, corrompido, excede_paginas (> 300); tipo e perfil pela assinatura de fontes (perfil_id nulo quando nenhum casa); contagem de palavras"
+          - "processar: despacho por perfil['tipo']; gate de cobertura 99,5% no modo original; relatório com modificações (removido/reorganizado), estrutura, regras disparadas e tempos"
+          - "Síntese só para relatório (Q4): sintese_disponivel = false em ficha"
+          - "validar_perfil com JSON Schema derivado de perfis/*.json"
+          - "Testes unitários com PDFs sintéticos (escaneado, com senha, corrompido, template desconhecido)"
+        criterios_aceite:
+          - "triar acerta tipo e perfil dos ex. 01–05"
+          - "Os três casos de recusa retornam o motivo certo; template desconhecido retorna perfil_id nulo"
+          - "Relatorio serializa em JSON e tem todos os campos do spec §4"
+          - "Regressão 2.2 continua verde"
+
+      - id: "2.4"
+        titulo: "Síntese extrativa no documento inteiro, ligada ao render"
+        rastreia: [FR-6, FR-13, CON-6]
+        spec: ["§4 síntese"]
+        depende_de: ["2.3"]
+        tarefas:
+          - "Generalizar scripts/sintese_extrativa.py de --capitulo para o documento inteiro (só relatórios, Q4)"
+          - "Ligar a saída ao render_relatorio (DOCX e PDF)"
+          - "Relatorio.fracao_real e Relatorio.condensado; marcação '[…]' e página de origem por trecho"
+        criterios_aceite:
+          - "Ex. 05 em 20/35/50%: fração real a até 1 ponto do alvo"
+          - "Toda frase da saída existe no original (teste automático de inclusão)"
+          - "Núcleo (PROBLEMA e CAUSAS CRÍTICAS) e todas as tabelas/gráficos com legenda presentes em qualquer nível"
+          - "Documento inteiro em ≤ 30 s de CPU"
+
+      - id: "2.5"
+        titulo: "Opção manter capa e elementos (U-C)"
+        rastreia: [FR-6]
+        spec: ["§4 regras do contrato"]
+        depende_de: ["2.3"]
+        tarefas:
+          - "Mapear as regras de remoção de capa, folha de rosto, cabeçalhos e elementos gráficos em REGRAS.md"
+          - "Opcoes.manter_capa_elementos desliga essas regras nos dois pipelines"
+        criterios_aceite:
+          - "Com a opção desligada, a regressão dos ex. 01–05 fica idêntica"
+          - "Com a opção ligada, a capa do ex. 05 e os cabeçalhos do ex. 01 aparecem na saída; cobertura não cai"
+
+  - unidade: 3
+    nome: Banco e RLS
+    executor: "@data-engineer"
+    contexto: "~180k"
+    stories:
+      - id: "3.1"
+        titulo: "Schema: tabelas, enums, índices, config e seed"
+        rastreia: [FR-2, FR-8, FR-11, FR-15, FR-16, FR-17, FR-19, FR-20]
+        spec: ["§6", "§7 índices", "§12"]
+        tarefas:
+          - "Migrations em db/supabase/migrations para as tabelas do spec §6 (inclui workers, entregas versionadas por (documento_id, versao), feedback_usuario com pk (documento_id, versao), jobs.estado_origem, documentos.partes, perfis_usuario.interno/senha_provisoria/exclusao_conta_em) e metricas_entrega do §12 (inclui colunas de primeira passagem)"
+          - "Enum de status sem aguardando_perfil; motivo de recusa template_novo; tipo de lançamento ajuste no ledger"
+          - "FKs para auth.users sem ON DELETE CASCADE nas tabelas que ficam depois da exclusão da conta (perfis_usuario, creditos_ledger, metricas_entrega ficam com o id pseudônimo; spec §14 item 4)"
+          - "Papel docredux_backend (login, BYPASSRLS, sem superusuário) com os grants de tabela da API e do worker (spec §6)"
+          - "Índice parcial da fila e único parcial de job ativo por (documento_id, tipo)"
+          - "config com os padrões: limites (300 págs., 80 MB), créditos iniciais 150, juiz_fracao 1.0, limiares de Q6 (nota ≤ 3; juiz sem nota em 48 h), amostra de Q11 (0,10), storage_teto_mb 900 (DT-20), preços do juiz"
+          - "seed.sql com os perfis semente (dono null, visíveis a todas as contas; Q5) a partir de perfis/*.json"
+          - "Views: fila do backoffice (motivos do spec §9, inclui pedido de perfil) e v_criterios_piloto (spec §12, sem internos; Q15)"
+        criterios_aceite:
+          - "supabase db reset aplica tudo do zero sem erro"
+          - "Views retornam linhas corretas num seed de teste com todos os motivos; documentos excluido/expirado não geram motivo"
+          - "Nota da versão 2 de uma entrega não sobrescreve a da versão 1"
+
+      - id: "3.2"
+        titulo: "Ledger de créditos e funções do saldo"
+        rastreia: [FR-3, FR-9, FR-19, NFR-3]
+        spec: ["§5 ciclo do crédito", "§6 invariantes e funções"]
+        depende_de: ["3.1"]
+        tarefas:
+          - "Schema private (não exposto): credito_conceder, credito_reservar (FOR UPDATE no perfil), credito_capturar, credito_estornar e o lançamento ajuste da exclusão da conta (spec §14; nome da função a critério do @data-engineer); SECURITY DEFINER, SET search_path = '', nomes qualificados"
+          - "REVOKE EXECUTE FROM PUBLIC, anon, authenticated; GRANT só a docredux_backend e service_role"
+          - "Gatilho em auth.users (SECURITY DEFINER): cria perfis_usuario (senha_provisoria = true) e concede coalesce(config.creditos_iniciais, 150)"
+          - "Gatilho append-only no ledger; reserva_id em captura/estorno com índice único"
+        criterios_aceite:
+          - "pgTAP: reserva com saldo insuficiente falha; duas reservas concorrentes não deixam saldo negativo"
+          - "Estorno e captura idempotentes (segunda chamada não muda o saldo); captura depois de estorno (e vice-versa) falha"
+          - "Invariantes: saldo = soma(ledger); nenhuma reserva aberta em documento de estado final"
+          - "Usuário novo nasce com 150, um lançamento de concessão e senha_provisoria = true, mesmo sem a chave em config"
+          - "Ajuste de exclusão deixa o saldo em 0 sem apagar lançamentos"
+          - "anon e authenticated não executam as funções do saldo; docredux_backend executa"
+
+      - id: "3.3"
+        titulo: "RLS, Storage e testes com dois usuários"
+        rastreia: [NFR-3, NFR-4, FR-4, CON-8]
+        spec: ["§6 RLS e Storage", "§13"]
+        depende_de: ["3.2"]
+        tarefas:
+          - "RLS ligada em todas as tabelas; só SELECT das próprias linhas para authenticated, conforme a tabela do spec §6"
+          - "Buckets privados originais (limite de objeto 50 MB; partes original.partNN de até 42 MB, DT-18) e saidas; política de INSERT só na pasta auth.uid()"
+          - "db/tests/rls.sql (pgTAP) com os casos do spec §6, mais um teste pela API REST (/rest/v1 e /rest/v1/rpc) com o JWT de cada usuário"
+        criterios_aceite:
+          - "Todos os casos de 'Testes de RLS obrigatórios' do spec §6 passam por SQL e por REST/RPC"
+          - "authenticated não consegue UPDATE em saldo, papel, interno nem senha_provisoria, nem EXECUTE em private.credito_*"
+
+  - unidade: 4
+    nome: API + worker
+    executor: "@dev"
+    contexto: "~180k"
+    stories:
+      - id: "4.1"
+        titulo: "Esqueleto da API: auth, erros, health, me, termo, senha"
+        rastreia: [FR-1, FR-18, CON-1]
+        spec: ["§9 autenticação, erros, CORS", "§13", "DT-14", "DT-19"]
+        tarefas:
+          - "FastAPI com validação do JWT do Supabase (chaves do projeto); dependência usuario_atual e exigir_admin"
+          - "Formato de erro e códigos do spec §9; CORS só do domínio do web"
+          - "GET /health (DB, heartbeat do worker, versão); GET /me (com senha_provisoria); POST /me/termo; POST /me/senha-trocada"
+          - "Postgres com o papel de backend pelo pooler em modo transação (6543, sem prepared statements; DT-14); leitura de config"
+          - "Mesmo código roda com uvicorn em dev e como função Python da Vercel em produção (DT-17)"
+        criterios_aceite:
+          - "Sem JWT → 401; usuário comum em /admin → 403; termo não aceito → termo_pendente nas rotas de envio"
+          - "POST /me/senha-trocada zera senha_provisoria; GET /me devolve o valor"
+
+      - id: "4.2"
+        titulo: "Créditos: orcar, orçamento, confirmação e extrato"
+        rastreia: [FR-2, FR-7, FR-9, FR-10]
+        spec: ["§5", "§9"]
+        depende_de: ["4.1"]
+        tarefas:
+          - "api/app/creditos.py::orcar (função pura, inteiros, síntese arredondada para cima com mínimo 1 — DT-10, Q9) com todos os casos da tabela do spec §5 em teste unitário"
+          - "POST /documentos/{id}/orcamento e /confirmar (409 orcamento_mudou; 402 saldo_insuficiente); sobretaxa de template novo quando o perfil foi criado na A3 para o documento (FR-10)"
+          - "GET /creditos/extrato paginado (inclui ajuste)"
+        criterios_aceite:
+          - "Todos os casos do spec §5 (fronteiras 5/6/15/16/20/21/40/41/60/61; extras; template novo com sobretaxa; síntese em relatório com 400 e 2.000 palavras; ex. 05 = 89/107/126)"
+          - "Confirmação concorrente dupla reserva uma vez só"
+
+      - id: "4.3"
+        titulo: "Envio: documento idempotente em partes, upload concluído, arquivos"
+        rastreia: [FR-4, FR-14, NFR-2, NFR-9]
+        spec: ["§9", "DT-3", "DT-18", "DT-20", "§6 Storage"]
+        depende_de: ["4.1"]
+        tarefas:
+          - "POST /documentos com Idempotency-Key (mesma chave → mesmo documento); calcula as partes de 42 MB e devolve os caminhos (DT-18)"
+          - "503 capacidade_piloto quando o uso estimado passa de config.storage_teto_mb (DT-20)"
+          - "POST /documentos/{id}/upload-concluido: confere todas as partes e a soma dos tamanhos; enfileira triagem ou marca upload_falhou"
+          - "GET /documentos, GET /documentos/{id}, GET /documentos/{id}/arquivo (URL assinada de 60 s; DOCX só se comprado)"
+        criterios_aceite:
+          - "Repetir POST com a mesma chave não cria documento novo"
+          - "Upload interrompido → upload_falhou → nova tentativa funciona"
+          - "Documento de 62 MB gera 2 partes; faltando uma parte → upload_falhou"
+          - "Uso acima do teto → 503 capacidade_piloto"
+          - "Usuário B recebe 404 no documento de A"
+
+      - id: "4.4"
+        titulo: "Worker: fila SKIP LOCKED, triagem e processamento"
+        rastreia: [FR-8, FR-9, FR-10, FR-11, FR-12, FR-20, NFR-1, NFR-8]
+        spec: ["§7", "§8", "§12", "DT-1", "DT-2", "DT-5", "DT-18"]
+        depende_de: ["4.2", "4.3", "2.3"]
+        tarefas:
+          - "Conexão pelo Supavisor em modo sessão (5432; DT-14), papel docredux_backend, 1 conexão por processo; só conexões de saída"
+          - "worker/loop.py: reivindicação do spec §7, polling de 2 s, workers.visto_em (DT-15), heartbeat de 15 s, coletor de 60 s, backoff"
+          - "Motor em subprocesso (cli do engine) com timeout por tipo; timeout volta para a fila como o coletor; diretório temporário e perfil LibreOffice por job"
+          - "worker/falhas.py: tratador único de falha final por tipo e origem (spec §7)"
+          - "Triagem baixa e concatena as partes do original, confere tamanho e SHA-256 (DT-18); perfil_id nulo → recusado com motivo template_novo, sem reserva, e pedido de perfil na fila (Q3)"
+          - "Jobs triagem e processar com as transições do spec §8; entregas versionadas (DT-16); captura só na primeira entrega; enfileira juiz em pronto e em_revisao"
+          - "Sem e-mail de pronto (Q8): o status fica na tela"
+          - "metricas_entrega preenchida (tamanho, tempos, cobertura, primeira passagem, tentativas, versão do motor, interno)"
+          - "exclusao_pendente e status excluido/expirado conferidos no fim de todo job (triagem, processar, juiz): descarta saídas, estorna se a reserva estiver aberta, apaga (spec §7)"
+          - "Tratador de falha final de reprocessar usa jobs.estado_origem (de pronto: só reprocessando = false)"
+        criterios_aceite:
+          - "Excluir durante triagem e durante processar → nada sobe ao Storage; estorno só se a reserva estiver aberta no ledger"
+          - "Dois workers não pegam o mesmo job (teste com 20 jobs e 2 processos)"
+          - "Matar o worker no meio → job volta à fila e termina; tentativas = 2"
+          - "Falha ou timeout nas 3 tentativas → documento falhou + estorno de 100%"
+          - "Gate abaixo de 99,5% → em_revisao, sem captura, entrega invisível ao usuário"
+          - "Ex. 05 (62 MB, 2 partes) → original remontado com o mesmo SHA-256"
+          - "PDF de template desconhecido → recusado (template_novo), saldo intacto, item na fila do backoffice"
+          - "/health verde com worker ocioso"
+
+      - id: "4.5"
+        titulo: "Pós-entrega e ciclo de vida: avaliação, problemas, cancelar, excluir, retenção, conta"
+        rastreia: [FR-15, FR-19, FR-21, CON-8]
+        spec: ["§9", "§14"]
+        depende_de: ["4.4"]
+        tarefas:
+          - "PUT /documentos/{id}/avaliacao e POST /documentos/{id}/problemas (validação de página)"
+          - "POST /documentos/{id}/cancelar (só na_fila; FR-21) e DELETE /documentos/{id} com as regras do spec §14; estorno decidido pela reserva aberta no ledger, nunca pelo status"
+          - "Apagar conteúdo: cancela jobs na_fila do documento (triagem, processar, juiz); job processando → exclusao_pendente"
+          - "PUT /avaliacao grava por (documento_id, versao) da entrega atual"
+          - "Tarefa diária de retenção no laço do worker, com pg_try_advisory_lock; alcança todos os estados (spec §14); originais em partes apagados juntos"
+          - "DELETE /me {confirmacao: 'EXCLUIR'} e DELETE /admin/usuarios/{id} (Q7; spec §14 exclusão da conta): ban imediato no Auth, exclusão de todos os documentos, e-mail e textos livres apagados, saldo zerado com ajuste, exclusao_conta_em gravado; a tarefa diária remove o usuário do Auth quando não houver job vivo"
+        criterios_aceite:
+          - "Cancelar na fila estorna; cancelar processando → 409; cancelar um pronto em reprocessamento → 409 e a versão atual continua acessível"
+          - "Excluir com job juiz na fila → job cancelado, nenhuma chamada à Anthropic"
+          - "Expirar em cada estado do spec §14 produz o efeito descrito; reservas abertas são estornadas; métricas ficam"
+          - "Excluir em cada estado do spec §14 produz o efeito descrito (em_revisao estorna)"
+          - "Excluir a conta com um documento processando → login bloqueado na hora; Storage vazio e usuário fora do Auth depois do job; agregados do piloto inalterados"
+          - "Nenhuma reserva aberta em documento de estado final ao fim da suíte"
+
+      - id: "4.6"
+        titulo: "Imagem do worker e teste ponta a ponta em dev"
+        rastreia: [CON-2, CON-10, NFR-1, NFR-8]
+        spec: ["§2", "§3 deploy/", "§16", "DT-17"]
+        depende_de: ["4.4", "4.5"]
+        tarefas:
+          - "Dockerfile do worker (Python 3.12 + LibreOffice + Carlito + Liberation), multi-arquitetura: amd64 (PC) e arm64 (Oracle A1)"
+          - "API roda local com uvicorn; configuração da função Python da Vercel (vercel.json) pronta, sem deploy"
+          - "deploy/docker-compose.dev.yml com Supabase local (supabase start)"
+          - "E2E: ficha (ex. 03) e relatório (ex. 05 em 2 partes) do upload ao pronto; queda do worker no meio"
+        criterios_aceite:
+          - "E2E verde nos dois documentos; PDFs com as mesmas páginas da regressão"
+          - "Ex. 05 termina em ≤ 3 min no container amd64"
+          - "Imagem arm64 constrói e roda a regressão (QEMU ou máquina arm64)"
+
+  - unidade: 5
+    nome: Front do usuário
+    executor: "@dev (+ /impeccable sob demanda)"
+    contexto: "~180k"
+    stories:
+      - id: "5.1"
+        titulo: "Esqueleto do web: login com senha, troca obrigatória, termo, layout, cliente da API"
+        rastreia: [FR-1, FR-18, NFR-7]
+        spec: ["§10 U1, U1b, U2", "DT-19"]
+        tarefas:
+          - "Next.js 15 (App Router), supabase-js 2.x só para auth; cliente da API com o JWT"
+          - "U1 /entrar (signInWithPassword; mensagem neutra para senha errada e e-mail inexistente; sem cadastro nem 'esqueci a senha')"
+          - "U1b /trocar-senha obrigatória enquanto senha_provisoria = true (updateUser + POST /me/senha-trocada)"
+          - "U2 /termo (bloqueia o resto até aceitar)"
+          - "Layout responsivo com saldo no topo"
+        criterios_aceite:
+          - "Conta com senha provisória → login → troca obrigatória → login com a nova, contra o Supabase local"
+          - "Sem termo aceito, qualquer rota redireciona para /termo"
+
+      - id: "5.2"
+        titulo: "Envio: upload TUS em partes, triagem, opções e custo"
+        rastreia: [FR-4, FR-5, FR-6, FR-7, FR-8, FR-10, NFR-2]
+        spec: ["§10 U4", "DT-3", "DT-18", "DT-20"]
+        depende_de: ["5.1"]
+        tarefas:
+          - "tus-js-client 4.x com o JWT renovado em onBeforeRequest; chunks de 6 MB; host de storage direto; 409 → chama upload-concluido; progresso; retomada; erro com nova tentativa"
+          - "Blob.slice em partes de 42 MB (DT-18), enviadas em sequência, com uma barra de progresso só; 503 capacidade_piloto com mensagem"
+          - "Passo 2: triagem com polling; recusa com motivo; template_novo com o texto do spec §10 U4 (Q3)"
+          - "Passo 3: opções (síntese só se sintese_disponivel), custo item a item, saldo depois, sobretaxa quando houver; confirmar"
+        criterios_aceite:
+          - "Ex. 05 (62 MB) e um PDF de 80 MB sobem em 2 partes e retomam depois de cortar a rede na 2ª parte"
+          - "Custo na tela = custo da API para os casos do spec §5"
+
+      - id: "5.3"
+        titulo: "Documento: status, visualizador, impressão, downloads, relatórios, avaliação"
+        rastreia: [FR-11, FR-13, FR-14, FR-15, FR-19, FR-21, NFR-9]
+        spec: ["§10 U5", "DT-4"]
+        depende_de: ["5.2"]
+        tarefas:
+          - "Polling de 3 s (60 s em em_revisao); etapas visuais; aviso quando o worker do piloto estiver fora do ar (heartbeat do /health; DT-17)"
+          - "Visualizador pdfjs-dist 4.x sobre o blob baixado uma vez (DT-12); Imprimir a partir do blob; Baixar PDF; Baixar DOCX só se comprado"
+          - "Economia (páginas, folhas, faixa de R$ a 0,10–0,20 por página); selo de integridade ou relatório de síntese; relatório de modificações com salto de página"
+          - "Nota 1–5 + comentário; marcar problema (página atual pré-preenchida); cancelar só na fila; apagar"
+        criterios_aceite:
+          - "Fluxo completo com ex. 03 no browser embutido em 375 px e no desktop, com capturas"
+          - "Ex. 05: abrir, esperar 2 min, rolar até a última página e imprimir sem erro"
+          - "Nenhum formato além de PDF e do DOCX comprado aparece"
+
+      - id: "5.4"
+        titulo: "Histórico, créditos e conta"
+        rastreia: [FR-2, FR-14, FR-19]
+        spec: ["§10 U3, U6, U7"]
+        depende_de: ["5.1"]
+        tarefas:
+          - "U3 histórico com status, páginas antes → depois, créditos, dias até apagar"
+          - "U6 saldo e extrato paginado (inclui ajuste)"
+          - "U7 /conta: e-mail; trocar senha; excluir a conta (explica o efeito do spec §14, pede para digitar EXCLUIR, encerra a sessão; Q7)"
+        criterios_aceite:
+          - "Extrato mostra concessão, reserva, captura e estorno de um caso real de falha"
+          - "Excluir a conta pela U7 → sessão encerrada e login recusado em seguida"
+
+  - unidade: 6
+    nome: Juiz Opus + backoffice
+    executor: "@dev"
+    contexto: "~180k"
+    stories:
+      - id: "6.1"
+        titulo: "Juiz automático por entrega"
+        rastreia: [FR-16, NFR-5, CON-5]
+        spec: ["§11"]
+        depende_de: ["4.4"]
+        tarefas:
+          - "Carregar a skill claude-api antes de codar (preços, cache de prompt, saída estruturada)"
+          - "Job juiz: entrada mínima por tamanho e modo (spec §11); teto de imagens em config"
+          - "Prompt com a rubrica (cobertura, núcleo, números, frases órfãs, layout) e schema de saída; 1 nova tentativa se inválido"
+          - "Grava avaliacoes_juiz e as colunas do juiz em metricas_entrega (tokens, custo)"
+          - "Antes de cada chamada à Anthropic, confere exclusao_pendente/excluido/expirado; se marcado, não chama e conclui a remoção (spec §7)"
+          - "Conjunto de 10 entregas com defeito plantado em engine/tests/juiz/"
+        criterios_aceite:
+          - "Juiz roda em 100% das entregas prontas do E2E"
+          - "Aponta ≥ 9 dos 10 defeitos plantados"
+          - "Excluir o documento durante um job juiz → nenhuma chamada à Anthropic depois da exclusão e nada gravado"
+          - "Custo médio por documento registrado e comparado com o ≈ R$ 0,60 da revisão §6"
+
+      - id: "6.2"
+        titulo: "API do backoffice e métricas"
+        rastreia: [FR-10, FR-17, FR-19, FR-20]
+        spec: ["§9 backoffice", "§9 motivos da fila", "§12", "§14 exclusão da conta"]
+        depende_de: ["4.5", "3.1"]
+        tarefas:
+          - "Rotas /admin/* do spec §9 (fila, detalhe, revisão, perfil, reprocessar, cancelar, problemas, usuários, recarga, exclusão de conta, métricas json/csv, config)"
+          - "Motivos da fila com os limiares de Q6 (nota ≤ 3; divergência juiz × usuário do spec §9; juiz sem nota em 48 h) e a amostra de 10% (Q11)"
+          - "Anexar perfil a documento recusado com motivo template_novo: validar_perfil; salvar privado (dono = usuário do documento) ou semente; documento volta à triagem sem cobrança e segue para aguardando_confirmacao com a sobretaxa (Q3)"
+          - "Revisão atualiza intervencao_humana e minutos_humanos; concorda_juiz nulo quando não há juiz"
+          - "Reprocessar de em_revisao, pronto e falhou com as regras de crédito e estado do spec §5: de pronto o status não muda (reprocessando = true); grava jobs.estado_origem; de falhou, nova reserva com motivo e criado_por = admin"
+          - "Métricas filtram internos por padrão (incluir_internos=false; Q15); uso do Storage × storage_teto_mb (DT-20)"
+        criterios_aceite:
+          - "Cada motivo da fila (inclusive amostra de 10% e pedido de perfil) aparece com um caso de teste e sai depois da revisão"
+          - "Perfil anexado a um template_novo → triagem → aguardando_confirmacao com a sobretaxa; documento expirado antes disso sai da fila"
+          - "Reprocessar: os três estados de origem × sucesso/gate/falha batem com a tabela do spec §5 (falhou × gate → em_revisao com reserva aberta); ledger sem reserva órfã"
+          - "Excluir durante um reprocessamento → nada no Storage, nenhuma chamada à Anthropic depois"
+          - "Recarga gera lançamento com criado_por = admin"
+          - "CSV de métricas tem uma linha por entrega com todas as colunas do spec §12"
+
+      - id: "6.3"
+        titulo: "Telas do backoffice"
+        rastreia: [FR-10, FR-17, FR-19, FR-20, PL2]
+        spec: ["§10 A1–A6"]
+        depende_de: ["6.2", "5.1"]
+        tarefas:
+          - "A1 fila, A2 revisão, A3 pedido de perfil (template_novo; dias até expirar; baixar original; colar ou enviar JSON; reenviar à triagem), A4 usuários (recarga; excluir conta a pedido), A5 métricas com uso do Storage e workers vivos, A6 configuração"
+          - "Criar conta e redefinir senha ficam no painel do Supabase (DT-19, ASM-6); a A4 só mostra o link"
+        criterios_aceite:
+          - "Responsável revisa um caso de nota baixa e um pedido de perfil de ponta a ponta, registrando minutos"
+          - "A5 mostra as metas do piloto §4 com o valor atual e o uso do Storage contra o teto"
+
+  - unidade: 7
+    nome: Deploy (infraestrutura gratuita, DT-17)
+    executor: "@devops"
+    contexto: "~120k"
+    stories:
+      - id: "7.1"
+        titulo: "Supabase Free de produção"
+        rastreia: [CON-1, CON-8, CON-10, ASM-5]
+        spec: ["§6 Storage", "§13", "DT-14", "DT-17", "DT-19"]
+        tarefas:
+          - "Projeto Free em sa-east-1 (Q10, Q18); limite de objeto do Storage em 50 MB (partes de 42 MB, DT-18)"
+          - "Auth: cadastro aberto desligado; e-mail com senha; confirmação de e-mail desligada (contas criadas no painel, DT-19); sem SMTP (Q8, Q12)"
+          - "Connection strings do Supavisor: modo sessão (5432) para o worker, modo transação (6543) para a API (DT-14); conferir o limite de conexões do plano"
+          - "Aplicar migrations e seed; primeiro admin por SQL; sem backups (plano Free; Q16)"
+          - "Cron gratuito (Vercel) chamando /health 1×/dia para o projeto não pausar por inatividade"
+        criterios_aceite:
+          - "Testes de RLS (3.3) verdes contra o banco de produção vazio"
+          - "Conta criada no painel com senha provisória → login → troca obrigatória → login com a nova"
+          - "Cadastro pela API pública do Auth → recusado"
+
+      - id: "7.2"
+        titulo: "Host do worker: PC do responsável e Oracle Always Free A1"
+        rastreia: [CON-2, CON-10, NFR-1, ASM-7]
+        spec: ["§2", "§3 deploy/", "DT-17"]
+        depende_de: ["7.1"]
+        tarefas:
+          - "PC do responsável (dev e dry-run): docker compose do worker (worker × 2, restart: unless-stopped); .env fora do git"
+          - "Conta Oracle Always Free (o responsável faz o cadastro e a verificação por cartão) e VM A1 de 2 OCPU/12 GB em São Paulo, imagem arm64 (4.6); sem capacidade na região → worker do piloto fica no PC, com aviso de horário (ASM-7)"
+          - "Só conexões de saída (Postgres pelo pooler, Storage, Anthropic): sem domínio, porta aberta nem TLS próprio"
+          - "Logs sem conteúdo de documento"
+        criterios_aceite:
+          - "/health mostra o heartbeat dos 2 workers do host escolhido"
+          - "Reinício do host → workers voltam sozinhos e jobs pendentes continuam"
+
+      - id: "7.3"
+        titulo: "Web e API na Vercel Hobby, termo final e participantes"
+        rastreia: [FR-1, FR-3, FR-18, CON-10, PL1]
+        spec: ["§10", "§14", "DT-17"]
+        depende_de: ["7.1", "7.2"]
+        tarefas:
+          - "Projeto Vercel Hobby: web (Next.js) e API (função Python, região gru1) em *.vercel.app, sem domínio próprio (Q2); variáveis de ambiente na Vercel; CORS da API com a URL do web"
+          - "Conferir limites da função (corpo, duração) contra as rotas do spec §9; uploads vão direto ao Storage (DT-3)"
+          - "Texto final do termo v1 (spec §14, itens 1–7: sem backups, contas mantidas no fim do piloto até nova ordem, exclusão da conta)"
+          - "Semear perfis com documentos dos participantes (risco do plano §3); criar as 10 contas no painel com senha provisória, entregue por canal fora da plataforma"
+        criterios_aceite:
+          - "Upload real em produção chega a pronto e o juiz avalia"
+          - "Participante entra com a senha provisória e troca no primeiro acesso"
+
+  - unidade: 8
+    nome: QA + dry-run
+    executor: "@qa"
+    contexto: "~150k"
+    stories:
+      - id: "8.1"
+        titulo: "Gate de QA da plataforma"
+        rastreia: [NFR-3, NFR-4, NFR-6, NFR-7]
+        spec: ["§13", "§16"]
+        tarefas:
+          - "/code-review nas unidades 2–6; scan de segredos; revisão das políticas de RLS e Storage"
+          - "Roteiro completo no browser embutido (usuário e backoffice), 375 px e desktop"
+          - "Regressão dos ex. 01–05 na imagem de produção (arquitetura do host escolhido em 7.2)"
+        criterios_aceite:
+          - "Gate PASS, sem bloqueador aberto"
+
+      - id: "8.2"
+        titulo: "Dry-run com 2 usuários internos"
+        rastreia: [FR-20, PL1, PL5]
+        spec: ["§12", "§16"]
+        depende_de: ["8.1"]
+        tarefas:
+          - "2 usuários internos (perfis_usuario.interno = true) processam 10 documentos (fichas e relatórios, original e síntese, PDF e DOCX, 1 template novo recusado e atendido pela A3)"
+          - "Responsável revisa pela fila; conferir métricas e A5 contra o CSV"
+          - "Uma exclusão de conta de teste ponta a ponta (Q7)"
+        criterios_aceite:
+          - "10 entregas com métricas completas; 0 bloqueadores; juiz em 10/10"
+          - "Internos fora dos agregados da A5 (Q15)"
+          - "Tempo e custo reais registrados para a semana 1 do piloto"

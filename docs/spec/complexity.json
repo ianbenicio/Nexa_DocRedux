@@ -1,0 +1,41 @@
+{
+  "storyId": "DOCREDUX-PILOTO",
+  "assessedAt": "2026-11-18T20:10:00-03:00",
+  "assessedBy": "@architect",
+  "result": "STANDARD",
+  "overridden": false,
+  "totalScore": 15,
+  "dimensions": {
+    "scope": {
+      "score": 4,
+      "notes": "Greenfield de 4 pacotes (engine, api, web, db) com 11 tabelas, ~25 endpoints, ~10 telas e worker. Cross-cutting, mas o motor já existe e só muda de forma (scripts → biblioteca)."
+    },
+    "integration": {
+      "score": 3,
+      "notes": "Supabase (Auth, Postgres, Storage) e API Anthropic (juiz Opus). LibreOffice headless como dependência de sistema. Sem pagamento (PL3)."
+    },
+    "infrastructure": {
+      "score": 3,
+      "notes": "VPS própria para API + worker com LibreOffice (PL4), Vercel para o front, Supabase gerenciado. Fila no Postgres evita broker extra (Redis/RabbitMQ)."
+    },
+    "knowledge": {
+      "score": 2,
+      "notes": "Stack já usada na Fezinha (precedente Engram 'fezinha-stack-e-deploy'); motor validado nos ex. 01-05. Novo: fila SKIP LOCKED e juiz LLM com schema."
+    },
+    "risk": {
+      "score": 3,
+      "notes": "Dados de alunos (LGPD), créditos com RLS (precedente 'despensa-auditoria'), regressão do motor ao virar biblioteca. Piloto fechado de 10 usuários limita o impacto."
+    }
+  },
+  "phasesToRun": ["gather", "assess", "spec", "critique", "plan"],
+  "researchSkipped": {
+    "skipped": true,
+    "reason": "Sem lacuna técnica que bloqueie a spec. Os pontos externos ficam como verificação nas unidades: limite de arquivo do Storage no plano Supabase (ASM-5, unidade 7), preços do Opus para o registro de custo (unidade 6 carrega a skill claude-api)."
+  },
+  "flags": {
+    "needsDataEngineer": true,
+    "needsUx": "sob demanda (impeccable na unidade 5)",
+    "needsDevops": true,
+    "lgpd": true
+  }
+}
