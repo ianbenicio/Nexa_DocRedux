@@ -284,6 +284,24 @@ unidades:
           - "Ex. 05 termina em ≤ 3 min no container amd64"
           - "Imagem arm64 constrói e roda a regressão (QEMU ou máquina arm64)"
 
+      - id: "4.7"
+        titulo: "Avisos por e-mail via Resend (documento pronto e em revisão)"
+        rastreia: [Q8, Q2, Q12, Q14]
+        spec: ["DT-22", "§6 notificacoes", "§7", "§13", "§14 termo item 7"]
+        depende_de: ["4.4"]
+        tarefas:
+          - "Migration: tabela notificacoes (única por documento e evento; RLS ligada, sem leitura pelo usuário) e config.notificacao_prazo_revisao (nulo)"
+          - "api/app/notificacoes.py: interface ClienteEmail, ResendCliente (POST https://api.resend.com/emails com Idempotency-Key), notificar(documento, evento) e reenvio de pendentes"
+          - "RESEND_API_KEY e RESEND_FROM só por variável de ambiente; sem chave → status desligado, sem erro"
+          - "Worker chama o aviso no fim do processar (pronto, em_revisao) e da triagem (template_novo); o laço reenvia falhas até 3 tentativas"
+          - "Testes com cliente falso (nenhuma chamada real ao Resend)"
+        criterios_aceite:
+          - "No máximo um e-mail por (documento_id, evento), mesmo com job repetido, reprocessado ou em dois workers"
+          - "Falha no envio não derruba o job nem muda o status do documento; notificação fica falhou e é repetida"
+          - "Sem RESEND_API_KEY → desligado; conta sem e-mail ou documento apagado → sem_destinatario"
+          - "E-mail sem nome nem conteúdo do documento: texto fixo e link {WEB_URL}/documentos/{id}; prazo da revisão por gate só se config.notificacao_prazo_revisao não for nulo (Q19)"
+          - "Nenhuma chave no repositório"
+
   - unidade: 5
     nome: Front do usuário
     executor: "@dev (+ /impeccable sob demanda)"
