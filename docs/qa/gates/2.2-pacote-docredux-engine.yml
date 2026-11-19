@@ -1,18 +1,16 @@
 schema: 1
 story: '2.2'
 story_title: 'pacote-docredux-engine'
-gate: CONCERNS
-status_reason: "Pacote, Carlito, DOCREDUX_SOFFICE, CLI e regressão Windows 5/5 OK (baseline mantido). AC 1 no container não verificado: Docker Desktop não sobe nesta máquina."
+gate: PASS
+status_reason: "Regressão 5/5 idêntica ao baseline no Windows e no container Linux (Python 3.12.16, LibreOffice 26.8.3.1). CONCERNS anterior (container) resolvido em 2026-11-19."
 reviewer: 'Quinn (@qa)'
-updated: '2026-11-18'
-top_issues:
-  - severity: high
-    refs: ['env']
-    finding: "Regressão no container (AC 1/7) não executada: Docker Desktop não inicia (falta de RAM para a VM do WSL). Dockerfile pronto e URLs dos .deb conferidas."
-    suggested_action: "Liberar memória, subir o Docker e rodar docker build + regressao.py no container; registrar no LOG.md."
+updated: '2026-11-19'
+top_issues: []
 evidence:
-  tests: 'pytest 34 passed, 1 skipped (py 3.15); regressao.py 5/5 OK (LibreOffice 26.8.3.1, Windows)'
+  tests: 'pytest 34 passed, 1 skipped (py 3.15); regressao.py 5/5 OK no Windows e no container docredux-engine'
 nfr_validation:
-  security: {status: PASS, notes: 'Repositório público: nenhum PDF/DOCX/imagem/.env versionado'}
-  reliability: {status: CONCERNS, notes: 'Linux/container não verificado'}
+  security: {status: PASS, notes: 'Repositório público: nenhum PDF/DOCX/imagem/.env versionado; container roda sem root'}
+  reliability: {status: PASS, notes: 'Mesmo resultado em Windows e Linux'}
   maintainability: {status: PASS, notes: 'Testes automatizados por AC'}
+history:
+  - {date: '2026-11-18', gate: CONCERNS, reason: 'container não verificado (Docker não subia)'}

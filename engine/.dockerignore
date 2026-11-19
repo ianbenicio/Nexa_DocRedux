@@ -3,3 +3,4 @@
 tests/_saida
 *.egg-info
 .pytest_cache
+.venv

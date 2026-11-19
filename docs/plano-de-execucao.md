@@ -71,7 +71,7 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 | # | Unidade | Fase / executor | Entrega | Critério de aceitação preliminar | Limite de contexto |
 |---|---|---|---|---|---|
 | 1 ✅ | Spec da plataforma de testes — **concluída em 2026-11-18** | Spec Pipeline / @pm + @architect + @qa | `docs/spec/spec.md` + critique | Critique ≥ 4,0; cada requisito rastreia para `saas/piloto.md` ou `processos.md` | ~180k |
-| 2 ✅ | Motor como biblioteca — **concluída em 2026-11-18** (ressalva: regressão no container pendente) | SDC / @dev | `engine/` com `processar(pdf, opcoes) → saida + relatorio`; `git init` + monorepo | Ex. 01–05 reproduzem as saídas aprovadas (cobertura e páginas iguais) | ~180k |
+| 2 ✅ | Motor como biblioteca — **concluída em 2026-11-18** | SDC / @dev | `engine/` com `processar(pdf, opcoes) → saida + relatorio`; `git init` + monorepo | Ex. 01–05 reproduzem as saídas aprovadas (cobertura e páginas iguais) | ~180k |
 | 3 | Banco e RLS | SDC / @data-engineer | `db/` com migrations: perfis, documentos, jobs, ledger de créditos, avaliações, feedback; buckets | Teste de RLS: usuário não lê documento alheio nem altera saldo | ~180k |
 | 4 | API + worker | SDC / @dev | `api/` FastAPI + worker com fila (SKIP LOCKED), estimativa de créditos, reserva e estorno | Upload → job → PDF/DOCX ponta a ponta em dev; falha estorna crédito | ~180k |
 | 5 | Front do usuário | SDC / @dev (+ impeccable sob demanda) | `web/` Next.js: login, upload + opções + custo, status, visualizador/impressão, nota e "marcar problema", histórico | Fluxo completo no browser embutido, no desktop e no celular | ~180k |
@@ -100,8 +100,8 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 - Repositório `Nexa_DocRedux/` com os commits 22f7449 (2.1), 1025114 + cea982d (2.2/2.3), 8ea95d1 (2.4) e 838c490 (2.5), mais os gates QA. Tudo local; push só pelo @devops.
 - Motor: `engine/docredux_engine` (contrato `triar`/`processar`/`folha_contato`/`validar_perfil`, CLI JSON). Regressão ex. 01–05 com Carlito e LibreOffice 26.8.3.1: 52→19, 34→14, 16→5, 26→12, 294→142, cobertura 99,96/100/100/100/99,97, igual ao baseline do `LOG.md`.
 - Síntese extrativa (2.4): fração real a ≤ 0,15 ponto do alvo, ~1,2 s de CPU. Opção `manter_capa_elementos` (2.5) mapeada em `REGRAS.md`.
-- `pytest`: 34 passed, 1 skipped. Gates em `docs/qa/gates/`: 2.1, 2.3 e 2.5 PASS; 2.4 CONCERNS (contagem de palavras do preço); 2.2 CONCERNS (container).
-- **Ressalva:** a regressão no container Linux não rodou porque o Docker Desktop não sobe nesta máquina. O Dockerfile está pronto. Rodar antes da unidade 7 (o worker usa essa imagem).
+- `pytest`: 34 passed, 1 skipped. Gates em `docs/qa/gates/`: 2.1, 2.3 e 2.5 PASS; 2.2 PASS (container fechado em 2026-11-19); 2.4 CONCERNS (contagem de palavras do preço).
+- Container Linux (`docredux-engine`, Python 3.12.16, LibreOffice 26.8.3.1): regressão 5/5 idêntica ao Windows (2026-11-19). Se o Docker não subir com `ERROR_NO_SYSTEM_RESOURCES`, é falta de RAM para a VM do WSL; liberar memória ou limitar com `.wslconfig`.
 - **Ponto aberto para a unidade 3/4:** qual contagem de palavras vale para o preço da síntese. A triagem conta 93.166 e o verify 91.037; isso dá 56/75/94 contra 55/73/92.
 
 **Capacidades por fase** (fonte: `H:\King\Harness\docs\catalogo\mapa-fases.md`):
