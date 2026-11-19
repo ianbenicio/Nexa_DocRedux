@@ -259,5 +259,24 @@ select results_eq(
   $$ values (2, 4.50, 0.5000, 0.5000, 0.5000, 0.5000, 0.5000, 0.150000, 5.00) $$,
   'critérios do piloto só com participantes');
 
+-- --------------------------------------------------------------------------- Unidade 4 (stories 4.3, 4.7)
+select has_column('public', 'documentos', 'sha256', 'documentos.sha256 (DT-18)');
+select has_column('public', 'entregas', 'tamanho_bytes', 'entregas.tamanho_bytes (DT-20)');
+select has_table('public', 'notificacoes', 'tabela notificacoes (DT-22)');
+select col_is_unique('public', 'notificacoes', array['documento_id', 'evento'], 'um aviso por (documento, evento)');
+select ok((select relrowsecurity from pg_class where oid = 'public.notificacoes'::regclass), 'notificacoes com RLS');
+select ok(not has_table_privilege('authenticated', 'public.notificacoes', 'SELECT'), 'usuário não lê notificacoes');
+select ok(not has_table_privilege('anon', 'public.notificacoes', 'SELECT'), 'anon não lê notificacoes');
+select ok(has_table_privilege('docredux_backend', 'public.notificacoes', p), 'backend: ' || p || ' em notificacoes')
+  from unnest(array['SELECT', 'INSERT', 'UPDATE']) p;
+select ok(not has_table_privilege('docredux_backend', 'public.notificacoes', 'DELETE'), 'backend não apaga notificacoes');
+select hasnt_column('public', 'notificacoes', c, 'notificacoes não guarda ' || c)
+  from unnest(array['email', 'texto', 'assunto']) c;
+select is((select valor from public.config where chave = 'termo_versao_atual'), '"1"'::jsonb, 'termo v1');
+select ok(exists (select 1 from public.config where chave = c), 'config ' || c)
+  from unnest(array['notificacao_prazo_revisao', 'limpeza_executada_em']) c;
+select throws_ok($$insert into public.documentos (usuario_id, idempotency_key, nome_arquivo, tamanho_bytes, sha256)
+                   values (gen_random_uuid(), 'x', 'x', 1, 'ABC')$$, '23514', null, 'sha256 só hex minúsculo de 64');
+
 select * from finish();
 rollback;
