@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="7" skipped="1" tests="81" time="368.126" timestamp="2026-11-19T11:14:27.889064-03:00" hostname="DESKTOP-Q011TK0"><testcase classname="tests.test_api" name="test_triar_escaneado" time="0.111" /><testcase classname="tests.test_api" name="test_triar_protegido" time="0.053" /><testcase classname="tests.test_api" name="test_triar_corrompido" time="0.004" /><testcase classname="tests.test_api" name="test_triar_template_desconhecido" time="0.018" /><testcase classname="tests.test_api" name="test_triar_excede_paginas_e_tamanho" time="0.014" /><testcase classname="tests.test_api" name="test_triagem_serializa" time="0.014" /><testcase classname="tests.test_api" name="test_triar_exemplos[01]" time="2.852" /><testcase classname="tests.test_api" name="test_triar_exemplos[02]" time="1.392" /><testcase classname="tests.test_api" name="test_triar_exemplos[03]" time="1.180" /><testcase classname="tests.test_api" name="test_triar_exemplos[04]" time="3.352" /><testcase classname="tests.test_api" name="test_triar_exemplos[05]" time="50.593" /><testcase classname="tests.test_api" name="test_triar_conta_como_o_verify[03-1334]" time="2.518" /><testcase classname="tests.test_api" name="test_triar_conta_como_o_verify[05-91037]" time="101.024" /><testcase classname="tests.test_api" name="test_validar_perfis_semente" time="0.001" /><testcase classname="tests.test_api" name="test_validar_perfil_com_erros" time="0.001" /><testcase classname="tests.test_api" name="test_schema_e_json_schema_valido" time="0.001"><skipped type="pytest.skip" message="could not import 'jsonschema': No module named 'jsonschema'">H:\Nexa\03_Comercial_Clientes\Projetos\DocRedux\Nexa_DocRedux_Codex\engine\tests\test_api.py:132: could not import 'jsonschema': No module named 'jsonschema'</skipped></testcase><testcase classname="tests.test_api" name="test_sintese_so_para_relatorio" time="0.006" /><testcase classname="tests.test_api" name="test_fracao_invalida" time="0.006" /><testcase classname="tests.test_api" name="test_perfil_invalido" time="0.005" /><testcase classname="tests.test_api" name="test_relatorio_tem_campos_do_spec" time="0.000" /><testcase classname="tests.test_api" name="test_processar_ficha_ex03" time="1.292"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">docredux_engine\api.py:339: in processar
+    try:
+docredux_engine\pipeline.py:56: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+docredux_engine\soffice.py:39: in localizar
+    raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E   docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+The above exception was the direct cause of the following exception:
+tests\test_api.py:168: in test_processar_ficha_ex03
+    res = api.processar(pdf, Opcoes(docx=True), perfil_por_nome["mathema-saeb"], tmp_path)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\api.py:343: in processar
+    except (SofficeNaoEncontrado, RuntimeError) as e:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE</failure></testcase><testcase classname="tests.test_api" name="test_gate_bloqueia_cobertura_baixa" time="1.281"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">docredux_engine\api.py:339: in processar
+    try:
+docredux_engine\pipeline.py:56: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+docredux_engine\soffice.py:39: in localizar
+    raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E   docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+The above exception was the direct cause of the following exception:
+tests\test_api.py:190: in test_gate_bloqueia_cobertura_baixa
+    r = api.processar(pdf, Opcoes(), perfil_por_nome["mathema-saeb"], tmp_path).relatorio
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\api.py:343: in processar
+    except (SofficeNaoEncontrado, RuntimeError) as e:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE</failure></testcase><testcase classname="tests.test_api" name="test_folha_contato" time="0.029" /><testcase classname="tests.test_api" name="test_cli_triar_e_erro" time="1.133" /><testcase classname="tests.test_api" name="test_cli_processar_ex03" time="2.721"><failure message="assert (1 == 0)">tests\test_api.py:221: in test_cli_processar_ex03
+    assert cod == 0 and d["relatorio"]["paginas_depois"] == 5 and d["docx"]
+E   assert (1 == 0)</failure></testcase><testcase classname="tests.test_integridade" name="test_preserva_conteudo_visual_sem_texto[vetor-False]" time="0.054" /><testcase classname="tests.test_integridade" name="test_preserva_conteudo_visual_sem_texto[vetor-True]" time="0.055" /><testcase classname="tests.test_integridade" name="test_preserva_conteudo_visual_sem_texto[raster-False]" time="0.059" /><testcase classname="tests.test_integridade" name="test_preserva_conteudo_visual_sem_texto[raster-True]" time="0.060" /><testcase classname="tests.test_integridade" name="test_preserva_conteudo_visual_sem_texto[linha-False]" time="0.054" /><testcase classname="tests.test_integridade" name="test_preserva_conteudo_visual_sem_texto[linha-True]" time="0.054" /><testcase classname="tests.test_integridade" name="test_nao_promove_fundo_ou_objeto_fora_da_pagina_a_conteudo[branca]" time="0.001" /><testcase classname="tests.test_integridade" name="test_nao_promove_fundo_ou_objeto_fora_da_pagina_a_conteudo[fundo]" time="0.001" /><testcase classname="tests.test_integridade" name="test_nao_promove_fundo_ou_objeto_fora_da_pagina_a_conteudo[fora]" time="0.001" /><testcase classname="tests.test_integridade" name="test_conta_paragrafos_quebras_runs_e_tabela_aninhada" time="0.041" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O autor afirmou: &quot;O ensino melhorou.&quot; A pesquisa confirmou o resultado.]" time="0.001" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O autor afirmou: \u201cO ensino melhorou.\u201d A pesquisa confirmou o resultado.]" time="0.000" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O autor afirmou: (O ensino melhorou.) A pesquisa confirmou o resultado.]" time="0.001" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O autor afirmou: &quot;O ensino melhorou!&quot; A pesquisa confirmou o resultado.]" time="0.001" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O autor afirmou: \u201cO ensino melhorou?\u201d A pesquisa confirmou o resultado.]" time="0.000" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O autor afirmou: (&quot;O ensino melhorou.&quot;) A pesquisa confirmou o resultado.]" time="0.000" /><testcase classname="tests.test_integridade" name="test_segmentacao_preserva_pontuacao_e_texto[O Dr. Silva verificou o art. 5. A pesquisa confirmou o resultado.]" time="0.000" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[0.204]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[0.346]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[0.504]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[0.3]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[nan]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[inf]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[None]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[True]" time="0.001" /><testcase classname="tests.test_integridade" name="test_recusa_fracao_fora_do_contrato[0.2]" time="0.001" /><testcase classname="tests.test_integridade" name="test_aceita_as_tres_fracoes_publicas[0.2]" time="0.001" /><testcase classname="tests.test_integridade" name="test_aceita_as_tres_fracoes_publicas[0.35]" time="0.001" /><testcase classname="tests.test_integridade" name="test_aceita_as_tres_fracoes_publicas[0.5]" time="0.000" /><testcase classname="tests.test_integridade" name="test_folha_recusa_indices_invalidos[paginas0]" time="0.012" /><testcase classname="tests.test_integridade" name="test_folha_recusa_indices_invalidos[paginas1]" time="0.011" /><testcase classname="tests.test_integridade" name="test_folha_recusa_indices_invalidos[paginas2]" time="0.012" /><testcase classname="tests.test_integridade" name="test_folha_recusa_indices_invalidos[paginas3]" time="0.011" /><testcase classname="tests.test_integridade" name="test_folha_recusa_indices_invalidos[paginas4]" time="0.011" /><testcase classname="tests.test_integridade" name="test_folha_recusa_indices_invalidos[paginas5]" time="0.012" /><testcase classname="tests.test_integridade" name="test_folha_recusa_dpi_invalido" time="0.004" /><testcase classname="tests.test_integridade" name="test_verifica_o_arquivo_atual_mesmo_com_outro_docx_na_pasta" time="0.069" /><testcase classname="tests.test_integridade" name="test_contagem_dt21_reaproveita_modelo_sem_nova_extracao" time="0.012" /><testcase classname="tests.test_integridade" name="test_relatorio_sintese_usa_modelo_original_na_contagem" time="0.042" /><testcase classname="tests.test_integridade" name="test_aviso_informa_resultado_quando_nucleo_impede_alvo" time="0.001" /><testcase classname="tests.test_integridade" name="test_conversao_para_pdf_vazio_falha" time="0.046" /><testcase classname="tests.test_integridade" name="test_pdf_com_imagem_informativa_e_aceito" time="0.016" /><testcase classname="tests.test_integridade" name="test_cli_json_independe_do_encoding_do_host[cp1252]" time="0.333" /><testcase classname="tests.test_integridade" name="test_cli_json_independe_do_encoding_do_host[ascii]" time="0.329" /><testcase classname="tests.test_manter" name="test_desligada_nao_muda_o_modelo" time="1.212"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">docredux_engine\api.py:339: in processar
+    try:
+docredux_engine\pipeline.py:56: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+docredux_engine\soffice.py:39: in localizar
+    raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E   docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+The above exception was the direct cause of the following exception:
+tests\test_manter.py:22: in test_desligada_nao_muda_o_modelo
+    _, m = _rodar("03", perfil_por_nome["mathema-saeb"], tmp_path, False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_manter.py:16: in _rodar
+    res = api.processar(fixture_pdf(n), Opcoes(manter_capa_elementos=manter), perfil, out)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\api.py:343: in processar
+    except (SofficeNaoEncontrado, RuntimeError) as e:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE</failure></testcase><testcase classname="tests.test_manter" name="test_ficha_ex01" time="3.814"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">docredux_engine\api.py:339: in processar
+    try:
+docredux_engine\pipeline.py:56: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+docredux_engine\soffice.py:39: in localizar
+    raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E   docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+The above exception was the direct cause of the following exception:
+tests\test_manter.py:28: in test_ficha_ex01
+    res, m = _rodar("01", perfil_por_nome["mathema-saeb"], tmp_path, True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_manter.py:16: in _rodar
+    res = api.processar(fixture_pdf(n), Opcoes(manter_capa_elementos=manter), perfil, out)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\api.py:343: in processar
+    except (SofficeNaoEncontrado, RuntimeError) as e:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE</failure></testcase><testcase classname="tests.test_manter" name="test_relatorio_ex05" time="51.343"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">docredux_engine\api.py:339: in processar
+    try:
+docredux_engine\pipeline.py:56: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+docredux_engine\soffice.py:39: in localizar
+    raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E   docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+The above exception was the direct cause of the following exception:
+tests\test_manter.py:46: in test_relatorio_ex05
+    res, m = _rodar("05", perfil_por_nome["mec-sase-relatorio"], tmp_path, True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_manter.py:16: in _rodar
+    res = api.processar(fixture_pdf(n), Opcoes(manter_capa_elementos=manter), perfil, out)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\api.py:343: in processar
+    except (SofficeNaoEncontrado, RuntimeError) as e:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE</failure></testcase><testcase classname="tests.test_manter" name="test_sintese_com_capa" time="44.582" /><testcase classname="tests.test_sintese" name="test_so_relatorio" time="0.000" /><testcase classname="tests.test_sintese" name="test_regras_da_sintese" time="0.007" /><testcase classname="tests.test_sintese" name="test_inclusao" time="0.008" /><testcase classname="tests.test_sintese" name="test_marcador_de_pagina_intervalo" time="0.000" /><testcase classname="tests.test_sintese" name="test_ex05[0.2]" time="42.564" /><testcase classname="tests.test_sintese" name="test_ex05[0.35]" time="2.138" /><testcase classname="tests.test_sintese" name="test_ex05[0.5]" time="2.206" /><testcase classname="tests.test_sintese" name="test_processar_sintese_ex05" time="48.793"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">docredux_engine\api.py:339: in processar
+    try:
+docredux_engine\pipeline.py:56: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+docredux_engine\soffice.py:39: in localizar
+    raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E   docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+The above exception was the direct cause of the following exception:
+tests\test_sintese.py:151: in test_processar_sintese_ex05
+    res = api.processar(pdf, Opcoes(modo="sintese", fracao=0.35, docx=True), perfil_por_nome["mec-sase-relatorio"], tmp_path)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\api.py:343: in processar
+    except (SofficeNaoEncontrado, RuntimeError) as e:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE</failure></testcase></testsuite></testsuites>

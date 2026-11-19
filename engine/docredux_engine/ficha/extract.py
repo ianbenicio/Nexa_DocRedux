@@ -648,9 +648,36 @@ def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
     return [it[2] for it in items]
 
 
+def has_visual_content(page):
+    """Conteudo visivel alem de fundo uniforme, excluindo objetos fora da pagina."""
+    # Imagens/desenhos usam coordenadas nao rotacionadas no PyMuPDF.
+    area = page.rect * page.derotation_matrix
+    for image in page.get_image_info():
+        if not (pymupdf.Rect(image["bbox"]) & area).is_empty:
+            return True
+    for drawing in page.get_drawings():
+        bounds = drawing["rect"]
+        if (bounds.x0 >= area.x1 or bounds.x1 <= area.x0
+                or bounds.y0 >= area.y1 or bounds.y1 <= area.y0):
+            continue
+        rect = drawing["rect"] & area
+        if rect.is_empty:
+            # Linhas podem ter altura/largura zero, mas continuam visiveis.
+            rect = (drawing["rect"] + (-0.5, -0.5, 0.5, 0.5)) & area
+            if rect.is_empty:
+                continue
+        items = drawing.get("items", [])
+        fundo = (drawing.get("type") == "f" and len(items) == 1 and items[0][0] == "re"
+                 and (drawing["rect"] + (-1, -1, 1, 1)).contains(area))
+        if not fundo:
+            return True
+    return any(kind == "fill-shade" and not (pymupdf.Rect(bbox) & area).is_empty
+               for kind, bbox in page.get_bboxlog())
+
+
 def is_cover_or_blank(page, pno, n_pages):
     txt = page.get_text("text").strip()
-    if not txt:
+    if not txt and not has_visual_content(page):
         return "branca"
     if pno in (0, n_pages - 1) and len(txt) < 200 and len(page.get_drawings()) > 500:
         return "capa" if pno == 0 else "contracapa"
@@ -701,6 +728,11 @@ def extrair(pdf, out, perfil=None, *, paginas=None, manter_capa_elementos=False)
     removed, como_imagem = {}, {}
     model = [{"t": "id", "text": identification(doc), "arquivo": pdf.name}]
     for pno in range(doc.page_count):
+        if not doc[pno].get_text("text").strip() and has_visual_content(doc[pno]):
+            model.append(pagina_inteira(doc[pno], pno, out / "img", "conteudo_visual", dpi=200))
+            como_imagem[pno + 1] = "conteudo_visual"
+            stats["paginas_visuais_preservadas"] = stats.get("paginas_visuais_preservadas", 0) + 1
+            continue
         why = is_cover_or_blank(doc[pno], pno, doc.page_count)
         if why and manter_capa_elementos and why in ("capa", "contracapa"):
             pg = pagina_inteira(doc[pno], pno, out / "img", why)
@@ -729,6 +761,8 @@ def extrair(pdf, out, perfil=None, *, paginas=None, manter_capa_elementos=False)
         if el["t"] == "table":
             el["rows"] = [[norm(c.replace("\n", " ")) for c in r] for r in el["rows"]]
     meta = {"origem": pdf.name, "paginas": doc.page_count, "removidas": removed, "stats": stats}
+    if como_imagem:
+        meta["paginas_imagem"] = como_imagem
     if manter_capa_elementos:  # story 2.5; sem a opcao o modelo fica identico ao de antes
         meta.update(manter_capa_elementos=True, paginas_imagem=como_imagem, cabecalho=identification(doc))
     (out / "modelo.json").write_text(json.dumps({"meta": meta, "elementos": merged}, ensure_ascii=False, indent=1), encoding="utf-8")

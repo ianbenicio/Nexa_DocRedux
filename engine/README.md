@@ -38,6 +38,21 @@ res.pdf, res.docx, res.relatorio.to_json()   # relatório também gravado em sai
 - Erros: `MotorErro` (base), `PdfRecusado(motivo)`, `PerfilInvalido(erros)`, `RenderFalhou`.
 - `validar_perfil(perfil)` → lista de erros (`[]` = válido), contra `docredux_engine/perfil.schema.json`.
 
+### Correções experimentais da branch Codex (story 2.6)
+
+- Fichas: páginas com figuras sem texto são preservadas como página-imagem a 200 dpi, mesmo sem
+  `manter_capa_elementos`; fundo uniforme e objetos fora da página continuam descartáveis.
+- A síntese preserva delimitadores das frases, usa a contagem DT-21 no relatório e informa quando
+  o núcleo obrigatório impede atingir a fração solicitada. As frações aceitas são exatamente 0.20/0.35/0.50.
+- A contagem DOCX separa parágrafos/quebras e percorre células físicas uma única vez. Os verificadores
+  usam o arquivo produzido na execução atual, sem escolher o primeiro DOCX da pasta.
+- A CLI emite JSON ASCII escapado, compatível com leitores UTF-8 em Windows com encoding legado.
+- Conversão para PDF sem conteúdo detectável levanta `RenderFalhou`. É uma proteção inicial: ela
+  não certifica equivalência de texto, fórmulas, ordem ou imagens, nem substitui a regressão visual.
+
+Evidências, referências e pendências: `../docs/research/motor-referencias-2026-11-19.md` e
+`../docs/stories/2.6.integridade-motor-codex.story.md`. O baseline permanece inalterado.
+
 ### Opção `manter_capa_elementos` (story 2.5)
 
 `Opcoes(manter_capa_elementos=True)` (CLI `--manter-capa-elementos`) preserva a identidade visual. Desligada, a saída é idêntica ao baseline.

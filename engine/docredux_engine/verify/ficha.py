@@ -43,11 +43,15 @@ def original_words(pdf, removed, figs):
 
 def docx_words(path):
     d = Document(path); c = collections.Counter()
-    for p in d.paragraphs:
-        c.update(words(p.text))
-    for t in d.tables:  # celulas fisicas (tc), sem duplicar mescladas
-        for tc in t._tbl.iter(qn("w:tc")):
-            c.update(words("".join(x.text or "" for x in tc.iter(qn("w:t")))))
+    # Cada paragrafo fisico uma vez, inclusive em celulas mescladas/aninhadas.
+    for p in d.element.body.iter(qn("w:p")):
+        texto = []
+        for node in p.iter():
+            if node.tag == qn("w:t"):
+                texto.append(node.text or "")
+            elif node.tag in (qn("w:br"), qn("w:tab"), qn("w:cr")):
+                texto.append(" ")
+        c.update(words("".join(texto)))
     return c
 
 
@@ -105,15 +109,16 @@ def estimate_pages(model):
     return h / usable_h
 
 
-def verificar(pdf, out, model=None, perfil=None):
+def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=None):
     """Cobertura + metricas -> out/verificacao.json. Devolve o relatorio (dict)."""
     pdf, out = Path(pdf), Path(out)
     if model is None:
         model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))
     if model["meta"].get("tipo") == "relatorio":  # R32/R47: familia de relatorio
         from . import relatorio as verify_relatorio
-        return verify_relatorio.run(pdf, out, model, perfil)
-    docx = next(out.glob("*_COMPACTO.docx"))
+        return verify_relatorio.run(pdf, out, model, perfil, docx_path=docx_path, pdf_path=pdf_path)
+    from ..ficha.render import nome_docx
+    docx = Path(docx_path) if docx_path is not None else out / nome_docx(model)
     figs = [(el["pagina"], pymupdf.Rect(el["bbox"])) for el in model["elementos"] if el.get("figura")]
     # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, como nas figuras (R7)
     fora = {**model["meta"]["removidas"], **{str(k): v for k, v in model["meta"].get("paginas_imagem", {}).items()}}
