@@ -1,0 +1,17 @@
+schema: 1
+story: '3.2'
+story_title: 'ledger-creditos-funcoes-saldo'
+gate: PASS
+status_reason: "8 ACs: ledger.sql (69 asserções) cobre saldo insuficiente, idempotência, invariantes, usuário novo, ajuste da exclusão, permissões e append-only; concorrencia.py prova com duas conexões reais que a segunda reserva espera e falha (saldo final 50, invariantes vazias)."
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues: 
+  - {severity: low, finding: "Testes de script deixam resíduo no banco local por causa do append-only; documentado no README."}
+evidence:
+  tests: 'supabase db reset 3× sem erro (Supabase CLI 3.2.0, Postgres 17.6); supabase test db tests: 207 testes PASS (schema.sql 81, ledger.sql 69, rls.sql 57), com banco limpo e com resíduo dos scripts; concorrencia.py 9/9; rest_rls.py 25/25; gerar_seed.py --conferir em dia'
+  audit: 'Auditoria no banco: nenhuma função de public/private executável por anon/authenticated; todas as tabelas de public com RLS; toda função SECURITY DEFINER com search_path; docredux_backend só com SELECT no ledger e sem senha.'
+nfr_validation:
+  security: {status: PASS, notes: 'RLS em todas as tabelas; escrita só pelo backend; private fora da API; nenhuma chave, .env ou senha versionada'}
+  reliability: {status: PASS, notes: 'Saldo serializado por FOR UPDATE; ledger append-only; captura e estorno idempotentes'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README com como rodar'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual + auditoria de privilégios no banco'}

@@ -1,8 +1,8 @@
 # Spec: plataforma web de testes do piloto do DocRedux
 
-> **Versão:** 1.3 · **Data:** 2026-11-18 · **Story:** DOCREDUX-PILOTO · **Complexidade:** STANDARD (15)
+> **Versão:** 1.4 · **Data:** 2026-11-19 · **Story:** DOCREDUX-PILOTO · **Complexidade:** STANDARD (15)
 > **Autores:** @pm (requisitos e spec) · @architect (complexidade e plano) · @qa (critique)
-> **Entradas:** `requirements.json`, `complexity.json`, `critique.json` (rodada 1: 3,8, NEEDS_REVISION; rodada 2 sobre a v1.1: **4,4, APPROVED**; a v1.2 fecha as condições C-21 a C-25). A v1.3 aplica as respostas do responsável às perguntas Q1–Q18 (§18), inclusive a infraestrutura sem custo (DT-17 a DT-19). Ver "Histórico". Sem `research.json`: nenhuma lacuna técnica bloqueou a spec (ver `complexity.json`).
+> **Entradas:** `requirements.json`, `complexity.json`, `critique.json` (rodada 1: 3,8, NEEDS_REVISION; rodada 2 sobre a v1.1: **4,4, APPROVED**; a v1.2 fecha as condições C-21 a C-25). A v1.3 aplica as respostas do responsável às perguntas Q1–Q18 (§18), inclusive a infraestrutura sem custo (DT-17 a DT-19). A v1.4 registra as decisões da unidade 3 (DT-21 e o modelo sem FK para `auth.users`, §6). Ver "Histórico". Sem `research.json`: nenhuma lacuna técnica bloqueou a spec (ver `complexity.json`).
 > **Fontes rastreadas:** `saas/piloto.md` (PL1–PL5, §2–§5), `saas/processos.md` (P1–P16, D1–D17), `saas/margem.md` §10, `saas/revisao-template-novo.md` §6, `docs/plano-de-execucao.md`, `LOG.md`.
 > **Regra (Artigo IV):** cada requisito aponta para a fonte. O que é escolha técnica (como fazer) aparece como **decisão técnica (DT)**, com o motivo, e não como feature nova. O que falta nas fontes está em **§18 Perguntas abertas**, com um padrão proposto.
 
@@ -52,7 +52,7 @@ Construir a plataforma em que **10 participantes, durante 4 semanas** (PL1), env
 | DT-7 | Saldo em coluna materializada, atualizada na mesma transação do ledger por funções `SECURITY DEFINER` num schema não exposto, só executáveis pelo backend | Leitura rápida do saldo e consistência sob concorrência | NFR-3 (`despensa-auditoria`) |
 | DT-8 | O preço é uma função pura em `api/` (`creditos.orcar`), testada contra a margem §10 | O preço muda depois do piloto (D17); o motor fica sem regra de negócio | FR-7 |
 | DT-9 | Parâmetros do piloto em tabela `config` (limites, créditos iniciais, limiares, juiz, amostra, teto de Storage) | Ajustar sem deploy durante as 4 semanas; D17 prevê reduzir a fração avaliada depois | D17, Q6, Q11 |
-| DT-10 | Síntese arredonda **para cima** (`teto`), mínimo 1 | É a regra da margem §10.3 (ficha de ~2 mil palavras × 0,6 = 1,2 → 2). O ex. 05 leve dá 92 com as 91.037 palavras exatas; a margem mostra 91 porque arredondou o documento para "91 mil". Confirmado em Q9; `processos.md` P9 corrigido | margem §10.3, Q9 |
+| DT-10 | Síntese arredonda **para cima** (`teto`), mínimo 1 | É a regra da margem §10.3 (ficha de ~2 mil palavras × 0,6 = 1,2 → 2). O ex. 05 leve dá 92 com as 91.037 palavras do verify, que valem para o preço (DT-21); a margem mostra 91 porque arredondou o documento para "91 mil". Confirmado em Q9; `processos.md` P9 corrigido | margem §10.3, Q9 |
 | DT-11 | Imagem Linux com **Carlito** (métrica idêntica à Calibri) + Liberation; a regressão do NFR-6 roda **dentro do container** | O render usa Calibri (`scripts/render_docx.py:17`), que não existe no Linux; sem fonte de mesma métrica o LibreOffice muda as quebras de página | NFR-6, Q13 |
 | DT-12 | O visualizador baixa o PDF inteiro uma vez (URL assinada de 60 s → `blob`) e renderiza/imprime a partir do blob | O pdf.js busca por faixas sob demanda; a URL expirada quebraria a rolagem e a impressão | FR-14 |
 | DT-13 | Cancelamento pelo usuário em `na_fila` (FR-21) | Derivado: o usuário que desiste antes do processamento sai sem perder créditos; o estorno segue P9. Com Q3, não há mais espera por template novo | P3, P9 |
@@ -63,6 +63,7 @@ Construir a plataforma em que **10 participantes, durante 4 semanas** (PL1), env
 | DT-18 | **Original em partes** de até 42 MB (7 chunks TUS de 6 MB): `original.part00`, `original.part01`…; o worker baixa e concatena, e confere o tamanho total. Arquivos ≤ 42 MB têm uma parte só. Limite do piloto continua 80 MB (no máximo 2 partes) | O Supabase Free limita cada objeto a 50 MB, e o ex. 05 tem 62 MB | Q18, ASM-5 |
 | DT-19 | **Login por e-mail + senha**, sem SMTP: o admin cria a conta no painel do Supabase (confirmada, com senha provisória) e entrega a senha por canal privado. No primeiro acesso, o usuário troca a senha (`supabase.auth.updateUser`). Não há "esqueci a senha": o admin redefine no painel. Quando houver domínio e SMTP, volta o link mágico | Sem domínio não há remetente verificável; o SMTP padrão do Supabase só entrega à equipe do projeto (Q12). Senha não precisa de e-mail | Q12, PL1, ASM-6 |
 | DT-20 | **Teto de Storage**: a API recusa documentos novos (`503 capacidade_piloto`) quando o uso estimado (originais + saídas de documentos não apagados) passa de `config.storage_teto_mb` (padrão 900 MB); a A5 mostra o uso | O Supabase Free tem 1 GB de Storage; a retenção de 30 dias libera espaço, mas um pico de relatórios grandes enche o bucket | Q18 |
+| DT-21 | **Palavras do preço da síntese = contagem do verify** (`verify`: soma dos tokens normalizados do original, `palavras_original` do relatório), gravada em `documentos.palavras` já na triagem: a triagem passa a contar com a mesma função do verify, ou a chamá-la direto (mudança no motor, unidade 4). A contagem atual da triagem (`get_text("words")`) deixa de valer para o preço | Decisão do responsável em 2026-11-19 (registrada no plano de execução, unidade 2). O preço precisa existir antes da confirmação, quando o verify ainda não rodou; por isso a triagem usa a mesma contagem. No ex. 05: verify 91.037 → 55 / 73 / 92; a contagem antiga da triagem dava 93.166 → 56 / 75 / 94 | margem §10.3, DT-10 |
 
 ## 3. Monorepo
 
@@ -207,7 +208,7 @@ Função pura `api/app/creditos.py::orcar(paginas, palavras, opcoes, template_no
 | 15 / 16 / 60 / 61 págs. com template novo | 4+8 / 6+12 / 10+12 / 12+16 | 12 / 18 / 22 / 28 |
 | relatório com 2.000 palavras + síntese 20/35/50% | teto(1,2) / teto(1,6) / 2 | +2 em todos |
 | relatório com 400 palavras + síntese 20% | max(1, teto(0,24)) | +1 |
-| ex. 05 (91.037 palavras) + síntese 20/35/50% | 55 / 73 / 92 (margem: 55 / 73 / 91, ver DT-10 e Q9) | 89 / 107 / 126 |
+| ex. 05 (91.037 palavras, contagem do verify, DT-21) + síntese 20/35/50% | 55 / 73 / 92 (margem: 55 / 73 / 91, ver DT-10 e Q9) | 89 / 107 / 126 |
 
 A tabela "Exemplos com os documentos reais" em `processos.md` P9 ainda mostra valores da v2 (ex.: ex. 05 = 20); vale a margem §10 (Q9).
 
@@ -239,6 +240,8 @@ A tabela "Exemplos com os documentos reais" em `processos.md` P9 ainda mostra va
 ## 6. Modelo de dados (`db/`)
 
 Postgres do Supabase. Todas as tabelas com **RLS ligada**. O papel `authenticated` só tem `SELECT` nas linhas dele; nenhuma tabela tem política de `INSERT/UPDATE/DELETE` para `authenticated` ou `anon`. Toda escrita passa pela API ou pelo worker com o papel de backend (NFR-3).
+
+**Sem FK para `auth.users`** (unidade 3): `perfis_usuario.id` recebe o id do Auth no gatilho de criação do usuário, mas não referencia `auth.users`; as demais tabelas referenciam `perfis_usuario(id)`. Uma FK sem `CASCADE` impediria remover o usuário no Auth (§14 item 4), e com `CASCADE` apagaria o ledger. Assim, remover o usuário no Auth deixa o `id` como pseudônimo, e o histórico fica.
 
 | Tabela | Colunas principais | Leitura pelo usuário (RLS) |
 |---|---|---|
@@ -668,3 +671,7 @@ Todas as perguntas foram respondidas. A coluna "Efeito" diz onde a resposta entr
   - Termo: sem backups, conta mantida no fim, locais de processamento (§14).
   - DT-10 confirmado (Q9); `processos.md` P9 corrigido.
   - Sem nova critique. As mudanças tocam a infraestrutura (unidade 7) e os fluxos de upload, login, template novo e exclusão (unidades 3–5); o @qa confere no gate das stories.
+- **1.4** (2026-11-19): decisões da unidade 3 (Banco e RLS):
+  - DT-21: o preço da síntese usa a contagem do verify, decidida pelo responsável em 2026-11-19; a triagem passa a contar com a mesma função (motor, unidade 4). O caso do §5 continua 55 / 73 / 92 (totais 89 / 107 / 126).
+  - §6: sem FK para `auth.users`; o id fica como pseudônimo depois da exclusão da conta.
+  - Sem nova critique. A unidade 4 troca a contagem de palavras da triagem e testa o caso do ex. 05.

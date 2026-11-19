@@ -33,7 +33,7 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 | Pagamento no piloto | sim | Créditos grátis (PL3) |
 | Stack | sim | FastAPI + Supabase + Next.js (PL4) |
 | Onde fica o repositório (git init na pasta DocRedux ou repositório novo) | sim (Q1, 2026-11-18) | `https://github.com/ianbenicio/Nexa_DocRedux.git`; push só pelo @devops |
-| VPS (Hetzner CPX31, como em `margem.md`) e domínio | sim (Q2, Q18, 2026-11-18) | Sem VPS nem domínio na fase de testes: infraestrutura gratuita (spec DT-17): Supabase Free em sa-east-1, web e API na Vercel Hobby, worker no PC do responsável ou na Oracle Always Free A1 em São Paulo |
+| VPS (Hetzner CPX31, como em `margem.md`) e domínio | sim (Q2, Q18, 2026-11-18) | Sem VPS nem domínio na fase de testes: infraestrutura gratuita (spec DT-17): Supabase Free em sa-east-1, web e API na Vercel Hobby, worker no PC do responsável ou na Oracle Always Free A1 em São Paulo. **Em 2026-11-19:** domínio `.com.br` + Resend grátis para os e-mails "pronto" e "em revisão" (Q8 = sim); o login segue por senha do admin (DT-19) |
 | Recrutamento dos 10 participantes | aberta | Responsável, em paralelo à construção |
 | Demais lacunas da spec (Q3–Q18) | sim (2026-11-18) | Respostas e efeitos no §18 de `docs/spec/spec.md` (v1.3); só restam pendências de execução da unidade 7 |
 
@@ -56,6 +56,22 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 | `despensa-auditoria-de-c-digo-riscos-e-usabilidade-2026-07-31` | RLS permitia ao usuário se autoverificar (crítico) | relatada | sim: RLS por conta + créditos são o mesmo risco | Saldo e ledger escritos só pela service role; teste de RLS obrigatório na unidade 3 |
 | `python-docx-para-documento-compacto-truques-de-render-e-veri` | DOCX → PDF via LibreOffice headless; truques do render | verificável (ex. 01–04) | sim: mesmo motor | O worker precisa de LibreOffice na imagem; regressão contra ex. 01–05 |
 
+**Fase 0 da unidade 3 (Banco e RLS), 2026-11-19:**
+
+| Texto da consulta | Resultados | Relevância (mín–máx) |
+|---|---|---|
+| Supabase Postgres migrations RLS pgTAP testes dois usuários ledger de créditos saldo SECURITY DEFINER schema private fila SKIP LOCKED buckets políticas | 7 | 0,521–0,533 |
+| supabase db reset CLI docker migrations seed trigger auth.users "Database error saving new user" saldo negativo concorrência gotcha | 7 | 0,508–0,525 |
+
+| Nota (id) | O que diz | Força (D10) | Pré-condição vale aqui? | Efeito no plano |
+|---|---|---|---|---|
+| `classmate-connect-13-fix-de-performance-rls-initplan-multipl` | `auth.uid()` cru na política é reavaliado por linha; políticas permissivas duplicadas pesam | verificável (commit e advisors do Supabase) | sim: mesmo Postgres do Supabase com RLS por dono | Toda política usa `(select auth.uid())`; uma política de SELECT por tabela |
+| `despensa-disable-trigger-na-exclus-o-de-conta-abre-janela-gl` | Exclusão de conta que desliga o gatilho append-only abre janela global de escrita | relatada | sim: o ledger do DocRedux é append-only e a exclusão da conta mexe nele | O `ajuste` da exclusão é um INSERT; nenhuma função desliga gatilho; teste prova que UPDATE/DELETE no ledger falha até para o backend |
+| `despensa-onda-de-corre-es-da-auditoria-migrations-0005-0009` | 42 testes de RLS/schema verificados contra Postgres real | verificável | sim | Testes rodam no Postgres do Supabase local (`supabase start`), não em mock |
+| `despensa-auditoria-*` (já usado na unidade 1) | RLS deixou o usuário alterar coluna de autoridade | relatada | sim | `saldo`, `papel`, `interno` e `senha_provisoria` sem UPDATE para `authenticated`: sem política e sem grant |
+
+Descartados nesta consulta: `classmate-connect-13-reparo-de-historico-*` e `runbook-de-deploy-*` (servem à unidade 7, push de migrations); `fetch-resiliente` (front); `FU-001` (upload, unidade 4/5); `docredux-spec-*` (é a própria spec).
+
 **Descartados:**
 - `classmate-connect-13-*`: TanStack/SPA na Vercel, stack diferente.
 - `spec-v1-notas-whatsapp` e `spec-v1-critique-qa-review-qa`: domínio diferente; servem só como exemplo de formato do Spec Pipeline.
@@ -72,7 +88,7 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 |---|---|---|---|---|---|
 | 1 ✅ | Spec da plataforma de testes — **concluída em 2026-11-18** | Spec Pipeline / @pm + @architect + @qa | `docs/spec/spec.md` + critique | Critique ≥ 4,0; cada requisito rastreia para `saas/piloto.md` ou `processos.md` | ~180k |
 | 2 ✅ | Motor como biblioteca — **concluída em 2026-11-18** | SDC / @dev | `engine/` com `processar(pdf, opcoes) → saida + relatorio`; `git init` + monorepo | Ex. 01–05 reproduzem as saídas aprovadas (cobertura e páginas iguais) | ~180k |
-| 3 | Banco e RLS | SDC / @data-engineer | `db/` com migrations: perfis, documentos, jobs, ledger de créditos, avaliações, feedback; buckets | Teste de RLS: usuário não lê documento alheio nem altera saldo | ~180k |
+| 3 ✅ | Banco e RLS — **concluída em 2026-11-19** | SDC / @data-engineer | `db/` com migrations: perfis, documentos, jobs, ledger de créditos, avaliações, feedback; buckets | Teste de RLS: usuário não lê documento alheio nem altera saldo | ~180k |
 | 4 | API + worker | SDC / @dev | `api/` FastAPI + worker com fila (SKIP LOCKED), estimativa de créditos, reserva e estorno | Upload → job → PDF/DOCX ponta a ponta em dev; falha estorna crédito | ~180k |
 | 5 | Front do usuário | SDC / @dev (+ impeccable sob demanda) | `web/` Next.js: login, upload + opções + custo, status, visualizador/impressão, nota e "marcar problema", histórico | Fluxo completo no browser embutido, no desktop e no celular | ~180k |
 | 6 | Juiz Opus + backoffice | SDC / @dev | Juiz automático por entrega; telas de fila, revisão, recarga e reprocessamento | Juiz roda em 100% das entregas; custo por entrega registrado | ~180k |
@@ -83,7 +99,7 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 - Entregas em `docs/spec/`:
   - [`requirements.json`](spec/requirements.json): FR-1..21, NFR-1..9, CON-1..9, cada um com rastreio para `piloto.md`/`processos.md`.
   - [`complexity.json`](spec/complexity.json): STANDARD, 15; research pulada, sem lacuna que bloqueie.
-  - [`spec.md`](spec/spec.md): v1.3 (respostas Q1–Q18 aplicadas).
+  - [`spec.md`](spec/spec.md): v1.3 (respostas Q1–Q18 aplicadas); v1.4 na unidade 3 (DT-21 e §6 sem FK para `auth.users`).
   - [`critique.json`](spec/critique.json): rodada 1 deu 3,8 (NEEDS_REVISION); rodada 2 deu **4,4, APPROVED**. As condições C-21 a C-25 foram tratadas pelo autor na v1.2, e as respostas entraram na v1.3, ambas sem nova critique; o @qa confere no gate das stories.
   - [`implementation.yaml`](spec/implementation.yaml): 26 stories para as unidades 2 a 8 (specVersion 1.3), prontas para o `@sm *draft`, sem bloqueio por pergunta.
 - Decisões: Q1–Q18 respondidas em 2026-11-18 (spec §18). As que mudaram o desenho:
@@ -102,7 +118,24 @@ Nenhuma. `sessao.js --lista 5` não encontrou transcripts para a pasta do DocRed
 - Síntese extrativa (2.4): fração real a ≤ 0,15 ponto do alvo, ~1,2 s de CPU. Opção `manter_capa_elementos` (2.5) mapeada em `REGRAS.md`.
 - `pytest`: 34 passed, 1 skipped. Gates em `docs/qa/gates/`: 2.1, 2.3 e 2.5 PASS; 2.2 PASS (container fechado em 2026-11-19); 2.4 CONCERNS (contagem de palavras do preço).
 - Container Linux (`docredux-engine`, Python 3.12.16, LibreOffice 26.8.3.1): regressão 5/5 idêntica ao Windows (2026-11-19). Se o Docker não subir com `ERROR_NO_SYSTEM_RESOURCES`, é falta de RAM para a VM do WSL; liberar memória ou limitar com `.wslconfig`.
-- **Ponto aberto para a unidade 3/4:** qual contagem de palavras vale para o preço da síntese. A triagem conta 93.166 e o verify 91.037; isso dá 56/75/94 contra 55/73/92.
+- ~~Ponto aberto para a unidade 3/4:** qual contagem de palavras vale para o preço da síntese. A triagem conta 93.166 e o verify 91.037; isso dá 56/75/94 contra 55/73/92.~~ **Decidido em 2026-11-19:** o preço da síntese usa a **contagem do verify** (91.037 no ex. 05 → 55/73/92). A triagem precisa usar a mesma função de contagem do verify, ou chamá-la direto.
+
+**Unidade 3 — plano (Fase 0, 2026-11-19):**
+- Sessão concorrente: nenhuma escrevendo no repositório. As sessões ligadas (spec, ex02–ex05) estão ociosas; `git status` limpo em `f787a54`.
+- Workflow: SDC por story (3.1 → 3.2 → 3.3, em sequência, porque cada uma depende da anterior). @sm *draft → @po *validate → @data-engineer → @qa *qa-gate.
+- Ambiente de teste: Supabase CLI 3.2 via `npx supabase` + Docker Desktop (imagens do Supabase já em cache). `supabase db reset` aplica migrations e seed; pgTAP por `supabase test db`; o teste REST usa o PostgREST e o GoTrue locais com o JWT de dois usuários criados pela API de admin local.
+- Verificações: `supabase db reset` sem erro; `supabase test db` verde (schema/views, ledger, RLS); script REST/RPC verde.
+- Riscos: Docker sem RAM para a pilha do Supabase (liberar memória ou subir só o necessário com `-x`); diferença entre o Postgres local e o do projeto Free (conferida na unidade 7, que roda os testes de RLS no banco de produção vazio).
+- Decisão a registrar: contagem de palavras do preço da síntese (spec, DT nova).
+
+**Unidade 3 — resultado (2026-11-19):**
+- Commits d0ba4b6 (3.1), 3522ba2 (3.2) e 6e1568a (3.3), mais o commit de docs com spec, stories e gates. Tudo local; push só pelo @devops.
+- `db/`: 5 migrations (schema com 13 tabelas e RLS em todas; papel `docredux_backend` e grants; views do backoffice e dos critérios; ledger e funções do saldo em `private`; RLS do usuário e buckets `originais`/`saidas`), `seed.sql` gerado dos perfis do motor, README com como rodar.
+- Verificação: `supabase db reset` 3× sem erro; `supabase test db` 207 asserções PASS (schema 81, ledger 69, RLS 57); `concorrencia.py` 9/9 (a segunda reserva espera o lock e falha; saldo 50); `rest_rls.py` 25/25 pela API real: A não lê documento, entrega, extrato nem arquivo de B, não altera o próprio saldo e não alcança `private.*` nem por RPC. Auditoria de privilégios no banco limpa.
+- Gates em `docs/qa/gates/`: 3.1, 3.2 e 3.3 PASS. CodeRabbit não executado; revisão manual mais auditoria.
+- Decisões no spec v1.4: **DT-21** registra a decisão do responsável de 2026-11-19 (preço da síntese = contagem do verify; ex. 05 = 91.037 → 55/73/92, totais 89/107/126). **Sem FK para `auth.users`**: o id do perfil vira pseudônimo quando o usuário sai do Auth (§14).
+- Ambiente: Supabase local nas portas 553xx, ao lado de outras pilhas locais nas 543xx; `npx supabase stop` em `db/` libera a RAM. O `postgres` do Supabase não é superusuário: o teste de concorrência assume `docredux_backend` via `supabase_admin`, só no container local.
+- Para a unidade 4: a triagem do motor passa a contar palavras com a função do verify (DT-21; hoje usa `get_text("words")` em `api.py`), e o teste do ex. 05 confere 91.037; a API chama `private.credito_*` como `docredux_backend` (senha definida na unidade 7); os testes de script deixam usuários no banco local (ledger append-only), e `db reset` limpa.
 
 **Capacidades por fase** (fonte: `H:\King\Harness\docs\catalogo\mapa-fases.md`):
 
@@ -142,6 +175,10 @@ Saída de `node ~/.claude/skills/skill-budget/scripts/sessao.js` (sessão inteir
 |---|---|---|---|
 | 261 na sessão (Fase 0: ~10) | médio 182k, máx. 267k, 4 compactações | Fase 0: 2 deep (+1 query e 2 saves antes) | 14 resultados (tldr + trecho), ~4k |
 
+Unidade 3 (sessão 46209756, 2026-11-19, Fase 0 e implementação na mesma sessão): 80 chamadas registradas, contexto médio 169k, máx. 259k (23% acima de 200k), 1 compactação; Engram: 2 deep, ~3k de resultados no contexto; skill `fase-0` invocada 2× (a primeira barrada pelo guard de orçamento).
+
 ## 5. Aprovação
 
 **Aprovado:** sim · **Por:** responsável · **Em:** 2026-11-18 · **Ajustes pedidos:** nenhum. Unidade 1 iniciada em sessão nova.
+
+Unidade 3: plano da Fase 0 aprovado por delegação da sessão de origem (que abriu esta sessão com o escopo e os critérios de pronto), em 2026-11-19. A DT-21 só registra no spec a decisão que o responsável já tinha tomado.
