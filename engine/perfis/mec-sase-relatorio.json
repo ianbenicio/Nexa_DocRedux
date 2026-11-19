@@ -1,0 +1,31 @@
+{
+  "nome": "mec-sase-relatorio",
+  "tipo": "relatorio",
+  "assinatura": {"fontes_contem": ["Archer", "Cambria"]},
+  "regras_desligadas": ["R4", "R8", "R10", "R14", "R16", "R18", "R19", "R21", "R22", "R23", "R24", "R25", "R26", "R27", "RE_Q"],
+  "pagina_pt": [510, 737],
+  "faixa_topo_y": 46,
+  "faixa_rodape_y": 695,
+  "recuo_primeira_linha": 14,
+  "margem_esq_par": 74,
+  "margem_esq_impar": 51,
+  "h1": {"size_min": 17.0},
+  "h2": {"textos": ["PROBLEMA", "ANÁLISE DESCRITIVA", "ANÁLISE CAUSAL", "CAUSAS CRÍTICAS", "REFERÊNCIAS"], "faixa_cinza": true, "cambria_bold_size": 14.0},
+  "h3": {"font_contains": "Archer-Bold", "size": 12.0},
+  "h4": {"font_contains": "Archer-Bold", "size_max": 11.6, "font_italico": "Archer-BookItalic"},
+  "corpo": {"size_min": 10.6, "size_max": 12.6},
+  "citacao": {"size_min": 9.4, "size_max": 10.5, "recuo_min": 18},
+  "referencia": {"secao": "REFERÊNCIAS", "size_max": 10.5, "gap_nova_entrada": 15.5},
+  "nota_rodape": {"size_numero_max": 6.6},
+  "legenda_regex": "^(Gráfico|Tabela|Quadro|Figura)\\s+\\d+\\s+[–-]",
+  "fonte_regex": "^(Fonte|Nota|Notas|Elaboração|Foto|Legenda)\\b",
+  "capitulo_regex": "^\\d+\\)\\s",
+  "secoes_h1": {
+    "SUMÁRIO": "sumario",
+    "LISTA DE ABREVIAÇÕES E SIGLAS": "siglas",
+    "APRESENTAÇÃO": "apresentacao",
+    "INTRODUÇÃO": "introducao"
+  },
+  "foto_pagina_inteira_min_pct": 70,
+  "pagina_vazia_max_palavras": 15
+}

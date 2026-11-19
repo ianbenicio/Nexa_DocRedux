@@ -1,0 +1,14 @@
+{
+  "nome": "mathema-saeb",
+  "tipo": "ficha",
+  "assinatura": {"fontes_contem": ["Glober"]},
+  "regras_desligadas": [],
+  "cor_destaque": "#CF4562",
+  "cores_marcador": ["#CF4562", "#004691"],
+  "titulo_aula": {"font_contains": "GloberBlack", "size": 20.0, "color": "#FFFFFF"},
+  "tag_aula": {"regex": "^AULAS?\\s+\\d+(\\s+(?:E|A|À)\\s+\\d+)?$", "color": "#FFFFFF"},
+  "secao": {"font_contains": "Glober", "size_min": 13.5, "size_max": 14.5},
+  "fonte_ref_size": 9.0,
+  "running_header_regex": "^AULAS?\\s+\\d+(\\s+(?:E|A|À)\\s+\\d+)?$",
+  "rodape_regex": "FICHA DO ESTUDANTE|ANO\\s+·\\s+PERCURSO"
+}
