@@ -648,12 +648,24 @@ def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
     return [it[2] for it in items]
 
 
+# Faixa junto ao corte da pagina (pt). Filetes de sangria da grafica ficam nela; conteudo nao.
+# Ex. 01 e 02, p. 2: fundo creme + filete de 0,28 pt na borda direita, que nao e conteudo.
+BORDA_SANGRIA = 3.0
+
+
+def _so_na_borda(rect, area):
+    """True se o trecho visivel do objeto cabe inteiro na faixa de sangria de uma das bordas."""
+    return (rect.x0 >= area.x1 - BORDA_SANGRIA or rect.x1 <= area.x0 + BORDA_SANGRIA
+            or rect.y0 >= area.y1 - BORDA_SANGRIA or rect.y1 <= area.y0 + BORDA_SANGRIA)
+
+
 def has_visual_content(page):
-    """Conteudo visivel alem de fundo uniforme, excluindo objetos fora da pagina."""
+    """Conteudo visivel alem de fundo uniforme, excluindo objetos fora da pagina e sangria na borda."""
     # Imagens/desenhos usam coordenadas nao rotacionadas no PyMuPDF.
     area = page.rect * page.derotation_matrix
     for image in page.get_image_info():
-        if not (pymupdf.Rect(image["bbox"]) & area).is_empty:
+        rect = pymupdf.Rect(image["bbox"]) & area
+        if not rect.is_empty and not _so_na_borda(rect, area):
             return True
     for drawing in page.get_drawings():
         bounds = drawing["rect"]
@@ -666,13 +678,18 @@ def has_visual_content(page):
             rect = (drawing["rect"] + (-0.5, -0.5, 0.5, 0.5)) & area
             if rect.is_empty:
                 continue
+        if _so_na_borda(rect, area):
+            continue
         items = drawing.get("items", [])
         fundo = (drawing.get("type") == "f" and len(items) == 1 and items[0][0] == "re"
                  and (drawing["rect"] + (-1, -1, 1, 1)).contains(area))
         if not fundo:
             return True
-    return any(kind == "fill-shade" and not (pymupdf.Rect(bbox) & area).is_empty
-               for kind, bbox in page.get_bboxlog())
+    for kind, bbox in page.get_bboxlog():
+        rect = pymupdf.Rect(bbox) & area
+        if kind == "fill-shade" and not rect.is_empty and not _so_na_borda(rect, area):
+            return True
+    return False
 
 
 def is_cover_or_blank(page, pno, n_pages):

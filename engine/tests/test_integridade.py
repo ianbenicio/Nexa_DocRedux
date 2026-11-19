@@ -49,16 +49,37 @@ def test_preserva_conteudo_visual_sem_texto(tmp_path, perfil_por_nome, manter, v
     assert len(paginas) == 1 and (out / "img" / paginas[0]["file"]).exists()
 
 
-@pytest.mark.parametrize("tipo", ["branca", "fundo", "fora"])
+@pytest.mark.parametrize("tipo", ["branca", "fundo", "fora", "sangria", "sangria_topo", "sangria_imagem"])
 def test_nao_promove_fundo_ou_objeto_fora_da_pagina_a_conteudo(tipo):
     with pymupdf.open() as pdf:
         p = pdf.new_page()
-        if tipo == "fundo":
+        if tipo in ("fundo", "sangria", "sangria_topo", "sangria_imagem"):
             p.draw_rect(p.rect, fill=(1, 0.95, 0.66), color=None)
         if tipo == "fora":
             p.draw_rect(pymupdf.Rect(p.rect.x1, 100, p.rect.x1 + 100, 200), fill=(0, 0, 1))
+        if tipo == "sangria":  # ex. 01/02, p. 2: filete de 0,28 pt na borda direita
+            p.draw_rect(pymupdf.Rect(p.rect.x1 - 0.28, 0, p.rect.x1, 158), fill=(0.92, 0.3, 0.43), color=None)
+        if tipo == "sangria_topo":
+            p.draw_rect(pymupdf.Rect(0, 0, p.rect.x1, 2), fill=(0.92, 0.3, 0.43), color=None)
+        if tipo == "sangria_imagem":
+            pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 4, 40), False)
+            pix.set_rect(pix.irect, (230, 80, 110))
+            p.insert_image(pymupdf.Rect(p.rect.x1 - 1, 0, p.rect.x1 + 5, 300), pixmap=pix)
         assert not extract.has_visual_content(p)
         assert extract.is_cover_or_blank(p, 0, 1) == "branca"
+
+
+@pytest.mark.parametrize("posicao", ["margem", "atravessa"])
+def test_desenho_perto_da_borda_continua_conteudo(posicao):
+    """A faixa de sangria e estreita: linha a 10 pt do corte, ou objeto que entra na pagina, e conteudo."""
+    with pymupdf.open() as pdf:
+        p = pdf.new_page()
+        if posicao == "margem":
+            p.draw_line((p.rect.x1 - 10, 100), (p.rect.x1 - 10, 400), width=1)
+        else:
+            p.draw_rect(pymupdf.Rect(p.rect.x1 - 40, 100, p.rect.x1 + 10, 200), fill=(0, 0, 1))
+        assert extract.has_visual_content(p)
+        assert extract.is_cover_or_blank(p, 0, 1) is None
 
 
 @pytest.mark.parametrize("rotacao", [0, 90, 180, 270])

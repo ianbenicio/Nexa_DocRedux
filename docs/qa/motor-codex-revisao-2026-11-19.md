@@ -17,7 +17,7 @@ O levantamento em `docs/research/motor-referencias-2026-11-19.md` compara oito r
 
 | Auditoria | Estado nesta branch | Evidência |
 |---|---|---|
-| M01 | Corrigido para fichas: conteúdo vetorial/raster/linhas sem texto é preservado como página-imagem a 200 dpi | Testes nas duas opções de preservação e nas quatro rotações; controle de páginas brancas, fundos uniformes e desenhos fora da página |
+| M01 | Corrigido para fichas: conteúdo vetorial/raster/linhas sem texto é preservado como página-imagem a 200 dpi. Na revisão do Claude, o filete de sangria a até 3 pt do corte passou a ser ignorado, porque reprovava os ex. 01/02 | Testes nas duas opções de preservação e nas quatro rotações. Controles: páginas brancas, fundos uniformes, desenhos fora da página e sangria. Regressão 01–05 de volta ao baseline (`validacao-libreoffice-2026-11-19/PLANO.md`) |
 | M02 | Corrigido: o relatório de síntese conta pelo modelo original já extraído, seguindo DT-21 | Teste de contrato e prova de que não ocorre nova extração só para contar; triagem real de 91.037 palavras no ex. 05 |
 | M03 | Corrigido: divisão de frases preserva delimitadores | Aspas retas/curvas, pontuação, parênteses e abreviações |
 | M04 | Corrigido: contagem separa parágrafos e quebras sem duplicar células | Células mescladas, tabela aninhada, runs de uma mesma palavra, quebra de linha e tabulação |

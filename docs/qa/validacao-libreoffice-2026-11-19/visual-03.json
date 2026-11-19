@@ -1,0 +1,31 @@
+{
+  "exemplo": "03-mathema-saeb-4ano-mat-p3",
+  "dpi": 96,
+  "paginas": [
+    {
+      "pagina": 1,
+      "pixels_iguais": true,
+      "texto_igual": true
+    },
+    {
+      "pagina": 2,
+      "pixels_iguais": true,
+      "texto_igual": true
+    },
+    {
+      "pagina": 3,
+      "pixels_iguais": true,
+      "texto_igual": true
+    },
+    {
+      "pagina": 4,
+      "pixels_iguais": true,
+      "texto_igual": true
+    },
+    {
+      "pagina": 5,
+      "pixels_iguais": true,
+      "texto_igual": true
+    }
+  ]
+}
