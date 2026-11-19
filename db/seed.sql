@@ -1,0 +1,12 @@
+-- GERADO por db/scripts/gerar_seed.py a partir de engine/perfis/*.json. Não editar à mão.
+-- Perfis semente (dono nulo, visíveis a todas as contas; spec §6, Q5).
+
+-- mathema-saeb.json
+insert into public.perfis_template (id, dono, tipo, json, versao, ativo)
+values ('mathema-saeb', null, 'ficha', $perfil${"assinatura": {"fontes_contem": ["Glober"]}, "cor_destaque": "#CF4562", "cores_marcador": ["#CF4562", "#004691"], "fonte_ref_size": 9.0, "nome": "mathema-saeb", "regras_desligadas": [], "rodape_regex": "FICHA DO ESTUDANTE|ANO\\s+·\\s+PERCURSO", "running_header_regex": "^AULAS?\\s+\\d+(\\s+(?:E|A|À)\\s+\\d+)?$", "secao": {"font_contains": "Glober", "size_max": 14.5, "size_min": 13.5}, "tag_aula": {"color": "#FFFFFF", "regex": "^AULAS?\\s+\\d+(\\s+(?:E|A|À)\\s+\\d+)?$"}, "tipo": "ficha", "titulo_aula": {"color": "#FFFFFF", "font_contains": "GloberBlack", "size": 20.0}}$perfil$::jsonb, 1, true)
+on conflict (id) do update set tipo = excluded.tipo, json = excluded.json;
+
+-- mec-sase-relatorio.json
+insert into public.perfis_template (id, dono, tipo, json, versao, ativo)
+values ('mec-sase-relatorio', null, 'relatorio', $perfil${"assinatura": {"fontes_contem": ["Archer", "Cambria"]}, "capitulo_regex": "^\\d+\\)\\s", "citacao": {"recuo_min": 18, "size_max": 10.5, "size_min": 9.4}, "corpo": {"size_max": 12.6, "size_min": 10.6}, "faixa_rodape_y": 695, "faixa_topo_y": 46, "fonte_regex": "^(Fonte|Nota|Notas|Elaboração|Foto|Legenda)\\b", "foto_pagina_inteira_min_pct": 70, "h1": {"size_min": 17.0}, "h2": {"cambria_bold_size": 14.0, "faixa_cinza": true, "textos": ["PROBLEMA", "ANÁLISE DESCRITIVA", "ANÁLISE CAUSAL", "CAUSAS CRÍTICAS", "REFERÊNCIAS"]}, "h3": {"font_contains": "Archer-Bold", "size": 12.0}, "h4": {"font_contains": "Archer-Bold", "font_italico": "Archer-BookItalic", "size_max": 11.6}, "legenda_regex": "^(Gráfico|Tabela|Quadro|Figura)\\s+\\d+\\s+[–-]", "margem_esq_impar": 51, "margem_esq_par": 74, "nome": "mec-sase-relatorio", "nota_rodape": {"size_numero_max": 6.6}, "pagina_pt": [510, 737], "pagina_vazia_max_palavras": 15, "recuo_primeira_linha": 14, "referencia": {"gap_nova_entrada": 15.5, "secao": "REFERÊNCIAS", "size_max": 10.5}, "regras_desligadas": ["R4", "R8", "R10", "R14", "R16", "R18", "R19", "R21", "R22", "R23", "R24", "R25", "R26", "R27", "RE_Q"], "secoes_h1": {"APRESENTAÇÃO": "apresentacao", "INTRODUÇÃO": "introducao", "LISTA DE ABREVIAÇÕES E SIGLAS": "siglas", "SUMÁRIO": "sumario"}, "tipo": "relatorio"}$perfil$::jsonb, 1, true)
+on conflict (id) do update set tipo = excluded.tipo, json = excluded.json;
