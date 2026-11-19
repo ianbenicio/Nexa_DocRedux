@@ -1,0 +1,36 @@
+# Worker em container contra o Supabase local (story 4.6). Pré-requisitos:
+#   supabase start (em db/)  ·  python api/scripts/dev_setup.py  (grava api/.env e deploy/.env.dev)
+#   docker build -t docredux-engine engine/
+#
+#   docker compose -f deploy/docker-compose.dev.yml up --build worker
+#   docker compose -f deploy/docker-compose.dev.yml --profile api up --build      # + API em :8000
+#
+# Produção (Oracle A1, unidade 7) usa a mesma imagem com deploy/.env (ver deploy/.env.example).
+name: docredux-dev
+
+x-worker: &worker
+  build:
+    context: ../api
+    args:
+      BASE: docredux-engine:latest
+  image: docredux-worker:dev
+  env_file: .env.dev
+  environment:
+    WORKER_PROCESSOS: "2"
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  restart: unless-stopped
+  stop_grace_period: 30s
+
+services:
+  worker:
+    <<: *worker
+    command: ["worker"]
+
+  api:
+    <<: *worker
+    profiles: ["api"]
+    command: ["api"]
+    ports:
+      - "8000:8000"
+    restart: "no"

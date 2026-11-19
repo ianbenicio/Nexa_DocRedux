@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "builds": [
+    { "src": "index.py", "use": "@vercel/python", "config": { "maxLambdaSize": "50mb" } }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "index.py" }
+  ],
+  "regions": ["gru1"],
+  "crons": [
+    { "path": "/health", "schedule": "0 12 * * *" }
+  ]
+}
