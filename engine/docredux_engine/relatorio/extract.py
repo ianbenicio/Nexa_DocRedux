@@ -622,7 +622,7 @@ def parse_page(doc, pno, perfil, ctx, outdir, stats):
         elif e["k"] == "fonte":
             out.append({"t": "fonte", "runs": e["runs"]})
         elif e["k"] in ("p", "quote", "bullet", "ref"):
-            d = {"t": e["k"], "runs": e["runs"]}
+            d = {"t": e["k"], "runs": e["runs"], "pg": pno + 1}  # pg: página de origem (síntese, story 2.4)
             if e["k"] == "p" and not e.get("indent") and e.get("topo"):
                 d["continua"] = True
             if e["k"] in ("ref", "bullet") and e.get("topo"):
@@ -692,11 +692,14 @@ def finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx):
         prev = out[-1] if out else None
         if el["t"] == "p" and el.get("continua") and prev and prev["t"] in ("p", "quote"):
             prev["runs"] = join_runs(prev["runs"], el["runs"]); stats["paragrafos_emendados"] += 1
+            prev["pg_fim"] = el["pg"]
         elif el["t"] == "ref" and el.get("topo") and prev and prev["t"] == "ref" and \
                 not RE_SURNAME.match(runs_text(el["runs"])):
             prev["runs"] = join_runs(prev["runs"], el["runs"]); stats["refs_emendadas"] += 1
+            prev["pg_fim"] = el["pg"]
         elif el["t"] == "bullet" and el.get("topo") and prev and prev["t"] == "bullet" and runs_text(el["runs"])[:1].islower():
             prev["runs"] = join_runs(prev["runs"], el["runs"])
+            prev["pg_fim"] = el["pg"]
         else:
             out.append(el)
     # siglas: pares (sigla, significado)

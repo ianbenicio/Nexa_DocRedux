@@ -289,6 +289,8 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
         def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
             novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
             estado["rel"] = rel
+            (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
             return novo
     try:
         res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
@@ -314,7 +316,8 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
     else:  # FR-13: sem gate de cobertura na síntese; vale o relatório de síntese
         rel = estado["rel"]
         cobertura, gate, motivo = None, "ok", None
-        palavras_original = rel["palavras_original"]
+        with pymupdf.open(pdf) as doc:  # síntese não roda o verify: mesma contagem da triagem (PDF inteiro)
+            palavras_original = _palavras(doc)[0]
         fracao_real = rel["fracao_real"]
         condensado = rel["condensado"]
         mods.append(Modificacao("sintetizado", rel["descricao"], [], None))

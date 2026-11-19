@@ -264,7 +264,8 @@ class R:
 
 
 def nome_docx(model):
-    return Path(model["meta"]["origem"]).stem.replace("_ORIGINAL", "") + "_COMPACTO.docx"
+    sufixo = model["meta"].get("saida_sufixo", "COMPACTO")  # síntese: SINTESE20 / SINTESE35 / SINTESE50
+    return Path(model["meta"]["origem"]).stem.replace("_ORIGINAL", "") + f"_{sufixo}.docx"
 
 
 def renderizar(out, model=None):
