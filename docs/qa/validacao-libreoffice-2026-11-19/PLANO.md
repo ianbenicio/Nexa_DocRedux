@@ -19,7 +19,7 @@ Continuação autorizada pelo responsável em 2026-11-19. Trabalhar somente na b
 - [x] Rodar o exemplo 03 na versão original e na branch Codex, com o mesmo runtime.
 - [x] Rodar regressão padrão 01–05 e a opção de preservar elementos.
 - [x] Rodar suíte completa, incluindo síntese com renderização real.
-- [ ] Inspecionar amostra visual e sumário do relatório final.
+- [x] Inspecionar amostra visual e sumário do relatório final.
 - [x] Registrar diferenças, corrigir regressões reais encontradas e repetir somente as verificações afetadas.
 
 ## Critérios
@@ -78,3 +78,23 @@ Testes: `test_capa_so_com_imagem_segue_r1` (duas opções) e `test_capa_vetorial
 | Preservação das fichas 01–04 | 27/19/8/17 (`codex-capa-preservacao.json`) |
 
 O ex. 05 (relatório) usa `relatorio/extract.py`, que essa mudança não toca.
+
+## Inspeção visual (main × Codex), 2026-11-19
+
+Comparação dos PDFs de saída da `main` (`871507d`, motor igual ao `984b046`) com os da branch, no mesmo runtime, página a página: pixels a 96 dpi e texto extraído. Evidência: `visual-main-x-codex.json`.
+
+| Saída | Páginas | Diferenças |
+|---|---|---|
+| Fichas 01–04, modo padrão (`f1060b9`) | 19/14/5/12 | nenhuma, nem em pixels nem em texto |
+| Ex. 05, modo padrão | 142 | nenhuma |
+| Ex. 05, síntese de 35% | 81 | nenhuma no PDF |
+
+O PDF entregue é o mesmo do baseline aprovado, pixel a pixel, em 273 páginas. Na síntese só muda o relatório:
+- `palavras_original` vai de 93.166 para 91.037, a contagem da DT-21 (M02);
+- `palavras_saida` vai de 32.584 para 32.603, porque parágrafos da mesma célula deixaram de ser fundidos (M04).
+
+**Sumário do ex. 05** (`sumario-05.json`): as 21 entradas do sumário impresso e os 179 marcadores do PDF apontam para a página onde está o título.
+
+**Página-imagem nova** (`m01-diagrama-renderizado.png`): numa ficha sintética renderizada pelo LibreOffice, a página só com diagrama sai inteira, legível e depois do enunciado. A capa só com imagem foi removida (R1), e o filete de sangria não criou página extra.
+
+Ponto para depois, sem efeito na integridade: o diagrama ocupa uma página inteira, mesmo pequeno. Recortar a página-imagem pelo conteúdo economizaria páginas.
