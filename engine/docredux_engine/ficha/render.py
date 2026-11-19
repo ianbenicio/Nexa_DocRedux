@@ -25,6 +25,31 @@ CFG = {
 A4_W, A4_H = 595.3, 841.9
 
 
+# ---------------- manter_capa_elementos (story 2.5), usados pelos dois renders
+def cabecalho_docx(doc, meta, cor):
+    """R12 desligada: o cabecalho corrido do original vai para o cabecalho do DOCX (todas as paginas)."""
+    texto = (meta.get("cabecalho") or "").replace("5ᵒ", "5º").replace("4ᵒ", "4º")
+    if not meta.get("manter_capa_elementos") or not texto:
+        return
+    s = doc.sections[0]
+    s.header_distance = Cm(0.6)
+    p = s.header.paragraphs[0]; p.alignment = 2  # direita
+    r = p.add_run(texto); r.font.size = Pt(8); r.font.color.rgb = cor
+
+
+def pagina_inteira(doc, out, el, text_w):
+    """Pagina mantida como imagem (capa, contracapa, foto): ocupa uma pagina inteira do DOCX."""
+    text_h = A4_H - 2 * Cm(CFG["margem_cm"]).pt - 24  # folga para o paragrafo nao empurrar a pagina seguinte
+    w = min(text_w, text_h * el["w"] / el["h"])
+    corpo = [c for c in doc.element.body if c.tag != qn("w:sectPr")]
+    # quebra antes so se ja ha conteudo e ele nao termina numa quebra de pagina (pagina-imagem anterior)
+    ja_quebrou = bool(corpo) and bool(corpo[-1].xpath('./w:r[last()]/w:br[@w:type="page"]'))
+    p = doc.add_paragraph(); fmt(p, 0, 0); p.alignment = 1  # centro
+    p.paragraph_format.page_break_before = bool(corpo) and not ja_quebrou
+    p.add_run().add_picture(str(out / "img" / el["file"]), width=Pt(w))
+    p.add_run().add_break(WD_BREAK.PAGE)
+
+
 def shade(cell, hexcolor):
     tcPr = cell._tc.get_or_add_tcPr()
     sh = OxmlElement("w:shd"); sh.set(qn("w:val"), "clear"); sh.set(qn("w:color"), "auto"); sh.set(qn("w:fill"), hexcolor)
@@ -218,6 +243,7 @@ class R:
     # ---------------- fluxo
     def render(self, model):
         els = model["elementos"]; i = 0; ctx_left = 0.6
+        cabecalho_docx(self.doc, model["meta"], CFG["cinza"])
         while i < len(els):
             el = els[i]; t = el["t"]
             self.next_is_heading = i + 1 < len(els) and els[i + 1]["t"] in ("h1", "h2", "h3")
@@ -229,6 +255,8 @@ class R:
                 self.keep_intro = False
             if t == "id":
                 self.ident(el)
+            elif t == "pagina":
+                pagina_inteira(self.doc, self.out, el, self.text_w); self.stats["imagens"] += 1
             elif t == "h1":
                 self.h1(el); ctx_left = 0.6
             elif t == "h2":

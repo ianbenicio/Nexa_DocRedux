@@ -261,7 +261,7 @@ def is_empty_box(rc, vd, W):
     return rc.width > W * 0.4 and rc.height > 100 and not inner_drawings(rc, vd)
 
 
-def vector_figures(page, tables, imgs, W, H, stats):
+def vector_figures(page, tables, imgs, W, H, stats, manter=False):
     """Desenhos vetoriais da area de conteudo agrupados em figuras. Entra como figura se tiver
     preenchimento OU rotulo de texto dentro (ex.: molde preenchido, figuras a/b/c/d). Contorno
     so de linhas sem texto (ex.: pingos decorativos da margem) e descartado (R5).
@@ -280,7 +280,7 @@ def vector_figures(page, tables, imgs, W, H, stats):
             continue
         if is_empty_box(rc, vd, W):                     # quadro de desenho (tratado a parte)
             continue
-        if rc.y1 > H * 0.97 or rc.x0 < W * 0.02 or rc.x1 > W * 0.98:  # arte que sangra pela borda da pagina = decorativa
+        if not manter and (rc.y1 > H * 0.97 or rc.x0 < W * 0.02 or rc.x1 > W * 0.98):  # arte que sangra pela borda = decorativa (R5)
             continue
         if any(tb.intersects(rc) for tb in tables) or any(im.intersects(rc) for im in imgs):
             continue
@@ -314,8 +314,10 @@ def vector_figures(page, tables, imgs, W, H, stats):
         if n < 2 and not (filled or inside):  # desenho unico so entra com preenchimento ou rotulo dentro
             continue
         if not (filled or labels):
-            stats["desenhos_decorativos"] = stats.get("desenhos_decorativos", 0) + 1
-            continue
+            if not manter:  # R5: desenho sem preenchimento nem rotulo = decorativo
+                stats["desenhos_decorativos"] = stats.get("desenhos_decorativos", 0) + 1
+                continue
+            stats["desenhos_decorativos_mantidos"] = stats.get("desenhos_decorativos_mantidos", 0) + 1
         r = pymupdf.Rect(g + (-3, -3, 3, 3)) & page.rect
         for w in labels:
             r |= pymupdf.Rect(w[:4]) & page.rect
@@ -343,7 +345,7 @@ def vector_figures(page, tables, imgs, W, H, stats):
 
 
 # ---------------------------------------------------------------- pagina
-def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats):
+def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
     page = doc[pno]
     W, H = page.rect.width, page.rect.height
     items = []  # (y, ordem, dict)
@@ -381,7 +383,7 @@ def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats):
         stats["imagens"] += 1
 
     # figuras vetoriais (moldes, solidos, desenhos com rotulos a./b.): viram imagem, rotulos incluidos (R7)
-    figs = vector_figures(page, tables, imgs, W, H, stats)
+    figs = vector_figures(page, tables, imgs, W, H, stats, manter)
     for k, r in enumerate(figs):
         fn = f"p{pno+1:02d}_fig{k+1}.jpg"
         page.get_pixmap(dpi=200, clip=r).save(out_img_dir / fn, jpg_quality=85)
@@ -655,6 +657,15 @@ def is_cover_or_blank(page, pno, n_pages):
     return None
 
 
+def pagina_inteira(page, pno, out_img_dir, motivo, dpi=110):
+    """manter_capa_elementos (story 2.5): pagina que seria removida (capa, contracapa, foto) vira imagem
+    de pagina inteira. O texto dela fica na imagem, como nas figuras vetoriais (R7); o verify nao o cobra."""
+    fn = f"p{pno + 1:03d}_pagina.jpg"
+    page.get_pixmap(dpi=dpi).save(out_img_dir / fn, jpg_quality=80)
+    return {"t": "pagina", "file": fn, "w": round(page.rect.width, 1), "h": round(page.rect.height, 1),
+            "pagina": pno + 1, "motivo": motivo}
+
+
 def identification(doc):
     """R1: identificacao a partir do rodape repetido (texto do proprio documento)."""
     import collections
@@ -667,10 +678,12 @@ def identification(doc):
     return " · ".join(parts)
 
 
-def extrair(pdf, out, perfil=None, *, paginas=None):
+def extrair(pdf, out, perfil=None, *, paginas=None, manter_capa_elementos=False):
     """PDF -> out/modelo.json (+ out/img/). Devolve o `meta` do modelo.
     perfil: dict ja carregado (load_perfil); None = escolher pela assinatura (R33).
-    paginas: (a, b) 1-based, so no relatorio (recorte de iteracao)."""
+    paginas: (a, b) 1-based, so no relatorio (recorte de iteracao).
+    manter_capa_elementos: desliga R1 (capa/contracapa viram imagem de pagina inteira), R5 (desenhos
+    decorativos entram como figura) e R12 (cabecalho corrido vai para o cabecalho do DOCX)."""
     pdf = Path(pdf); out = Path(out); out.mkdir(parents=True, exist_ok=True)
     (out / "img").mkdir(exist_ok=True)
     for old in (out / "img").glob("*.jpg"):  # saida limpa: sem imagens de rodadas anteriores
@@ -682,17 +695,22 @@ def extrair(pdf, out, perfil=None, *, paginas=None):
             raise ValueError("nenhum perfil casa com as fontes do PDF: criar perfil novo (passo L)")
     if perfil["tipo"] == "relatorio":  # R32: familia de regras de relatorio (R34-R48); fichas seguem abaixo
         from ..relatorio import extract as extract_relatorio
-        return extract_relatorio.run(pdf, out, doc, perfil, paginas=paginas)
+        return extract_relatorio.run(pdf, out, doc, perfil, paginas=paginas, manter=manter_capa_elementos)
     stats = {k: 0 for k in ["imagens", "tabelas", "quadros", "linhas_resposta_orig", "descartado_rodape",
                             "descartado_cabecalho_corrido", "sublinhado_link"]}
-    removed = {}
+    removed, como_imagem = {}, {}
     model = [{"t": "id", "text": identification(doc), "arquivo": pdf.name}]
     for pno in range(doc.page_count):
         why = is_cover_or_blank(doc[pno], pno, doc.page_count)
+        if why and manter_capa_elementos and why in ("capa", "contracapa"):
+            pg = pagina_inteira(doc[pno], pno, out / "img", why)
+            model.insert(0, pg) if why == "capa" else model.append(pg)  # capa antes da caixa de identificacao
+            como_imagem[pno + 1] = why
+            continue
         if why:
             removed[pno + 1] = why
             continue
-        model.extend(page_items(str(pdf), doc, pno, perfil, out / "img", stats))
+        model.extend(page_items(str(pdf), doc, pno, perfil, out / "img", stats, manter_capa_elementos))
     # fusoes entre paginas: linhas de resposta divididas e paragrafo que continua na pagina seguinte
     merged = []
     for el in model:
@@ -711,6 +729,8 @@ def extrair(pdf, out, perfil=None, *, paginas=None):
         if el["t"] == "table":
             el["rows"] = [[norm(c.replace("\n", " ")) for c in r] for r in el["rows"]]
     meta = {"origem": pdf.name, "paginas": doc.page_count, "removidas": removed, "stats": stats}
+    if manter_capa_elementos:  # story 2.5; sem a opcao o modelo fica identico ao de antes
+        meta.update(manter_capa_elementos=True, paginas_imagem=como_imagem, cabecalho=identification(doc))
     (out / "modelo.json").write_text(json.dumps({"meta": meta, "elementos": merged}, ensure_ascii=False, indent=1), encoding="utf-8")
     return meta
 

@@ -74,7 +74,8 @@ def main(argv=None):
         r = res.relatorio
         antes, depois = r.paginas_antes, r.paginas_depois
         cob = round(r.cobertura * 100, 2)
-        ok_pag = depois == esp["paginas"]
+        # com manter_capa_elementos a saída cresce (capa, fotos, decorativos): basta não encolher; a cobertura vale igual
+        ok_pag = depois >= esp["paginas"] if a.manter_capa_elementos else depois == esp["paginas"]
         ok_cob = cob is not None and cob >= esp["cobertura_min"]
         ok = ok_pag and ok_cob and antes == esp["paginas_original"]
         falhas += 0 if ok else 1

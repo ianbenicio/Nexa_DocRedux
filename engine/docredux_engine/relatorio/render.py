@@ -283,10 +283,13 @@ class RR:
     # ------------------------------------------------------------ fluxo
     def render(self, model):
         els = model["elementos"]; i = 0
+        RD.cabecalho_docx(self.doc, model["meta"], CINZA)
         while i < len(els):
             el = els[i]; t = el["t"]
             if t == "id":
                 self.ident(el)
+            elif t == "pagina":
+                RD.pagina_inteira(self.doc, self.out, el, self.text_w); self.stats["imagens"] += 1
             elif t == "front":
                 g = []
                 while i < len(els) and els[i]["t"] == "front":

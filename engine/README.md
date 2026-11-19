@@ -38,6 +38,19 @@ res.pdf, res.docx, res.relatorio.to_json()   # relatório também gravado em sai
 - Erros: `MotorErro` (base), `PdfRecusado(motivo)`, `PerfilInvalido(erros)`, `RenderFalhou`.
 - `validar_perfil(perfil)` → lista de erros (`[]` = válido), contra `docredux_engine/perfil.schema.json`.
 
+### Opção `manter_capa_elementos` (story 2.5)
+
+`Opcoes(manter_capa_elementos=True)` (CLI `--manter-capa-elementos`) preserva a identidade visual. Desligada, a saída é idêntica ao baseline.
+
+| Regra | Onde | Ligada |
+|---|---|---|
+| R1 capa/contracapa | `ficha/extract.py` `is_cover_or_blank()` | viram imagem de página inteira (`{"t": "pagina"}`) |
+| R5 decorativos | `ficha/extract.py` `vector_figures()` | entram como figura |
+| R12 cabeçalho corrido | `ficha/extract.py` `page_items()`; `relatorio/extract.py` `page_lines()` | `meta.cabecalho` repetido no cabeçalho do DOCX |
+| R44 foto / arte | `relatorio/extract.py` `page_removal()` | viram imagem de página inteira |
+
+Continuam: páginas em branco (R11) e sem conteúdo (R44 `sem_conteudo`), número de página, aba lateral. As páginas-imagem ficam em `meta.paginas_imagem` e fora da cobertura (texto em imagem, como R7). Mapa completo: `REGRAS.md` do acervo.
+
 ## CLI (como o worker chama, DT-5)
 
 Uma linha JSON no stdout; avisos e progresso no stderr; código 1 em erro (o JSON traz `erro`, `mensagem`).

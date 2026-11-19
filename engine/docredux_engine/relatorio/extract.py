@@ -637,7 +637,11 @@ def parse_page(doc, pno, perfil, ctx, outdir, stats):
 
 
 # ---------------------------------------------------------------- documento
-def run(pdf, outdir, doc, perfil, paginas=None):
+def run(pdf, outdir, doc, perfil, paginas=None, manter=False):
+    """manter (story 2.5): paginas-foto e de arte (R44: foto, foto_ou_arte; capa e folha de rosto do ex. 05)
+    viram imagem de pagina inteira e o cabecalho corrido (R12) vai para o cabecalho do DOCX. Paginas
+    sem_conteudo (so numero/cabecalho) continuam saindo."""
+    from ..ficha.extract import pagina_inteira
     pdf = Path(pdf); outdir = Path(outdir); outdir.mkdir(parents=True, exist_ok=True)
     (outdir / "img").mkdir(exist_ok=True)
     for old in (outdir / "img").glob("*.jpg"):
@@ -647,7 +651,7 @@ def run(pdf, outdir, doc, perfil, paginas=None):
         a, b = paginas
     stats = collections.Counter()
     ctx = {"secao": "front", "refs": False, "sumario": []}
-    removed = {}
+    removed, como_imagem = {}, {}
     model = []
     notas_cap = []
     hdrs = collections.Counter()
@@ -655,6 +659,10 @@ def run(pdf, outdir, doc, perfil, paginas=None):
         res, why, hdr = parse_page(doc, pno, perfil, ctx, outdir, stats)
         for t, x0 in hdr:
             hdrs[t] += 1
+        if why and manter and why in ("foto", "foto_ou_arte"):
+            model.append(pagina_inteira(doc[pno], pno, outdir / "img", why))
+            como_imagem[pno + 1] = why
+            continue
         if why:
             removed[pno + 1] = why
             continue
@@ -664,8 +672,10 @@ def run(pdf, outdir, doc, perfil, paginas=None):
         notas_cap.extend(res["notas"])
     flush_notas(model, notas_cap, stats)
     titulo = next((t for t, n in hdrs.most_common() if len(t) > 15 and not t.isdigit()), pdf.stem)
-    model.insert(0, {"t": "id", "text": titulo, "arquivo": pdf.name})
-    return finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx)
+    lead = next((k for k, e in enumerate(model) if e["t"] != "pagina"), len(model))  # capa/rosto antes da identificacao
+    model.insert(lead, {"t": "id", "text": titulo, "arquivo": pdf.name})
+    extra = {"manter_capa_elementos": True, "paginas_imagem": como_imagem, "cabecalho": titulo} if manter else None
+    return finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx, extra)
 
 
 def flush_notas(model, notas, stats):
@@ -685,7 +695,7 @@ def flush_notas(model, notas, stats):
     notas.clear()
 
 
-def finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx):
+def finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx, extra=None):
     out = []
     # continuacoes entre paginas: paragrafo sem recuo no topo da pagina emenda no anterior
     for el in model:
@@ -737,5 +747,7 @@ def finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx):
         stats["n_" + k] += 1
     meta = {"origem": pdf.name, "paginas": doc.page_count, "recorte": [a, b], "removidas": removed,
             "stats": dict(stats), "tipo": "relatorio", "perfil": perfil["nome"], "sumario_linhas": ctx["sumario"]}
+    if extra:
+        meta.update(extra)
     (outdir / "modelo.json").write_text(json.dumps({"meta": meta, "elementos": final}, ensure_ascii=False, indent=1), encoding="utf-8")
     return meta

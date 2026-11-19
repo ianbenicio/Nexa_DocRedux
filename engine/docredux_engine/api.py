@@ -196,8 +196,15 @@ def _modificacoes(meta, model, verificacao) -> list[Modificacao]:
         mods.append(Modificacao("removido", f"{_plural(len(pags), 'página removida', 'páginas removidas')}: {rot}",
                                 sorted(pags), None))
     st = meta.get("stats", {})
-    if st.get("descartado_rodape") or st.get("descartado_cabecalho_corrido"):
+    if meta.get("paginas_imagem"):  # manter_capa_elementos (story 2.5)
+        pags = sorted(int(p) for p in meta["paginas_imagem"])
+        mods.append(Modificacao("reorganizado", f"{_plural(len(pags), 'página mantida', 'páginas mantidas')} como imagem de página inteira (capa, fotos)", pags, None))
+    if meta.get("manter_capa_elementos") and meta.get("cabecalho"):
+        mods.append(Modificacao("reorganizado", "cabeçalho corrido do original repetido no cabeçalho de todas as páginas", [], None))
+    elif st.get("descartado_rodape") or st.get("descartado_cabecalho_corrido"):
         mods.append(Modificacao("removido", "rodapé, número de página e cabeçalho corrido repetidos removidos", [], None))
+    if st.get("desenhos_decorativos_mantidos"):
+        mods.append(Modificacao("reorganizado", f"{_plural(st['desenhos_decorativos_mantidos'], 'elemento gráfico decorativo mantido', 'elementos gráficos decorativos mantidos')} como figura", [], None))
     if st.get("desenhos_decorativos"):
         mods.append(Modificacao("removido", f"{_plural(st['desenhos_decorativos'], 'elemento gráfico decorativo removido', 'elementos gráficos decorativos removidos')}", [], None))
     els = model["elementos"]
@@ -272,8 +279,6 @@ def _checar(opcoes: Opcoes, perfil: dict):
             raise MotorErro(f"fração da síntese deve ser uma de {FRACOES}")
     elif opcoes.fracao is not None:
         raise MotorErro("fração só vale no modo síntese")
-    if opcoes.manter_capa_elementos:
-        raise MotorErro("manter_capa_elementos ainda não implementado (story 2.5)")
 
 
 def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
@@ -294,7 +299,8 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
             return novo
     try:
         res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
-                             verificar=opcoes.modo == "original", ao_progresso=ao_progresso)
+                             verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                             manter_capa_elementos=opcoes.manter_capa_elementos)
     except (SofficeNaoEncontrado, RuntimeError) as e:
         raise RenderFalhou(str(e)) from e
     except (pymupdf.FileDataError, pymupdf.EmptyFileError) as e:

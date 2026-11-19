@@ -98,6 +98,8 @@ def estimate_pages(model):
             h += el["h"] * CFG["quadro_fator"] + 4
         elif t == "source":
             h += tl(el["text"], 17, 7.5) * 9.5 + 3
+        elif t == "pagina":  # manter_capa_elementos: imagem de pagina inteira
+            h += usable_h
         else:
             h += 4 + tl(el["text"], 34 if t in ("quote", "bullet") else 0) * lh
     return h / usable_h
@@ -113,7 +115,9 @@ def verificar(pdf, out, model=None, perfil=None):
         return verify_relatorio.run(pdf, out, model, perfil)
     docx = next(out.glob("*_COMPACTO.docx"))
     figs = [(el["pagina"], pymupdf.Rect(el["bbox"])) for el in model["elementos"] if el.get("figura")]
-    o, in_fig = original_words(pdf, model["meta"]["removidas"], figs)
+    # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, como nas figuras (R7)
+    fora = {**model["meta"]["removidas"], **{str(k): v for k, v in model["meta"].get("paginas_imagem", {}).items()}}
+    o, in_fig = original_words(pdf, fora, figs)
     n = docx_words(docx)
     missing = o - n
     cov = 1 - sum(missing.values()) / max(1, sum(o.values()))

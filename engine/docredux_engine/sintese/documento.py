@@ -270,7 +270,7 @@ def sintetizar(model, fracao):
             cap, secao = cap + 1, None
         elif t == "h2":
             secao = (e.get("text") or "").strip().upper()
-        if secao in FORA:
+        if secao in FORA and t != "pagina":  # página-imagem (story 2.5) após REFERÊNCIAS abre o capítulo seguinte
             continue
         if t in TEXTO:
             us = por_el.get(gi, [])

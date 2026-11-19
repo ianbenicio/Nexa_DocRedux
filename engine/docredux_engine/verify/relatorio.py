@@ -114,7 +114,9 @@ def run(pdf, out, model, perfil=None):
     if perfil is None:
         perfil = extract.load_perfil(Path(extract.PERFIL_DIR) / f"{meta['perfil']}.json")
     docx = next(out.glob("*_COMPACTO.docx"))
-    lines, info = orig_lines(pdf, perfil, meta["removidas"], meta["recorte"], meta.get("sumario_linhas", []))
+    # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, fora da cobranca
+    fora = {**meta["removidas"], **{str(k): v for k, v in meta.get("paginas_imagem", {}).items()}}
+    lines, info = orig_lines(pdf, perfil, fora, meta["recorte"], meta.get("sumario_linhas", []))
     o = orig_counter(lines); n = docx_counter(docx)
     missing = o - n; extra = n - o
     cov = 1 - sum(missing.values()) / max(1, sum(o.values()))

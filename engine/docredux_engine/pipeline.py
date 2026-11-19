@@ -15,7 +15,8 @@ from .ficha import render as ficha_render
 from .verify import ficha as verify_ficha
 
 
-def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=True, ao_progresso=None):
+def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=True, ao_progresso=None,
+          manter_capa_elementos=False):
     """Roda o pipeline e devolve um dict com meta, render, verificacao, caminhos, páginas e tempos.
 
     perfil: dict (load_perfil); None = escolher pela assinatura (R33).
@@ -27,7 +28,7 @@ def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=Tr
     tempos = {}
 
     t = time.perf_counter(); avisar("extracao")
-    meta = ficha_extract.extrair(pdf, out, perfil, paginas=paginas)
+    meta = ficha_extract.extrair(pdf, out, perfil, paginas=paginas, manter_capa_elementos=manter_capa_elementos)
     tempos["extracao"] = time.perf_counter() - t
 
     model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))
