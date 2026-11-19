@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import collections
 import json
+import math
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -138,12 +139,13 @@ def _palavras(doc) -> tuple[int, int]:
     return total, com_texto
 
 
-def contar_palavras(pdf: Path, perfil: dict) -> int:
+def contar_palavras(pdf: Path, perfil: dict, *, modelo: dict | None = None) -> int:
     """DT-21: palavras do original contadas como o verify conta (extração + contador do original).
 
     É a contagem que entra no preço da síntese e em `palavras_original` do modo original: o mesmo
     texto que a cobertura mede, sem capa, páginas removidas, cabeçalhos e rodapés repetidos.
     Opções padrão (sem manter capa e elementos). Custa uma extração completa (ex. 05: ~50 s).
+    Se `modelo` for informado, reaproveita o modelo original ja extraido, antes da sintese.
     """
     import tempfile
 
@@ -152,10 +154,11 @@ def contar_palavras(pdf: Path, perfil: dict) -> int:
     from .verify import relatorio as verify_relatorio
 
     pdf = Path(pdf)
-    with tempfile.TemporaryDirectory(prefix="docredux_contagem_") as d:
-        ficha_extract.extrair(pdf, Path(d), perfil)
-        # meta do modelo.json (chaves de página em texto), a mesma que o verify lê
-        model = json.loads((Path(d) / "modelo.json").read_text(encoding="utf-8"))
+    if modelo is None:
+        with tempfile.TemporaryDirectory(prefix="docredux_contagem_") as d:
+            ficha_extract.extrair(pdf, Path(d), perfil)
+            modelo = json.loads((Path(d) / "modelo.json").read_text(encoding="utf-8"))
+    model = modelo
     meta = model["meta"]
     fora = {**meta["removidas"], **{str(k): v for k, v in meta.get("paginas_imagem", {}).items()}}
     if meta.get("tipo") == "relatorio":
@@ -232,7 +235,7 @@ def _modificacoes(meta, model, verificacao) -> list[Modificacao]:
     st = meta.get("stats", {})
     if meta.get("paginas_imagem"):  # manter_capa_elementos (story 2.5)
         pags = sorted(int(p) for p in meta["paginas_imagem"])
-        mods.append(Modificacao("reorganizado", f"{_plural(len(pags), 'página mantida', 'páginas mantidas')} como imagem de página inteira (capa, fotos)", pags, None))
+        mods.append(Modificacao("reorganizado", f"{_plural(len(pags), 'página mantida', 'páginas mantidas')} como imagem de página inteira (capa, fotos ou diagramas)", pags, None))
     if meta.get("manter_capa_elementos") and meta.get("cabecalho"):
         mods.append(Modificacao("reorganizado", "cabeçalho corrido do original repetido no cabeçalho de todas as páginas", [], None))
     elif st.get("descartado_rodape") or st.get("descartado_cabecalho_corrido"):
@@ -309,7 +312,8 @@ def _checar(opcoes: Opcoes, perfil: dict):
     if opcoes.modo == "sintese":
         if perfil["tipo"] != "relatorio":  # Q4: síntese só para relatório
             raise MotorErro("síntese só está disponível para relatórios (Q4)")
-        if opcoes.fracao is None or round(opcoes.fracao, 2) not in FRACOES:
+        if (not isinstance(opcoes.fracao, (int, float)) or isinstance(opcoes.fracao, bool)
+                or not math.isfinite(opcoes.fracao) or opcoes.fracao not in FRACOES):
             raise MotorErro(f"fração da síntese deve ser uma de {FRACOES}")
     elif opcoes.fracao is not None:
         raise MotorErro("fração só vale no modo síntese")
@@ -326,6 +330,7 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
         estado = {}
 
         def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+            estado["modelo_original"] = model
             novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
             estado["rel"] = rel
             (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
@@ -356,8 +361,7 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
     else:  # FR-13: sem gate de cobertura na síntese; vale o relatório de síntese
         rel = estado["rel"]
         cobertura, gate, motivo = None, "ok", None
-        with pymupdf.open(pdf) as doc:  # síntese não roda o verify: mesma contagem da triagem (PDF inteiro)
-            palavras_original = _palavras(doc)[0]
+        palavras_original = contar_palavras(pdf, perfil, modelo=estado["modelo_original"])
         fracao_real = rel["fracao_real"]
         condensado = rel["condensado"]
         mods.append(Modificacao("sintetizado", rel["descricao"], [], None))

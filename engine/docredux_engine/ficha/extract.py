@@ -648,12 +648,69 @@ def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
     return [it[2] for it in items]
 
 
+# Faixa junto ao corte da pagina (pt). Filetes de sangria da grafica ficam nela; conteudo nao.
+# Ex. 01 e 02, p. 2: fundo creme + filete de 0,28 pt na borda direita, que nao e conteudo.
+BORDA_SANGRIA = 3.0
+
+
+def _so_na_borda(rect, area):
+    """True se o trecho visivel do objeto cabe inteiro na faixa de sangria de uma das bordas."""
+    return (rect.x0 >= area.x1 - BORDA_SANGRIA or rect.x1 <= area.x0 + BORDA_SANGRIA
+            or rect.y0 >= area.y1 - BORDA_SANGRIA or rect.y1 <= area.y0 + BORDA_SANGRIA)
+
+
+def has_visual_content(page):
+    """Conteudo visivel alem de fundo uniforme, excluindo objetos fora da pagina e sangria na borda."""
+    # Imagens/desenhos usam coordenadas nao rotacionadas no PyMuPDF.
+    area = page.rect * page.derotation_matrix
+    for image in page.get_image_info():
+        rect = pymupdf.Rect(image["bbox"]) & area
+        if not rect.is_empty and not _so_na_borda(rect, area):
+            return True
+    for drawing in page.get_drawings():
+        bounds = drawing["rect"]
+        if (bounds.x0 >= area.x1 or bounds.x1 <= area.x0
+                or bounds.y0 >= area.y1 or bounds.y1 <= area.y0):
+            continue
+        rect = drawing["rect"] & area
+        if rect.is_empty:
+            # Linhas podem ter altura/largura zero, mas continuam visiveis.
+            rect = (drawing["rect"] + (-0.5, -0.5, 0.5, 0.5)) & area
+            if rect.is_empty:
+                continue
+        if _so_na_borda(rect, area):
+            continue
+        items = drawing.get("items", [])
+        fundo = (drawing.get("type") == "f" and len(items) == 1 and items[0][0] == "re"
+                 and (drawing["rect"] + (-1, -1, 1, 1)).contains(area))
+        if not fundo:
+            return True
+    for kind, bbox in page.get_bboxlog():
+        rect = pymupdf.Rect(bbox) & area
+        if kind == "fill-shade" and not rect.is_empty and not _so_na_borda(rect, area):
+            return True
+    return False
+
+
+# R1: na 1a/ultima pagina sem texto, uma imagem que cobre ao menos esta fracao da pagina e arte de capa,
+# nao figura de conteudo (figura de atividade ocupa parte da pagina e vem com enunciado em outra).
+CAPA_IMAGEM_MIN = 0.8
+
+
+def _maior_imagem(page):
+    """Fracao da area da pagina coberta pela maior imagem (trecho visivel)."""
+    area = page.rect * page.derotation_matrix
+    total = abs(area) or 1
+    return max((abs(pymupdf.Rect(i["bbox"]) & area) / total for i in page.get_image_info()), default=0)
+
+
 def is_cover_or_blank(page, pno, n_pages):
     txt = page.get_text("text").strip()
-    if not txt:
-        return "branca"
-    if pno in (0, n_pages - 1) and len(txt) < 200 and len(page.get_drawings()) > 500:
+    if pno in (0, n_pages - 1) and len(txt) < 200 and (
+            len(page.get_drawings()) > 500 or (not txt and _maior_imagem(page) >= CAPA_IMAGEM_MIN)):
         return "capa" if pno == 0 else "contracapa"
+    if not txt and not has_visual_content(page):
+        return "branca"
     return None
 
 
@@ -701,7 +758,13 @@ def extrair(pdf, out, perfil=None, *, paginas=None, manter_capa_elementos=False)
     removed, como_imagem = {}, {}
     model = [{"t": "id", "text": identification(doc), "arquivo": pdf.name}]
     for pno in range(doc.page_count):
+        # R1 primeiro: capa/contracapa sem texto (arte de pagina inteira) segue a regra da capa, nao M01
         why = is_cover_or_blank(doc[pno], pno, doc.page_count)
+        if why is None and not doc[pno].get_text("text").strip():  # M01: so ha conteudo visual
+            model.append(pagina_inteira(doc[pno], pno, out / "img", "conteudo_visual", dpi=200))
+            como_imagem[pno + 1] = "conteudo_visual"
+            stats["paginas_visuais_preservadas"] = stats.get("paginas_visuais_preservadas", 0) + 1
+            continue
         if why and manter_capa_elementos and why in ("capa", "contracapa"):
             pg = pagina_inteira(doc[pno], pno, out / "img", why)
             model.insert(0, pg) if why == "capa" else model.append(pg)  # capa antes da caixa de identificacao
@@ -729,6 +792,8 @@ def extrair(pdf, out, perfil=None, *, paginas=None, manter_capa_elementos=False)
         if el["t"] == "table":
             el["rows"] = [[norm(c.replace("\n", " ")) for c in r] for r in el["rows"]]
     meta = {"origem": pdf.name, "paginas": doc.page_count, "removidas": removed, "stats": stats}
+    if como_imagem:
+        meta["paginas_imagem"] = como_imagem
     if manter_capa_elementos:  # story 2.5; sem a opcao o modelo fica identico ao de antes
         meta.update(manter_capa_elementos=True, paginas_imagem=como_imagem, cabecalho=identification(doc))
     (out / "modelo.json").write_text(json.dumps({"meta": meta, "elementos": merged}, ensure_ascii=False, indent=1), encoding="utf-8")

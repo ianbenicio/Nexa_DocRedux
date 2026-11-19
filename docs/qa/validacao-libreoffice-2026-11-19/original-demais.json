@@ -1,0 +1,77 @@
+{
+ "ambiente": {
+  "motor": "0.2.0",
+  "python": "3.13.13",
+  "so": "Windows-10-10.0.19045-SP0",
+  "maquina": "AMD64",
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "manter_capa_elementos": false
+ },
+ "exemplos": [
+  {
+   "exemplo": "01-mathema-saeb-5ano-lp-p3",
+   "ok": true,
+   "paginas": "52→19",
+   "paginas_baseline": "52→19",
+   "cobertura_pct": 99.96,
+   "cobertura_min": 99.96,
+   "gate": "ok",
+   "tempo_s": 14.0,
+   "tempos_s": {
+    "extracao": 2.59,
+    "render_docx": 0.32,
+    "pdf": 10.88,
+    "verify": 0.14
+   }
+  },
+  {
+   "exemplo": "02-mathema-saeb-4ano-lp-p3",
+   "ok": true,
+   "paginas": "34→14",
+   "paginas_baseline": "34→14",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "tempo_s": 12.0,
+   "tempos_s": {
+    "extracao": 1.22,
+    "render_docx": 0.21,
+    "pdf": 10.48,
+    "verify": 0.08
+   }
+  },
+  {
+   "exemplo": "04-mathema-saeb-5ano-mat-p3",
+   "ok": true,
+   "paginas": "26→12",
+   "paginas_baseline": "26→12",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "tempo_s": 14.6,
+   "tempos_s": {
+    "extracao": 3.23,
+    "render_docx": 0.3,
+    "pdf": 10.98,
+    "verify": 0.08
+   }
+  },
+  {
+   "exemplo": "05-diagnostico-educacao-nacional",
+   "ok": true,
+   "paginas": "294→142",
+   "paginas_baseline": "294→142",
+   "cobertura_pct": 99.97,
+   "cobertura_min": 99.97,
+   "gate": "ok",
+   "tempo_s": 92.8,
+   "tempos_s": {
+    "extracao": 40.89,
+    "render_docx": 24.29,
+    "pdf": 16.64,
+    "verify": 10.75
+   }
+  }
+ ],
+ "falhas": 0
+}

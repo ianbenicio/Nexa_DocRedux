@@ -1,0 +1,29 @@
+{
+ "ambiente": {
+  "motor": "0.2.0",
+  "python": "3.13.13",
+  "so": "Windows-10-10.0.19045-SP0",
+  "maquina": "AMD64",
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "manter_capa_elementos": false
+ },
+ "exemplos": [
+  {
+   "exemplo": "03-mathema-saeb-4ano-mat-p3",
+   "ok": true,
+   "paginas": "16→5",
+   "paginas_baseline": "16→5",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "tempo_s": 11.9,
+   "tempos_s": {
+    "extracao": 1.09,
+    "render_docx": 0.11,
+    "pdf": 10.66,
+    "verify": 0.05
+   }
+  }
+ ],
+ "falhas": 0
+}

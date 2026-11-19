@@ -78,7 +78,12 @@ def dividir_frases(txt):
     for i, a in enumerate(ABREV):
         protegido = protegido.replace(a, a.replace(".", f"\u0000{i}\u0000"))
     # números decimais/milhares: 6.9 / 1.234 já não têm espaço depois do ponto
-    partes = re.split(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ“\"(])", protegido)
+    # Fatiar pela posicao preserva aspas/parenteses, que re.split consumia.
+    partes, ini = [], 0
+    for m in re.finditer(r"(?<=[.!?…])[\"”’)]*\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ“\"(])", protegido):
+        partes.append(protegido[ini:m.end()].rstrip())
+        ini = m.end()
+    partes.append(protegido[ini:])
     out = []
     for p in partes:
         for i, a in enumerate(ABREV):

@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="7" skipped="1" tests="37" time="366.104" timestamp="2026-11-19T10:58:18.343873-03:00" hostname="DESKTOP-Q011TK0"><testcase classname="tests.test_api" name="test_triar_escaneado" time="0.114" /><testcase classname="tests.test_api" name="test_triar_protegido" time="0.052" /><testcase classname="tests.test_api" name="test_triar_corrompido" time="0.003" /><testcase classname="tests.test_api" name="test_triar_template_desconhecido" time="0.018" /><testcase classname="tests.test_api" name="test_triar_excede_paginas_e_tamanho" time="0.008" /><testcase classname="tests.test_api" name="test_triagem_serializa" time="0.014" /><testcase classname="tests.test_api" name="test_triar_exemplos[01]" time="2.701" /><testcase classname="tests.test_api" name="test_triar_exemplos[02]" time="1.278" /><testcase classname="tests.test_api" name="test_triar_exemplos[03]" time="1.105" /><testcase classname="tests.test_api" name="test_triar_exemplos[04]" time="3.244" /><testcase classname="tests.test_api" name="test_triar_exemplos[05]" time="49.682" /><testcase classname="tests.test_api" name="test_triar_conta_como_o_verify[03-1334]" time="2.269" /><testcase classname="tests.test_api" name="test_triar_conta_como_o_verify[05-91037]" time="99.747" /><testcase classname="tests.test_api" name="test_validar_perfis_semente" time="0.001" /><testcase classname="tests.test_api" name="test_validar_perfil_com_erros" time="0.001" /><testcase classname="tests.test_api" name="test_schema_e_json_schema_valido" time="0.001"><skipped type="pytest.skip" message="could not import 'jsonschema': No module named 'jsonschema'">H:\Nexa\03_Comercial_Clientes\Projetos\DocRedux\Nexa_DocRedux\engine\tests\test_api.py:132: could not import 'jsonschema': No module named 'jsonschema'</skipped></testcase><testcase classname="tests.test_api" name="test_sintese_so_para_relatorio" time="0.008" /><testcase classname="tests.test_api" name="test_fracao_invalida" time="0.006" /><testcase classname="tests.test_api" name="test_perfil_invalido" time="0.006" /><testcase classname="tests.test_api" name="test_relatorio_tem_campos_do_spec" time="0.000" /><testcase classname="tests.test_api" name="test_processar_ficha_ex03" time="1.202"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/original/Mathema-SAEB_MAT_Ficha do estudante_4A3P_V2.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=False, docx=True)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_processar_ficha_ex030')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+&gt;           res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+
+docredux_engine\api.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+docredux_engine\pipeline.py:46: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def localizar():
+        env = os.environ.get("DOCREDUX_SOFFICE")
+        if env:
+            if Path(env).exists() or shutil.which(env):
+                return env
+            raise SofficeNaoEncontrado(f"DOCREDUX_SOFFICE={env!r} não existe")
+        for nome in ("soffice", "libreoffice"):
+            achado = shutil.which(nome)
+            if achado:
+                return achado
+        for c in _PADRAO.get(sys.platform, _LINUX):
+            if Path(c).exists():
+                return c
+&gt;       raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E       docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\soffice.py:39: SofficeNaoEncontrado
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_processar_ficha_ex030')
+perfil_por_nome = {'mathema-saeb': {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_deslig...a': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}}
+
+    def test_processar_ficha_ex03(tmp_path, perfil_por_nome):
+        pdf = fixture_pdf("03")
+&gt;       res = api.processar(pdf, Opcoes(docx=True), perfil_por_nome["mathema-saeb"], tmp_path)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/original/Mathema-SAEB_MAT_Ficha do estudante_4A3P_V2.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=False, docx=True)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_processar_ficha_ex030')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+            res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+        except (SofficeNaoEncontrado, RuntimeError) as e:
+&gt;           raise RenderFalhou(str(e)) from e
+E           docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\api.py:339: RenderFalhou</failure></testcase><testcase classname="tests.test_api" name="test_gate_bloqueia_cobertura_baixa" time="1.171"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/original/Mathema-SAEB_MAT_Ficha do estudante_4A3P_V2.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=False, docx=False)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_gate_bloqueia_cobertura_b0')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+&gt;           res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+
+docredux_engine\api.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+docredux_engine\pipeline.py:46: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def localizar():
+        env = os.environ.get("DOCREDUX_SOFFICE")
+        if env:
+            if Path(env).exists() or shutil.which(env):
+                return env
+            raise SofficeNaoEncontrado(f"DOCREDUX_SOFFICE={env!r} não existe")
+        for nome in ("soffice", "libreoffice"):
+            achado = shutil.which(nome)
+            if achado:
+                return achado
+        for c in _PADRAO.get(sys.platform, _LINUX):
+            if Path(c).exists():
+                return c
+&gt;       raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E       docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\soffice.py:39: SofficeNaoEncontrado
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_gate_bloqueia_cobertura_b0')
+perfil_por_nome = {'mathema-saeb': {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_deslig...a': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002312B7F0640&gt;
+
+    def test_gate_bloqueia_cobertura_baixa(tmp_path, perfil_por_nome, monkeypatch):
+        pdf = fixture_pdf("03")
+        monkeypatch.setattr(api, "GATE_COBERTURA", 1.01)  # força o gate: 100% &lt; 101%
+&gt;       r = api.processar(pdf, Opcoes(), perfil_por_nome["mathema-saeb"], tmp_path).relatorio
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:190: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/original/Mathema-SAEB_MAT_Ficha do estudante_4A3P_V2.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=False, docx=False)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_gate_bloqueia_cobertura_b0')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+            res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+        except (SofficeNaoEncontrado, RuntimeError) as e:
+&gt;           raise RenderFalhou(str(e)) from e
+E           docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\api.py:339: RenderFalhou</failure></testcase><testcase classname="tests.test_api" name="test_folha_contato" time="0.026" /><testcase classname="tests.test_api" name="test_cli_triar_e_erro" time="1.111" /><testcase classname="tests.test_api" name="test_cli_processar_ex03" time="2.732"><failure message="AttributeError: 'NoneType' object has no attribute 'splitlines'">tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_cli_processar_ex030')
+
+    def test_cli_processar_ex03(tmp_path):
+        pdf = fixture_pdf("03")
+&gt;       cod, d = _cli("processar", pdf, tmp_path, "--docx")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = ('processar', WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/origin...V2.pdf'), WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_cli_processar_ex030'), '--docx')
+
+    def _cli(*args):
+        r = subprocess.run([sys.executable, "-m", "docredux_engine", *map(str, args)], cwd=ENGINE,
+                           capture_output=True, text=True, encoding="utf-8", timeout=600)
+&gt;       linhas = [ln for ln in r.stdout.splitlines() if ln.strip()]
+                               ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'splitlines'
+
+tests\test_api.py:204: AttributeError</failure></testcase><testcase classname="tests.test_manter" name="test_desligada_nao_muda_o_modelo" time="1.194"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/original/Mathema-SAEB_MAT_Ficha do estudante_4A3P_V2.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=False, docx=False)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_desligada_nao_muda_o_mode0')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+&gt;           res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+
+docredux_engine\api.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+docredux_engine\pipeline.py:46: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def localizar():
+        env = os.environ.get("DOCREDUX_SOFFICE")
+        if env:
+            if Path(env).exists() or shutil.which(env):
+                return env
+            raise SofficeNaoEncontrado(f"DOCREDUX_SOFFICE={env!r} não existe")
+        for nome in ("soffice", "libreoffice"):
+            achado = shutil.which(nome)
+            if achado:
+                return achado
+        for c in _PADRAO.get(sys.platform, _LINUX):
+            if Path(c).exists():
+                return c
+&gt;       raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E       docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\soffice.py:39: SofficeNaoEncontrado
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_desligada_nao_muda_o_mode0')
+perfil_por_nome = {'mathema-saeb': {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_deslig...a': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}}
+
+    def test_desligada_nao_muda_o_modelo(tmp_path, perfil_por_nome):
+&gt;       _, m = _rodar("03", perfil_por_nome["mathema-saeb"], tmp_path, False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_manter.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_manter.py:16: in _rodar
+    res = api.processar(fixture_pdf(n), Opcoes(manter_capa_elementos=manter), perfil, out)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/03-mathema-saeb-4ano-mat-p3/original/Mathema-SAEB_MAT_Ficha do estudante_4A3P_V2.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=False, docx=False)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_desligada_nao_muda_o_mode0')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+            res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+        except (SofficeNaoEncontrado, RuntimeError) as e:
+&gt;           raise RenderFalhou(str(e)) from e
+E           docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\api.py:339: RenderFalhou</failure></testcase><testcase classname="tests.test_manter" name="test_ficha_ex01" time="3.817"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/01-mathema-saeb-5ano-lp-p3/original/Mathema-SAEB_5A3P-LP_Ficha do estudante_V2_ORIGINAL.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=True, docx=False)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_ficha_ex010')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+&gt;           res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+
+docredux_engine\api.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+docredux_engine\pipeline.py:46: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def localizar():
+        env = os.environ.get("DOCREDUX_SOFFICE")
+        if env:
+            if Path(env).exists() or shutil.which(env):
+                return env
+            raise SofficeNaoEncontrado(f"DOCREDUX_SOFFICE={env!r} não existe")
+        for nome in ("soffice", "libreoffice"):
+            achado = shutil.which(nome)
+            if achado:
+                return achado
+        for c in _PADRAO.get(sys.platform, _LINUX):
+            if Path(c).exists():
+                return c
+&gt;       raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E       docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\soffice.py:39: SofficeNaoEncontrado
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_ficha_ex010')
+perfil_por_nome = {'mathema-saeb': {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_deslig...a': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}}
+
+    def test_ficha_ex01(tmp_path, perfil_por_nome):
+&gt;       res, m = _rodar("01", perfil_por_nome["mathema-saeb"], tmp_path, True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_manter.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_manter.py:16: in _rodar
+    res = api.processar(fixture_pdf(n), Opcoes(manter_capa_elementos=manter), perfil, out)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/01-mathema-saeb-5ano-lp-p3/original/Mathema-SAEB_5A3P-LP_Ficha do estudante_V2_ORIGINAL.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=True, docx=False)
+perfil = {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_desligadas': [], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_ficha_ex010')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+            res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+        except (SofficeNaoEncontrado, RuntimeError) as e:
+&gt;           raise RenderFalhou(str(e)) from e
+E           docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\api.py:339: RenderFalhou</failure></testcase><testcase classname="tests.test_manter" name="test_relatorio_ex05" time="52.543"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/05-diagnostico-educacao-nacional/original/Documento Diagnóstico da Educação Nacional - Versão Digital.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=True, docx=False)
+perfil = {'nome': 'mec-sase-relatorio', 'tipo': 'relatorio', 'assinatura': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_relatorio_ex050')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+&gt;           res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+
+docredux_engine\api.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+docredux_engine\pipeline.py:46: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def localizar():
+        env = os.environ.get("DOCREDUX_SOFFICE")
+        if env:
+            if Path(env).exists() or shutil.which(env):
+                return env
+            raise SofficeNaoEncontrado(f"DOCREDUX_SOFFICE={env!r} não existe")
+        for nome in ("soffice", "libreoffice"):
+            achado = shutil.which(nome)
+            if achado:
+                return achado
+        for c in _PADRAO.get(sys.platform, _LINUX):
+            if Path(c).exists():
+                return c
+&gt;       raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E       docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\soffice.py:39: SofficeNaoEncontrado
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_relatorio_ex050')
+perfil_por_nome = {'mathema-saeb': {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_deslig...a': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}}
+
+    def test_relatorio_ex05(tmp_path, perfil_por_nome):
+&gt;       res, m = _rodar("05", perfil_por_nome["mec-sase-relatorio"], tmp_path, True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_manter.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_manter.py:16: in _rodar
+    res = api.processar(fixture_pdf(n), Opcoes(manter_capa_elementos=manter), perfil, out)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/05-diagnostico-educacao-nacional/original/Documento Diagnóstico da Educação Nacional - Versão Digital.pdf')
+opcoes = Opcoes(modo='original', fracao=None, manter_capa_elementos=True, docx=False)
+perfil = {'nome': 'mec-sase-relatorio', 'tipo': 'relatorio', 'assinatura': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_relatorio_ex050')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+            res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+        except (SofficeNaoEncontrado, RuntimeError) as e:
+&gt;           raise RenderFalhou(str(e)) from e
+E           docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\api.py:339: RenderFalhou</failure></testcase><testcase classname="tests.test_manter" name="test_sintese_com_capa" time="44.924" /><testcase classname="tests.test_sintese" name="test_so_relatorio" time="0.001" /><testcase classname="tests.test_sintese" name="test_regras_da_sintese" time="0.007" /><testcase classname="tests.test_sintese" name="test_inclusao" time="0.008" /><testcase classname="tests.test_sintese" name="test_marcador_de_pagina_intervalo" time="0.000" /><testcase classname="tests.test_sintese" name="test_ex05[0.2]" time="42.436" /><testcase classname="tests.test_sintese" name="test_ex05[0.35]" time="2.155" /><testcase classname="tests.test_sintese" name="test_ex05[0.5]" time="2.237" /><testcase classname="tests.test_sintese" name="test_processar_sintese_ex05" time="49.768"><failure message="docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE">pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/05-diagnostico-educacao-nacional/original/Documento Diagnóstico da Educação Nacional - Versão Digital.pdf')
+opcoes = Opcoes(modo='sintese', fracao=0.35, manter_capa_elementos=False, docx=True)
+perfil = {'nome': 'mec-sase-relatorio', 'tipo': 'relatorio', 'assinatura': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_processar_sintese_ex050')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+&gt;           res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+
+docredux_engine\api.py:335: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+docredux_engine\pipeline.py:46: in rodar
+    pdf_saida = soffice.para_pdf(docx, out)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docredux_engine\soffice.py:59: in para_pdf
+    r = subprocess.run([localizar(), f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--norestore",
+                        ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def localizar():
+        env = os.environ.get("DOCREDUX_SOFFICE")
+        if env:
+            if Path(env).exists() or shutil.which(env):
+                return env
+            raise SofficeNaoEncontrado(f"DOCREDUX_SOFFICE={env!r} não existe")
+        for nome in ("soffice", "libreoffice"):
+            achado = shutil.which(nome)
+            if achado:
+                return achado
+        for c in _PADRAO.get(sys.platform, _LINUX):
+            if Path(c).exists():
+                return c
+&gt;       raise SofficeNaoEncontrado("LibreOffice não encontrado: defina DOCREDUX_SOFFICE")
+E       docredux_engine.soffice.SofficeNaoEncontrado: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\soffice.py:39: SofficeNaoEncontrado
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_processar_sintese_ex050')
+perfil_por_nome = {'mathema-saeb': {'nome': 'mathema-saeb', 'tipo': 'ficha', 'assinatura': {'fontes_contem': ['Glober']}, 'regras_deslig...a': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}}
+
+    def test_processar_sintese_ex05(tmp_path, perfil_por_nome):
+        pdf = fixture_pdf("05")
+&gt;       res = api.processar(pdf, Opcoes(modo="sintese", fracao=0.35, docx=True), perfil_por_nome["mec-sase-relatorio"], tmp_path)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_sintese.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pdf = WindowsPath('H:/Nexa/03_Comercial_Clientes/Projetos/DocRedux/exemplos/05-diagnostico-educacao-nacional/original/Documento Diagnóstico da Educação Nacional - Versão Digital.pdf')
+opcoes = Opcoes(modo='sintese', fracao=0.35, manter_capa_elementos=False, docx=True)
+perfil = {'nome': 'mec-sase-relatorio', 'tipo': 'relatorio', 'assinatura': {'fontes_contem': ['Archer', 'Cambria']}, 'regras_desligadas': ['R4', 'R8', 'R10', 'R14', 'R16', 'R18', ...], ...}
+saida_dir = WindowsPath('C:/Users/ianfl/AppData/Local/Temp/pytest-of-ianfl/pytest-1/test_processar_sintese_ex050')
+ao_progresso = None
+
+    def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
+                  ao_progresso: Callable[[str], None] | None = None) -&gt; Resultado:
+        """Despacha pelo perfil['tipo'] (ficha | relatorio) e devolve PDF, DOCX (se pedido) e o relatório."""
+        _checar(opcoes, perfil)
+        pdf, saida_dir = Path(pdf), Path(saida_dir)
+        transformar = None
+        if opcoes.modo == "sintese":
+            from .sintese import documento as sintese_doc
+            estado = {}
+    
+            def transformar(model):  # noqa: F811 — aplicada entre a extração e o render
+                novo, rel = sintese_doc.sintetizar(model, opcoes.fracao)
+                estado["rel"] = rel
+                (saida_dir / "modelo_sintese.json").write_text(  # trilha de auditoria: o que foi para o render
+                    json.dumps(novo, ensure_ascii=False, indent=1), encoding="utf-8")
+                return novo
+        try:
+            res = pipeline.rodar(pdf, saida_dir, perfil, transformar=transformar,
+                                 verificar=opcoes.modo == "original", ao_progresso=ao_progresso,
+                                 manter_capa_elementos=opcoes.manter_capa_elementos)
+        except (SofficeNaoEncontrado, RuntimeError) as e:
+&gt;           raise RenderFalhou(str(e)) from e
+E           docredux_engine.api.RenderFalhou: LibreOffice não encontrado: defina DOCREDUX_SOFFICE
+
+docredux_engine\api.py:339: RenderFalhou</failure></testcase></testsuite></testsuites>

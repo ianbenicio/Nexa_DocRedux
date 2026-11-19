@@ -103,7 +103,8 @@ def main(argv=None):
             saida["erros"] = e.erros
     finally:
         sys.stdout = stdout
-    sys.stdout.write(json.dumps(saida, ensure_ascii=False, default=str) + "\n")
+    # Protocolo ASCII (subconjunto de UTF-8), independente da pagina de codigo do host.
+    sys.stdout.write(json.dumps(saida, ensure_ascii=True, default=str) + "\n")
     return codigo
 
 

@@ -1,0 +1,71 @@
+{
+ "metodo": "PDFs de saida da main (871507d, motor = 984b046) x branch Codex, mesmo LibreOffice 26.8.3.1 + Carlito; pixels a 96 dpi e texto, pagina a pagina",
+ "padrao_fichas_01_04_f1060b9": [
+  {
+   "exemplo": "01-mathema-saeb-5ano-lp-p3",
+   "paginas_a": 19,
+   "paginas_b": 19,
+   "pixels_diferentes": [],
+   "texto_diferente": [],
+   "paginas_iguais": 19
+  },
+  {
+   "exemplo": "02-mathema-saeb-4ano-lp-p3",
+   "paginas_a": 14,
+   "paginas_b": 14,
+   "pixels_diferentes": [],
+   "texto_diferente": [],
+   "paginas_iguais": 14
+  },
+  {
+   "exemplo": "03-mathema-saeb-4ano-mat-p3",
+   "paginas_a": 5,
+   "paginas_b": 5,
+   "pixels_diferentes": [],
+   "texto_diferente": [],
+   "paginas_iguais": 5
+  },
+  {
+   "exemplo": "04-mathema-saeb-5ano-mat-p3",
+   "paginas_a": 12,
+   "paginas_b": 12,
+   "pixels_diferentes": [],
+   "texto_diferente": [],
+   "paginas_iguais": 12
+  }
+ ],
+ "padrao_05_b980917": [
+  {
+   "exemplo": "05-diagnostico-educacao-nacional",
+   "paginas_a": 142,
+   "paginas_b": 142,
+   "pixels_diferentes": [],
+   "texto_diferente": [],
+   "paginas_iguais": 142
+  }
+ ],
+ "sintese35_05": {
+  "paginas": [
+   {
+    "exemplo": "05-sintese35",
+    "paginas_a": 81,
+    "paginas_b": 81,
+    "pixels_diferentes": [],
+    "texto_diferente": [],
+    "paginas_iguais": 81
+   }
+  ],
+  "relatorio_main": {
+   "paginas_depois": 81,
+   "palavras_original": 93166,
+   "palavras_saida": 32584,
+   "fracao_real": 0.3485
+  },
+  "relatorio_codex": {
+   "paginas_depois": 81,
+   "palavras_original": 91037,
+   "palavras_saida": 32603,
+   "fracao_real": 0.3485
+  }
+ }
+}

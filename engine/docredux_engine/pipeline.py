@@ -15,6 +15,16 @@ from .ficha import render as ficha_render
 from .verify import ficha as verify_ficha
 
 
+def validar_pdf_renderizado(pdf_saida):
+    """Protecao minima do artefato entregue, sem confundir ausencia de texto com pagina vazia."""
+    with pymupdf.open(pdf_saida) as doc:
+        if not doc.is_pdf or doc.page_count == 0:
+            raise RuntimeError("PDF gerado sem páginas válidas")
+        if not any(p.get_text("text").strip() or ficha_extract.has_visual_content(p) for p in doc):
+            raise RuntimeError("PDF gerado sem conteúdo visível")
+        return doc.page_count
+
+
 def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=True, ao_progresso=None,
           manter_capa_elementos=False):
     """Roda o pipeline e devolve um dict com meta, render, verificacao, caminhos, páginas e tempos.
@@ -45,13 +55,12 @@ def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=Tr
     t = time.perf_counter(); avisar("pdf")
     pdf_saida = soffice.para_pdf(docx, out)
     tempos["pdf"] = time.perf_counter() - t
-    with pymupdf.open(pdf_saida) as d:
-        paginas_pdf = d.page_count
+    paginas_pdf = validar_pdf_renderizado(pdf_saida)
 
     verificacao = None
     if verificar:
         t = time.perf_counter(); avisar("verify")
-        verificacao = verify_ficha.verificar(pdf, out, model, perfil)
+        verificacao = verify_ficha.verificar(pdf, out, model, perfil, docx_path=docx, pdf_path=pdf_saida)
         tempos["verify"] = time.perf_counter() - t
 
     return {"meta": meta, "modelo": model, "render": render, "verificacao": verificacao,

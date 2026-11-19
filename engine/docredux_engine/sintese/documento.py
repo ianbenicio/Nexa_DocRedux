@@ -259,10 +259,15 @@ def sintetizar(model, fracao):
     for i, u in enumerate(unidades):
         por_el[u["gi"]].append((i, u))
     pct = round(fracao * 100)
-    aviso = (f"Síntese extrativa: cerca de {pct}% do texto corrido, só com frases do original, sem reescrita. "
+    fracao_real = usado / total
+    percentual = (f"{fracao_real * 100:.1f}".rstrip("0").rstrip(".")
+                  if abs(fracao_real - fracao) > 0.01 else str(pct))
+    ressalva = (f" Alvo de {pct}% inviável com o núcleo obrigatório preservado."
+                if usado > fracao * total + 0.01 * total else "")
+    aviso = (f"Síntese extrativa: cerca de {percentual}% do texto corrido, só com frases do original, sem reescrita. "
              f"{RETICENCIAS} marca trecho omitido; [p. N] aponta a página do documento original. "
              f"Títulos, tabelas, gráficos e as seções PROBLEMA e CAUSAS CRÍTICAS foram mantidos; "
-             f"notas e referências foram retiradas.")
+             f"notas e referências foram retiradas.{ressalva}")
     novos, omitidos, cap, secao = [], 0, 0, None
     for gi, e in enumerate(E):
         t = e["t"]

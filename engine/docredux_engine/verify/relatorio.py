@@ -109,11 +109,13 @@ def docx_counter(path):
     return c
 
 
-def run(pdf, out, model, perfil=None):
+def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
     meta = model["meta"]
     if perfil is None:
         perfil = extract.load_perfil(Path(extract.PERFIL_DIR) / f"{meta['perfil']}.json")
-    docx = next(out.glob("*_COMPACTO.docx"))
+    from ..ficha.render import nome_docx
+    out = Path(out)
+    docx = Path(docx_path) if docx_path is not None else out / nome_docx(model)
     # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, fora da cobranca
     fora = {**meta["removidas"], **{str(k): v for k, v in meta.get("paginas_imagem", {}).items()}}
     lines, info = orig_lines(pdf, perfil, fora, meta["recorte"], meta.get("sumario_linhas", []))
@@ -141,8 +143,14 @@ def run(pdf, out, model, perfil=None):
     }
     ok = all(est[k]["pdf"] == est[k]["modelo"] for k in ("h1_capitulos", "legendas", "fontes", "notas")) \
         and est["figuras_sem_legenda"] == 0 and est["legendas_sem_visual"] == 0
-    pdf_out = next(out.glob("*_COMPACTO.pdf"), None)
-    pages = pymupdf.open(pdf_out).page_count if pdf_out else None
+    pdf_out = Path(pdf_path) if pdf_path is not None else docx.with_suffix(".pdf")
+    if not pdf_out.exists():
+        pdf_out = None
+    if pdf_out:
+        with pymupdf.open(pdf_out) as saida:
+            pages = saida.page_count
+    else:
+        pages = None
     rep = {
         "paginas_original": meta["paginas"], "paginas_docx_pdf": pages,
         "palavras_original": sum(o.values()), "cobertura_texto_pct": round(cov * 100, 2),

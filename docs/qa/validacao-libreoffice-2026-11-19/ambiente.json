@@ -1,0 +1,34 @@
+{
+  "python": "3.13.13 (tags/v3.13.13:01104ce, Apr  7 2026, 19:25:48) [MSC v.1944 64 bit (AMD64)]",
+  "plataforma": "Windows-10-10.0.19045-SP0",
+  "pymupdf": "1.28.2",
+  "python_docx": "1.2.0",
+  "pytest": "9.2.0",
+  "jsonschema": "4.26.0",
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "executavel": "H:\\Nexa\\03_Comercial_Clientes\\Projetos\\DocRedux\\.runtime\\libreoffice-26.8.3.1\\extraido\\program\\soffice.com",
+  "fonte_efetiva_pdf_smoke": [
+    "Carlito"
+  ],
+  "msi_sha256": "0e6918c273eabbdbbd800ee0dacbbf130a14c13c2e4cec861b06dd59e015bf94",
+  "msi_origem": "https://downloadarchive.documentfoundation.org/libreoffice/old/26.8.3.1/win/x86_64/LibreOffice_26.8.3.1_Win_x86-64.msi",
+  "fontes_privadas": [
+    {
+      "arquivo": "Carlito-Bold.ttf",
+      "sha256": "0f62ab34ad5d079a0a28fac01bcf7c7a724a4db4d6cb99cab9cabff382fbb80f"
+    },
+    {
+      "arquivo": "Carlito-BoldItalic.ttf",
+      "sha256": "380764b6898d7b73ceae6384b2958b196d2a0428962ef3adf138d27947228666"
+    },
+    {
+      "arquivo": "Carlito-Italic.ttf",
+      "sha256": "718a0663864d37a4868220a19b9668a5fe10a46197f6df367b4c2c30c04c026c"
+    },
+    {
+      "arquivo": "Carlito-Regular.ttf",
+      "sha256": "b4ff23ba370cc95a3c349336b73f9c28514a1371210f89832efc85c4b1ea7131"
+    }
+  ],
+  "instalacao_global_substituida": false
+}
