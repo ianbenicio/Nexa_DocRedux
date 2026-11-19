@@ -25,7 +25,7 @@ O levantamento em `docs/research/motor-referencias-2026-11-19.md` compara oito r
 | M06 | Corrigido: biblioteca admite apenas as três frações do contrato | Frações próximas porém inválidas, NaN, infinito, booleano, string e ausência de fração |
 | M07 | Corrigido: páginas da folha são 1-based e validadas; DPI deve ser inteiro positivo | Zero, negativo, fora do limite, lista vazia e tipos inválidos; arquivos não são criados antes da validação |
 | M08 | Corrigido: aviso informa o resultado quando o núcleo impede o alvo | Núcleo ocupa 100% do texto, com alvo de 20%; conteúdo obrigatório é preservado |
-| M09 | Aberto | Integridade numérica/fórmulas exige verificação própria, sem mudar silenciosamente a contagem histórica usada no preço |
+| M09 | Corrigido na story 2.7: checagem numérica (números, sinais, decimais, frações, %, ordinais e operadores entre números) bloqueia o gate quando falta algo; DT-21 inalterada | 29 testes em `engine/tests/test_numeros.py`. O ex. 05 revelou defeito real (marcador de nota grudado no ano em legenda/título: "2012-20232"), corrigido. Regressão 01–05 e preservação ok (`validacao-libreoffice-2026-11-19/PLANO.md`) |
 | M10 | Proteção inicial implementada | Conversão defeituosa para PDF vazio levanta RenderFalhou; PDF com imagem informativa é permitido |
 | M11 | Aberto | Política bloqueante para divergência estrutural continua a da spec atual; definir critérios antes de alterá-la |
 | M12 | Aberto | Contagem global continua sem provar ordem ou associação; planejar alinhamento por blocos e proveniência |

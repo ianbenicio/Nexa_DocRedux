@@ -39,6 +39,25 @@ def add_runs(p, runs, size=None, color=None, bold=None, italic=None):
     return p
 
 
+SUP_UNI = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+SUP_NORMAL = str.maketrans(SUP_UNI, "0123456789")
+RE_SUP_UNI = re.compile(f"([{SUP_UNI}]+)")
+
+
+def add_text(p, text):
+    """Texto de titulo/legenda: digitos sobrescritos Unicode (marcador de nota, story 2.7) viram run sobrescrito
+    com digito normal. Devolve os runs criados, para o chamador aplicar fonte/cor."""
+    runs = []
+    for k, parte in enumerate(RE_SUP_UNI.split(text)):
+        if not parte:
+            continue
+        r = p.add_run(parte.translate(SUP_NORMAL))
+        if k % 2:
+            r.font.superscript = True
+        runs.append(r)
+    return runs
+
+
 def page_field(par, size=8):
     for kind, txt in (("begin", None), (None, "PAGE"), ("end", None)):
         r = par.add_run(); r.font.size = Pt(size); r.font.color.rgb = CINZA
@@ -138,11 +157,11 @@ class RR:
             fmt(p, 6, 2, keep=True)
         else:
             fmt(p, 4, 1, keep=True)
-        r = p.add_run(el["text"])
-        if lvl == 4:
-            r.italic = True
-        if lvl == 2 and el.get("sintetico"):
-            r.font.size = Pt(10)
+        for r in add_text(p, el["text"]):
+            if lvl == 4:
+                r.italic = True
+            if lvl == 2 and el.get("sintetico"):
+                r.font.size = Pt(10)
         return p
 
     def para(self, el):
@@ -249,7 +268,8 @@ class RR:
         b = el["body"]
         if el["caption"]:
             p = self.doc.add_paragraph(); fmt(p, 6, 2, keep=True)
-            r = p.add_run(el["caption"]); r.bold = True; r.font.size = Pt(9.5); r.font.color.rgb = COR
+            for r in add_text(p, el["caption"]):
+                r.bold = True; r.font.size = Pt(9.5); r.font.color.rgb = COR
         if b and b["t"] == "img":
             p = self.doc.add_paragraph(); fmt(p, 0, 2, keep=bool(el["fontes"]))
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -271,7 +291,8 @@ class RR:
             first = True
             if el["caption"]:
                 p = c.paragraphs[0]; first = False; fmt(p, 0, 2, keep=True)
-                r = p.add_run(el["caption"]); r.bold = True; r.font.size = Pt(9); r.font.color.rgb = COR
+                for r in add_text(p, el["caption"]):
+                    r.bold = True; r.font.size = Pt(9); r.font.color.rgb = COR
             p = c.paragraphs[0] if first else c.add_paragraph(); fmt(p, 0, 2)
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             self.picture(p, el["body"], width=min(el["body"]["w"], half - 6))

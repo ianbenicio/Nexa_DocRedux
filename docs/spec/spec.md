@@ -148,7 +148,7 @@ class Relatorio:
     fracao_real: float | None        # modo síntese
     condensado: list[str]            # síntese: o que saiu (notas, referências, exemplos), com contagem
     gate: Literal["ok", "bloqueado"]
-    motivo_gate: str | None          # ex.: "cobertura 99,41% < 99,5%"
+    motivo_gate: str | None          # ex.: "cobertura 99,41% < 99,5%"; "números do original ausentes na saída: 2, operador +"
     estrutura: dict[str, int]        # contagens: capítulos, legendas, tabelas, imagens, questões, notas...
     modificacoes: list[Modificacao]  # base do relatório de modificações (U-G)
     regras_disparadas: list[str]     # R1..R48
@@ -178,6 +178,7 @@ class RenderFalhou(MotorErro): ...       # LibreOffice
 **Regras do contrato:**
 - `processar` escolhe o pipeline pelo `perfil["tipo"]`: `ficha` → `extract` + `render_docx` + `verify`; `relatorio` → `extract_relatorio` + `render_relatorio` + `verify_relatorio`. O PDF sai do LibreOffice headless.
 - **Gate de cobertura** (FR-12): no modo original, `cobertura < 0,995` → `gate = "bloqueado"`. Na síntese não há gate de cobertura; vale o relatório de síntese (FR-13).
+- **Integridade numérica** (FR-12, story 2.7, achado M09): no modo original, todo número do original (com sinal, decimal, fração, porcentagem ou ordinal) e todo operador entre números (`+ − × ÷ = < > ≤ ≥`) precisam chegar à saída na mesma quantidade. Faltou algum → `gate = "bloqueado"`, mesmo com cobertura ≥ 99,5%; o `motivo_gate` lista até 5 itens. A checagem usa os mesmos textos e exclusões da cobertura; número de página (só dígitos, faixa de 8% do topo/rodapé) fica fora. Números a mais na saída (sumário regenerado, rótulos) não bloqueiam. A contagem de palavras usada no preço (DT-21) não muda. Detalhe por execução em `verificacao.json` → `numeros`.
 - **Síntese** (FR-6): o protótipo `sintese_extrativa.py` hoje roda por capítulo e não está ligado ao render (P5, "Próximo"). A unidade 2 generaliza para o documento inteiro e liga ao render DOCX/PDF. Toda frase da saída existe no original e aponta para a página (P5).
 - **Manter capa e elementos** (FR-6, U-C): liga/desliga as regras de remoção de capa, folha de rosto, cabeçalhos e elementos gráficos (P5).
 - O caminho do LibreOffice vem de `DOCREDUX_SOFFICE` (hoje fixo no Windows em `scripts/render_relatorio.py:23`). Cada chamada usa `-env:UserInstallation` próprio (DT-5).

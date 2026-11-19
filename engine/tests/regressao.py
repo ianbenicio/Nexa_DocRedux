@@ -6,7 +6,8 @@ Uso (de engine/):
 Lê os PDFs de $DOCREDUX_FIXTURES/<NN-slug>/original/*.pdf (fora do git, Q1). Para cada exemplo roda
 o pipeline completo (extração → DOCX → PDF pelo LibreOffice → verificação) e compara:
   - páginas do PDF de saída == baseline (tests/baseline.json);
-  - cobertura >= baseline (nunca pode cair, Q13).
+  - cobertura >= baseline (nunca pode cair, Q13);
+  - gate ok (inclui a integridade numérica M09, story 2.7).
 Sai com código 1 se algum exemplo falhar; 2 se não houver fixtures.
 """
 import argparse
@@ -77,20 +78,21 @@ def main(argv=None):
         # com manter_capa_elementos a saída cresce (capa, fotos, decorativos): basta não encolher; a cobertura vale igual
         ok_pag = depois >= esp["paginas"] if a.manter_capa_elementos else depois == esp["paginas"]
         ok_cob = cob is not None and cob >= esp["cobertura_min"]
-        ok = ok_pag and ok_cob and antes == esp["paginas_original"]
+        ok = ok_pag and ok_cob and antes == esp["paginas_original"] and r.gate == "ok"  # gate inclui M09 (2.7)
         falhas += 0 if ok else 1
         linhas.append({"exemplo": slug, "ok": ok,
                        "paginas": f"{antes}→{depois}",
                        "paginas_baseline": f"{esp['paginas_original']}→{esp['paginas']}",
                        "cobertura_pct": cob, "cobertura_min": esp["cobertura_min"],
-                       "gate": r.gate, "tempo_s": round(time.perf_counter() - t0, 1), "tempos_s": r.tempos_s})
+                       "gate": r.gate, "motivo_gate": r.motivo_gate, "tempo_s": round(time.perf_counter() - t0, 1), "tempos_s": r.tempos_s})
     for ln in linhas:
         if "erro" in ln:
             print(f"FALHA {ln['exemplo']}: {ln['erro']}")
         else:
             st = "OK   " if ln["ok"] else "FALHA"
             print(f"{st} {ln['exemplo']:<36} {ln['paginas']:>9} (baseline {ln['paginas_baseline']})  "
-                  f"cobertura {ln['cobertura_pct']}% (mín. {ln['cobertura_min']}%)  {ln['tempo_s']} s")
+                  f"cobertura {ln['cobertura_pct']}% (mín. {ln['cobertura_min']}%)  {ln['tempo_s']} s"
+                  + (f"  gate: {ln['motivo_gate']}" if ln["gate"] != "ok" else ""))
     resumo = {"ambiente": ambiente, "exemplos": linhas, "falhas": falhas}
     if a.json:
         Path(a.json).write_text(json.dumps(resumo, ensure_ascii=False, indent=1), encoding="utf-8")

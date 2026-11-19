@@ -13,6 +13,7 @@ from docx.oxml.ns import qn
 
 from ..ficha import extract
 from ..relatorio import extract as ER
+from . import numeros
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
 
@@ -81,7 +82,15 @@ def orig_counter(lines):
 
 
 def docx_counter(path):
-    d = Document(path); c = collections.Counter()
+    c = collections.Counter()
+    for t in docx_textos(path):
+        c.update(words(t))
+    return c
+
+
+def docx_textos(path):
+    """Texto de cada paragrafo do DOCX como a cobertura o le (sem sobrescritos nem numero de nota)."""
+    d = Document(path); out = []
 
     def runs_words(p):
         t = []
@@ -95,7 +104,7 @@ def docx_counter(path):
             t.append(r.text)
         return "".join(t)
     for p in d.paragraphs:
-        c.update(words(runs_words(p)))
+        out.append(runs_words(p))
     for t in d.tables:
         for tc in t._tbl.iter(qn("w:tc")):
             for p in tc.iter(qn("w:p")):
@@ -105,8 +114,8 @@ def docx_counter(path):
                     if va is not None and va.get(qn("w:val")) == "superscript":
                         continue
                     txt.append("".join(x.text or "" for x in r.iter(qn("w:t"))))
-                c.update(words("".join(txt)))
-    return c
+                out.append("".join(txt))
+    return out
 
 
 def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
@@ -119,7 +128,8 @@ def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
     # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, fora da cobranca
     fora = {**meta["removidas"], **{str(k): v for k, v in meta.get("paginas_imagem", {}).items()}}
     lines, info = orig_lines(pdf, perfil, fora, meta["recorte"], meta.get("sumario_linhas", []))
-    o = orig_counter(lines); n = docx_counter(docx)
+    saida_textos = docx_textos(docx)
+    o = orig_counter(lines); n = orig_counter(saida_textos)
     missing = o - n; extra = n - o
     cov = 1 - sum(missing.values()) / max(1, sum(o.values()))
     els = model["elementos"]
@@ -155,6 +165,7 @@ def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
         "paginas_original": meta["paginas"], "paginas_docx_pdf": pages,
         "palavras_original": sum(o.values()), "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(40)), "palavras_a_mais": dict(extra.most_common(15)),
+        "numeros": numeros.comparar(numeros.contar(lines), numeros.contar(saida_textos)),
         "estrutura": est, "estrutura_ok": ok,
         "imagens": meta["stats"].get("imagens", 0), "tabelas": meta["stats"].get("tabelas", 0),
         "paginas_removidas": meta["removidas"],

@@ -98,3 +98,17 @@ O PDF entregue é o mesmo do baseline aprovado, pixel a pixel, em 273 páginas. 
 **Página-imagem nova** (`m01-diagrama-renderizado.png`): numa ficha sintética renderizada pelo LibreOffice, a página só com diagrama sai inteira, legível e depois do enunciado. A capa só com imagem foi removida (R1), e o filete de sangria não criou página extra.
 
 Ponto para depois, sem efeito na integridade: o diagrama ocupa uma página inteira, mesmo pequeno. Recortar a página-imagem pelo conteúdo economizaria páginas.
+
+## Integridade numérica (M09, story 2.7), 2026-11-19
+
+Medição antes do gate, sobre as saídas da `main`: fichas 01–04 sem número faltando; ex. 05 com 4 anos faltando em 6.001 tokens.
+
+- `2009` ×2: "jan./jun. 2009" saía "jan./jun.2009" (espaço perdido na junção, número intacto). O token agora começa também depois de ponto de abreviação.
+- `2022`/`2023`: defeito real. Legenda e título guardavam o marcador de nota sobrescrito como texto puro, grudado no ano: "2012-2023²" saía "2012-20232". Corrigido: o marcador vira dígito sobrescrito Unicode no modelo e run sobrescrito no DOCX. O mesmo defeito causava "crianças1" e "cor3"; a cobertura do 05 recuperou 4 palavras (31 → 27 faltando; `palavras_original` 91.037, igual).
+
+Depois da correção, LibreOffice 26.8.3.1 + Carlito:
+- Regressão padrão (`m09-regressao-padrao.json`): 5/5, baseline 19/14/5/12/142, gate ok em todos.
+- Preservação (`m09-regressao-preservacao.json`): 5/5, 27/19/8/17/174, igual ao histórico.
+- Suíte completa (`m09-pytest.xml`): 121 passaram, 1 pulado (jsonschema).
+- Tokens numéricos conferidos: 203/207/85/145/6.012, nada faltando. Sobras na saída (não bloqueiam): identificação ("5º ano"), números de página do sumário regenerado e 14 `=` do ex. 04, onde uma grade de contas ("1 : 10 =") virou um parágrafo e o `=` passou a encostar no número seguinte.
+- PDF do 05 conferido: "2012-2023²" (p. 90) e "Alfabetização de crianças¹" (p. 26) com o marcador sobrescrito.

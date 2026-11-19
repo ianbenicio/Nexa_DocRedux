@@ -11,6 +11,7 @@ from docx import Document
 from docx.oxml.ns import qn
 
 from ..ficha.render import CFG, A4_W, A4_H  # noqa: E402
+from . import numeros
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
 
@@ -19,31 +20,55 @@ def words(text):
     return [w.lower() for w in WORD.findall(text.replace("ᵒ", "º")) if not w.isdigit() or len(w) > 1]
 
 
+MARGEM_NUM_PAGINA = 0.08  # numero sozinho no topo/rodape (8% da altura) e numero de pagina, nao conteudo
+
+
+def original_textos(pdf, removed, figs):
+    """Linhas do original que a saida deve conter. Devolve (textos, textos_numeros, palavras_em_figuras).
+
+    textos: base da cobertura de palavras (sem linhas so de digitos, como sempre).
+    textos_numeros: base da checagem numerica (M09): inclui linhas so de digitos (valores de alternativas,
+    celulas), exceto o numero de pagina na faixa de topo/rodape.
+    figs: [(pagina, Rect)] das figuras vetoriais. Texto dentro delas esta na imagem (R7), nao no DOCX."""
+    textos, textos_num, in_fig = [], [], 0
+    with pymupdf.open(pdf) as doc:
+        for pno, p in enumerate(doc):
+            if str(pno + 1) in removed:
+                continue
+            fr = [r for pg, r in figs if pg == pno + 1]
+            h = p.rect.height
+            for b in p.get_text("dict")["blocks"]:
+                for ln in b.get("lines", []):
+                    if abs(ln["dir"][1]) > 0.1:
+                        continue
+                    t = "".join(s["text"] for s in ln["spans"])
+                    if re.search(r"FICHA DO ESTUDANTE|ANO\s+·\s+PERCURSO", t):
+                        continue
+                    lb = pymupdf.Rect(ln["bbox"])
+                    if any(r.contains(pymupdf.Point((lb.x0 + lb.x1) / 2, (lb.y0 + lb.y1) / 2)) for r in fr):
+                        in_fig += len(words(t)); continue
+                    t = re.sub(r"\[\d\]", " ", t)  # glifo de checkbox -> vira ☐
+                    if t.strip().isdigit():
+                        if MARGEM_NUM_PAGINA * h < (lb.y0 + lb.y1) / 2 < (1 - MARGEM_NUM_PAGINA) * h:
+                            textos_num.append(t)
+                        continue
+                    textos.append(t)
+                    textos_num.append(t)
+    return textos, textos_num, in_fig
+
+
 def original_words(pdf, removed, figs):
     """figs: [(pagina, Rect)] das figuras vetoriais. Texto dentro delas esta na imagem (R7), nao no DOCX."""
-    doc = pymupdf.open(pdf); c = collections.Counter(); in_fig = 0
-    for pno, p in enumerate(doc):
-        if str(pno + 1) in removed:
-            continue
-        fr = [r for pg, r in figs if pg == pno + 1]
-        for b in p.get_text("dict")["blocks"]:
-            for ln in b.get("lines", []):
-                if abs(ln["dir"][1]) > 0.1:
-                    continue
-                t = "".join(s["text"] for s in ln["spans"])
-                if re.search(r"FICHA DO ESTUDANTE|ANO\s+·\s+PERCURSO", t) or t.strip().isdigit():
-                    continue
-                lb = pymupdf.Rect(ln["bbox"])
-                if any(r.contains(pymupdf.Point((lb.x0 + lb.x1) / 2, (lb.y0 + lb.y1) / 2)) for r in fr):
-                    in_fig += len(words(t)); continue
-                t = re.sub(r"\[\d\]", " ", t)  # glifo de checkbox -> vira ☐
-                c.update(words(t))
+    textos, _, in_fig = original_textos(pdf, removed, figs)
+    c = collections.Counter()
+    for t in textos:
+        c.update(words(t))
     return c, in_fig
 
 
-def docx_words(path):
-    d = Document(path); c = collections.Counter()
-    # Cada paragrafo fisico uma vez, inclusive em celulas mescladas/aninhadas.
+def docx_textos(path):
+    """Texto de cada paragrafo fisico do DOCX, uma vez, inclusive em celulas mescladas/aninhadas."""
+    d = Document(path); out = []
     for p in d.element.body.iter(qn("w:p")):
         texto = []
         for node in p.iter():
@@ -51,7 +76,14 @@ def docx_words(path):
                 texto.append(node.text or "")
             elif node.tag in (qn("w:br"), qn("w:tab"), qn("w:cr")):
                 texto.append(" ")
-        c.update(words("".join(texto)))
+        out.append("".join(texto))
+    return out
+
+
+def docx_words(path):
+    c = collections.Counter()
+    for t in docx_textos(path):
+        c.update(words(t))
     return c
 
 
@@ -122,8 +154,14 @@ def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=Non
     figs = [(el["pagina"], pymupdf.Rect(el["bbox"])) for el in model["elementos"] if el.get("figura")]
     # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, como nas figuras (R7)
     fora = {**model["meta"]["removidas"], **{str(k): v for k, v in model["meta"].get("paginas_imagem", {}).items()}}
-    o, in_fig = original_words(pdf, fora, figs)
-    n = docx_words(docx)
+    textos, textos_num, in_fig = original_textos(pdf, fora, figs)
+    o = collections.Counter()
+    for t in textos:
+        o.update(words(t))
+    saida_textos = docx_textos(docx)
+    n = collections.Counter()
+    for t in saida_textos:
+        n.update(words(t))
     missing = o - n
     cov = 1 - sum(missing.values()) / max(1, sum(o.values()))
     pages_est = estimate_pages(model)
@@ -137,6 +175,7 @@ def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=Non
         "figuras_vetoriais": len(figs),
         "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(30)),
+        "numeros": numeros.comparar(numeros.contar(textos_num), numeros.contar(saida_textos)),
         "linhas_resposta": {"original": st["linhas_resposta_orig"],
                             "saida": sum(max(1, math.ceil(e["n"] * CFG["fator_linhas"])) for e in model["elementos"] if e["t"] == "lines")},
         "imagens": st["imagens"], "tabelas": st["tabelas"], "quadros": st["quadros"],

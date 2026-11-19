@@ -29,6 +29,15 @@ def runs_text(runs):
     return "".join(r[0] for r in runs)
 
 
+SUP_DIG = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+
+
+def runs_text_sup(runs):
+    """Texto puro para titulos e legendas, que nao guardam runs: o marcador de nota sobrescrito vira digito
+    Unicode sobrescrito (story 2.7). Sem isso ele grudava no texto: '2012-2023' + nota 2 -> '2012-20232'."""
+    return "".join(r[0].translate(SUP_DIG) if r[1] & SUP else r[0] for r in runs)
+
+
 def is_url_tail(t):
     tok = t.rsplit(" ", 1)[-1]
     return bool(re.match(r"(https?://|www\.)", tok) or "://" in tok or ("/" in tok and "." in tok))
@@ -134,6 +143,7 @@ def page_lines(page, perfil, stats=None):
             txt = runs_text(runs)
             first = spans[0]
             out.append({"bb": pymupdf.Rect(ln["bbox"]), "y": base, "x0": ln["bbox"][0], "runs": runs, "text": txt,
+                        "text_sup": runs_text_sup(runs),
                         "font": main["font"].split("+")[-1], "size": round(main["size"], 1),
                         "first_size": round(first["size"], 1), "first_text": clean(first["text"]).strip(),
                         "first_font": first["font"].split("+")[-1]})
@@ -485,29 +495,29 @@ def parse_page(doc, pno, perfil, ctx, outdir, stats):
         if (in_band and bold and font.startswith("Archer")) or (font.startswith("Cambria-Bold") and size >= perfil["h2"]["cambria_bold_size"] - 0.1) \
                 or (t in perfil["h2"]["textos"] and bold and l["x0"] <= left + 2):
             if cur is not None and cur["k"] == "h" and cur["lvl"] == 2 and l["y"] - cur["y1"] < 20:
-                cur["text"] = join_text(cur["text"], t); cur["y1"] = l["y"]
+                cur["text"] = join_text(cur["text"], l["text_sup"]); cur["y1"] = l["y"]
                 continue
             flush()
-            cur = {"k": "h", "lvl": 2, "text": t, "y0": l["y"], "y1": l["y"]}
+            cur = {"k": "h", "lvl": 2, "text": l["text_sup"],"y0": l["y"], "y1": l["y"]}
             ctx["refs"] = (t == perfil["referencia"]["secao"])
             continue
         # --- H3/H4
         if font.startswith("Archer-Bold") or font.startswith("Archer-BookItalic"):
             lvl = 3 if (font.startswith("Archer-Bold") and size >= perfil["h3"]["size"] - 0.1) else 4
             if cur is not None and cur["k"] == "h" and cur["lvl"] == lvl and l["y"] - cur["y1"] < 17:
-                cur["text"] = join_text(cur["text"], t); cur["y1"] = l["y"]
+                cur["text"] = join_text(cur["text"], l["text_sup"]); cur["y1"] = l["y"]
                 continue
             flush()
-            cur = {"k": "h", "lvl": lvl, "text": t, "y0": l["y"], "y1": l["y"]}
+            cur = {"k": "h", "lvl": lvl, "text": l["text_sup"],"y0": l["y"], "y1": l["y"]}
             continue
         # --- legenda (R37)
         if cfg_leg.match(t) and (bold or font.startswith("CambriaMath")):
             flush()
-            cur = {"k": "cap", "text": t, "y0": l["y"], "y1": l["y"], "font": font, "x": l["bb"].x0}
+            cur = {"k": "cap", "text": l["text_sup"],"y0": l["y"], "y1": l["y"], "font": font, "x": l["bb"].x0}
             last_y = l["y"]
             continue
         if cur is not None and cur["k"] == "cap" and (font == cur["font"] or font.startswith("Cambria")) and l["y"] - last_y <= 16 and size >= 9.9 and (bold or font.startswith("CambriaMath")):
-            cur["text"] = join_text(cur["text"], t); cur["y1"] = l["y"]; last_y = l["y"]
+            cur["text"] = join_text(cur["text"], l["text_sup"]); cur["y1"] = l["y"]; last_y = l["y"]
             continue
         # --- Fonte / Nota
         if cfg_fonte.match(t) and size <= 10.6 and (t.startswith(("Fonte", "Foto", "Elaboração")) or size <= 9.6):

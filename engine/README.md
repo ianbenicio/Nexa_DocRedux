@@ -35,6 +35,7 @@ res.pdf, res.docx, res.relatorio.to_json()   # relatório também gravado em sai
 - Recusas da triagem: `escaneado`, `protegido`, `corrompido`, `excede_paginas` (> 300), `excede_tamanho` (> 80 MB).
 - `Opcoes.modo="sintese"` só vale para relatório (Q4); `fracao` em 0.20 / 0.35 / 0.50.
 - Modo original: cobertura < 99,5% → `relatorio.gate = "bloqueado"` com `motivo_gate`.
+- Modo original, integridade numérica (story 2.7): número ou operador entre números do original ausente na saída → também `"bloqueado"`, mesmo com cobertura alta. Detalhe em `verificacao.json` → `numeros` (`verify/numeros.py`). Número de página e números a mais na saída não bloqueiam.
 - Erros: `MotorErro` (base), `PdfRecusado(motivo)`, `PerfilInvalido(erros)`, `RenderFalhou`.
 - `validar_perfil(perfil)` → lista de erros (`[]` = válido), contra `docredux_engine/perfil.schema.json`.
 
@@ -83,7 +84,7 @@ python -m docredux_engine validar-perfil perfis/mathema-saeb.json
 
 ```bash
 pytest                                       # contrato (PDFs sintéticos) + ex. 01–05 se DOCREDUX_FIXTURES existir
-python tests/regressao.py                    # ex. 01–05 contra tests/baseline.json (páginas e cobertura)
+python tests/regressao.py                    # ex. 01–05 contra tests/baseline.json (páginas, cobertura e gate)
 ```
 
 Container (mesma regressão em Linux):

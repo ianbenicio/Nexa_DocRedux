@@ -351,11 +351,15 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
     if opcoes.modo == "original":
         cobertura = v["cobertura_texto_pct"] / 100
         palavras_original = v["palavras_original"]
+        motivos = []
         if cobertura < GATE_COBERTURA:
-            gate = "bloqueado"
-            motivo = f"cobertura {cobertura * 100:.2f}% < {GATE_COBERTURA * 100:.1f}%".replace(".", ",")
-        else:
-            gate, motivo = "ok", None
+            motivos.append(f"cobertura {cobertura * 100:.2f}% < {GATE_COBERTURA * 100:.1f}%".replace(".", ","))
+        num = v.get("numeros")
+        if num is not None and not num["ok"]:  # M09, story 2.7: número ou sinal do original ausente na saída
+            itens = ", ".join(k.replace("op:", "operador ") + (f" (×{n})" if n > 1 else "")
+                              for k, n in list(num["faltando"].items())[:5])
+            motivos.append(f"números do original ausentes na saída: {itens}")
+        gate, motivo = ("bloqueado", "; ".join(motivos)) if motivos else ("ok", None)
         if v.get("estrutura_ok") is False:
             avisos.append("verificação estrutural divergente (legendas, Fonte, notas ou capítulos)")
     else:  # FR-13: sem gate de cobertura na síntese; vale o relatório de síntese
