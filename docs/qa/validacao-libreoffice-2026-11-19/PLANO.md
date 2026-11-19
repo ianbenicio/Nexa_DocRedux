@@ -57,4 +57,24 @@ Os arquivos `codex-demais.json`, `preservacao.json` e `pytest-com-libreoffice.xm
 
 Ainda pendente:
 - inspeção visual amostral e do sumário do relatório final (só o ex. 03 foi comparado pixel a pixel);
-- uma capa só de imagem, sem texto, na primeira ou última página, agora é mantida como `conteudo_visual` no modo padrão, em vez de removida pela R1. Nenhum dos ex. 01–05 tem esse caso, e ainda falta o teste dele.
+
+## Capa sem texto (R1 × M01), 2026-11-19
+
+Na versão anterior, uma capa feita só de imagem, sem texto, na primeira ou na última página, virava `conteudo_visual` no modo padrão em vez de sair pela R1. Correção: `is_cover_or_blank` testa a capa antes da página branca, e `extrair` só aplica o M01 quando a página não é capa nem branca.
+
+Na 1ª e na última página sem texto, contam como capa:
+- arte que cobre ≥ 80% da página (`CAPA_IMAGEM_MIN`);
+- capa vetorial com > 500 desenhos, que já era a regra antiga.
+
+A mesma arte no meio do documento continua `conteudo_visual`. Uma figura pequena na última página também continua conteúdo.
+
+Testes: `test_capa_so_com_imagem_segue_r1` (duas opções) e `test_capa_vetorial_sem_texto_segue_r1`. Resultados:
+
+| Verificação | Resultado |
+|---|---|
+| `test_integridade.py` | 56 passaram |
+| `test_manter.py` | 4 passaram |
+| Regressão padrão das fichas 01–04 | 19/14/5/12 (`codex-capa-padrao.json`) |
+| Preservação das fichas 01–04 | 27/19/8/17 (`codex-capa-preservacao.json`) |
+
+O ex. 05 (relatório) usa `relatorio/extract.py`, que essa mudança não toca.

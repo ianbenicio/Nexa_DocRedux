@@ -42,7 +42,8 @@ res.pdf, res.docx, res.relatorio.to_json()   # relatório também gravado em sai
 
 - Fichas: páginas com figuras sem texto são preservadas como página-imagem a 200 dpi, mesmo sem
   `manter_capa_elementos`; fundo uniforme, objetos fora da página e filetes de sangria a até 3 pt do
-  corte (`BORDA_SANGRIA`) continuam descartáveis. Ex. 01–05 seguem o baseline com a opção desligada.
+  corte (`BORDA_SANGRIA`) continuam descartáveis. Na 1ª/última página sem texto, arte que cobre ≥ 80% da
+  página (`CAPA_IMAGEM_MIN`) é capa/contracapa e segue a R1. Ex. 01–05 seguem o baseline com a opção desligada.
 - A síntese preserva delimitadores das frases, usa a contagem DT-21 no relatório e informa quando
   o núcleo obrigatório impede atingir a fração solicitada. As frações aceitas são exatamente 0.20/0.35/0.50.
 - A contagem DOCX separa parágrafos/quebras e percorre células físicas uma única vez. Os verificadores

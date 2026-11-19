@@ -69,6 +69,43 @@ def test_nao_promove_fundo_ou_objeto_fora_da_pagina_a_conteudo(tipo):
         assert extract.is_cover_or_blank(p, 0, 1) == "branca"
 
 
+def _arte_pagina_inteira(page, cor=(30, 90, 160)):
+    pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 60, 80), False)
+    pix.set_rect(pix.irect, cor)
+    page.insert_image(page.rect, pixmap=pix)
+
+
+@pytest.mark.parametrize("manter", [False, True])
+def test_capa_so_com_imagem_segue_r1(tmp_path, perfil_por_nome, manter):
+    """Capa/contracapa sem texto, so com arte de pagina inteira, e R1 (nao M01); no meio do documento e conteudo."""
+    path = tmp_path / "capa.pdf"
+    with pymupdf.open() as pdf:
+        _arte_pagina_inteira(pdf.new_page())                       # p. 1: capa so imagem
+        pdf.new_page().insert_text((72, 100), "Leia o texto e responda as questoes da atividade.")
+        _arte_pagina_inteira(pdf.new_page(), (200, 120, 40))       # p. 3: arte no meio, sem texto
+        pdf.new_page().insert_text((72, 100), "Continue a atividade nesta pagina com atencao.")
+        _arte_pagina_inteira(pdf.new_page(), (90, 30, 30))         # p. 5: contracapa so imagem
+        pdf.save(path)
+    out = tmp_path / "saida"
+    meta = extract.extrair(path, out, perfil_por_nome["mathema-saeb"], manter_capa_elementos=manter)
+    if manter:
+        assert meta["paginas_imagem"] == {1: "capa", 3: "conteudo_visual", 5: "contracapa"}
+        assert meta["removidas"] == {}
+    else:
+        assert meta["removidas"] == {1: "capa", 5: "contracapa"}
+        assert meta["paginas_imagem"] == {3: "conteudo_visual"}
+
+
+def test_capa_vetorial_sem_texto_segue_r1():
+    with pymupdf.open() as pdf:
+        p = pdf.new_page()
+        for i in range(520):
+            p.draw_rect(pymupdf.Rect(20 + i % 26 * 20, 20 + i // 26 * 20, 35 + i % 26 * 20, 35 + i // 26 * 20),
+                        fill=(0.2, 0.4, 0.7), color=None)
+        assert extract.is_cover_or_blank(p, 0, 3) == "capa"
+        assert extract.is_cover_or_blank(p, 1, 3) is None  # mesma arte no meio: conteudo
+
+
 @pytest.mark.parametrize("posicao", ["margem", "atravessa"])
 def test_desenho_perto_da_borda_continua_conteudo(posicao):
     """A faixa de sangria e estreita: linha a 10 pt do corte, ou objeto que entra na pagina, e conteudo."""

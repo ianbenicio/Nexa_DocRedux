@@ -692,12 +692,25 @@ def has_visual_content(page):
     return False
 
 
+# R1: na 1a/ultima pagina sem texto, uma imagem que cobre ao menos esta fracao da pagina e arte de capa,
+# nao figura de conteudo (figura de atividade ocupa parte da pagina e vem com enunciado em outra).
+CAPA_IMAGEM_MIN = 0.8
+
+
+def _maior_imagem(page):
+    """Fracao da area da pagina coberta pela maior imagem (trecho visivel)."""
+    area = page.rect * page.derotation_matrix
+    total = abs(area) or 1
+    return max((abs(pymupdf.Rect(i["bbox"]) & area) / total for i in page.get_image_info()), default=0)
+
+
 def is_cover_or_blank(page, pno, n_pages):
     txt = page.get_text("text").strip()
+    if pno in (0, n_pages - 1) and len(txt) < 200 and (
+            len(page.get_drawings()) > 500 or (not txt and _maior_imagem(page) >= CAPA_IMAGEM_MIN)):
+        return "capa" if pno == 0 else "contracapa"
     if not txt and not has_visual_content(page):
         return "branca"
-    if pno in (0, n_pages - 1) and len(txt) < 200 and len(page.get_drawings()) > 500:
-        return "capa" if pno == 0 else "contracapa"
     return None
 
 
@@ -745,12 +758,13 @@ def extrair(pdf, out, perfil=None, *, paginas=None, manter_capa_elementos=False)
     removed, como_imagem = {}, {}
     model = [{"t": "id", "text": identification(doc), "arquivo": pdf.name}]
     for pno in range(doc.page_count):
-        if not doc[pno].get_text("text").strip() and has_visual_content(doc[pno]):
+        # R1 primeiro: capa/contracapa sem texto (arte de pagina inteira) segue a regra da capa, nao M01
+        why = is_cover_or_blank(doc[pno], pno, doc.page_count)
+        if why is None and not doc[pno].get_text("text").strip():  # M01: so ha conteudo visual
             model.append(pagina_inteira(doc[pno], pno, out / "img", "conteudo_visual", dpi=200))
             como_imagem[pno + 1] = "conteudo_visual"
             stats["paginas_visuais_preservadas"] = stats.get("paginas_visuais_preservadas", 0) + 1
             continue
-        why = is_cover_or_blank(doc[pno], pno, doc.page_count)
         if why and manter_capa_elementos and why in ("capa", "contracapa"):
             pg = pagina_inteira(doc[pno], pno, out / "img", why)
             model.insert(0, pg) if why == "capa" else model.append(pg)  # capa antes da caixa de identificacao
