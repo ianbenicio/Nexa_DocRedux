@@ -1,0 +1,14 @@
+schema: 1
+story: '2.1'
+story_title: 'repositorio-e-esqueleto'
+gate: PASS
+status_reason: "Monorepo com 6 pastas e README; .gitignore/.gitattributes cobrem PDF, DOCX, imagens, .env e saídas; git ls-files sem nenhum desses tipos."
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-18'
+top_issues: []
+evidence:
+  tests: 'pytest 34 passed, 1 skipped (py 3.15); regressao.py 5/5 OK (LibreOffice 26.8.3.1, Windows)'
+nfr_validation:
+  security: {status: PASS, notes: 'Repositório público: nenhum PDF/DOCX/imagem/.env versionado'}
+  reliability: {status: PASS, notes: 'Regressão estável'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC'}

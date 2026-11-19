@@ -1,0 +1,18 @@
+schema: 1
+story: '2.4'
+story_title: 'sintese-extrativa'
+gate: CONCERNS
+status_reason: "Fração real a ≤ 0,15 ponto do alvo nos 3 níveis, 0 trechos fora do original, núcleo e figuras presentes, ~1,2 s de CPU. Ponto aberto de produto sobre a contagem de palavras usada no preço."
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-18'
+top_issues:
+  - severity: medium
+    refs: ['spec']
+    finding: "palavras_original na síntese = contagem da triagem (93.166 no ex. 05); o spec usa 91.037 (verify). O preço 20/35/50% muda de 55/73/92 para 56/75/94."
+    suggested_action: "Decidir na unidade 3/4 qual contagem vale para o preço (triagem ou extração prévia)."
+evidence:
+  tests: 'pytest 34 passed, 1 skipped (py 3.15); regressao.py 5/5 OK (LibreOffice 26.8.3.1, Windows)'
+nfr_validation:
+  security: {status: PASS, notes: 'Repositório público: nenhum PDF/DOCX/imagem/.env versionado'}
+  reliability: {status: PASS, notes: 'Regressão estável'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC'}
