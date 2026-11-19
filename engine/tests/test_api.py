@@ -103,6 +103,16 @@ def test_triar_exemplos(n, perfis):
     assert t.palavras > 1000
 
 
+# DT-21: a triagem conta palavras como o verify. Valores medidos na unidade 4 (2026-11-19).
+@pytest.mark.parametrize("n,palavras", [("03", 1334), ("05", 91037)])
+def test_triar_conta_como_o_verify(n, palavras, perfis, perfil_por_nome):
+    pdf = fixture_pdf(n)
+    t = triar(pdf, perfis)
+    assert t.palavras == palavras
+    assert api.contar_palavras(pdf, perfil_por_nome[EXEMPLOS[n][2]]) == palavras
+    assert triar(pdf, perfis, contagem_verify=False).palavras > palavras  # a simples conta capa, rodapés etc.
+
+
 # ---------------------------------------------------------------- validar_perfil
 def test_validar_perfis_semente(perfis):
     for p in perfis:

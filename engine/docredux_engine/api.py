@@ -138,9 +138,41 @@ def _palavras(doc) -> tuple[int, int]:
     return total, com_texto
 
 
-def triar(pdf: Path, perfis: list[dict], *, max_paginas: int = 300, max_bytes: int = 80 * 2**20) -> Triagem:
+def contar_palavras(pdf: Path, perfil: dict) -> int:
+    """DT-21: palavras do original contadas como o verify conta (extração + contador do original).
+
+    É a contagem que entra no preço da síntese e em `palavras_original` do modo original: o mesmo
+    texto que a cobertura mede, sem capa, páginas removidas, cabeçalhos e rodapés repetidos.
+    Opções padrão (sem manter capa e elementos). Custa uma extração completa (ex. 05: ~50 s).
+    """
+    import tempfile
+
+    from .ficha import extract as ficha_extract
+    from .verify import ficha as verify_ficha
+    from .verify import relatorio as verify_relatorio
+
+    pdf = Path(pdf)
+    with tempfile.TemporaryDirectory(prefix="docredux_contagem_") as d:
+        ficha_extract.extrair(pdf, Path(d), perfil)
+        # meta do modelo.json (chaves de página em texto), a mesma que o verify lê
+        model = json.loads((Path(d) / "modelo.json").read_text(encoding="utf-8"))
+    meta = model["meta"]
+    fora = {**meta["removidas"], **{str(k): v for k, v in meta.get("paginas_imagem", {}).items()}}
+    if meta.get("tipo") == "relatorio":
+        linhas, _ = verify_relatorio.orig_lines(pdf, perfil, fora, meta["recorte"], meta.get("sumario_linhas", []))
+        return int(sum(verify_relatorio.orig_counter(linhas).values()))
+    figs = [(el["pagina"], pymupdf.Rect(el["bbox"])) for el in model["elementos"] if el.get("figura")]
+    contagem, _ = verify_ficha.original_words(pdf, fora, figs)
+    return int(sum(contagem.values()))
+
+
+def triar(pdf: Path, perfis: list[dict], *, max_paginas: int = 300, max_bytes: int = 80 * 2**20,
+          contagem_verify: bool = True) -> Triagem:
     """Recusa o que o motor não processa e casa tipo e perfil pela assinatura de fontes (R33).
-    Template desconhecido: tipo "desconhecido", perfil_id None (Q3: vira pedido de perfil)."""
+    Template desconhecido: tipo "desconhecido", perfil_id None (Q3: vira pedido de perfil).
+
+    Documento aceito com perfil: `palavras` vem de `contar_palavras` (DT-21). Recusado ou sem perfil:
+    contagem simples do PDF inteiro (não há preço a calcular). `contagem_verify=False` força a simples."""
     pdf = Path(pdf)
     tamanho = pdf.stat().st_size
 
@@ -171,6 +203,8 @@ def triar(pdf: Path, perfis: list[dict], *, max_paginas: int = 300, max_bytes: i
         return resultado("escaneado", paginas, palavras)
     if paginas > max_paginas:
         return resultado("excede_paginas", paginas, palavras, perfil)
+    if perfil is not None and contagem_verify:
+        palavras = contar_palavras(pdf, perfil)
     return resultado(None, paginas, palavras, perfil)
 
 
