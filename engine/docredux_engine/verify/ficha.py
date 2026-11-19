@@ -1,6 +1,6 @@
 """DocRedux - verificacao (passo 7): cobertura de texto + estimativa de paginas + metricas.
 
-Uso: python verify.py <pdf_original> <saida_dir>
+Uso: python -m docredux_engine.verify.ficha <pdf_original> <saida_dir>  (no pacote: `verificar()`)
 Cobertura: toda palavra do original (exceto rodape/cabecalho corrido/capa) deve existir no DOCX.
 Paginas: estimativa por altura acumulada (Calibri 10,5; A4; margem 1,5 cm). Confirmar no Word.
 """
@@ -10,8 +10,7 @@ import pymupdf
 from docx import Document
 from docx.oxml.ns import qn
 
-sys.path.insert(0, str(Path(__file__).parent))
-from render_docx import CFG, A4_W, A4_H  # noqa: E402
+from ..ficha.render import CFG, A4_W, A4_H  # noqa: E402
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
 
@@ -104,12 +103,14 @@ def estimate_pages(model):
     return h / usable_h
 
 
-def main():
-    pdf, out = Path(sys.argv[1]), Path(sys.argv[2])
-    model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))
+def verificar(pdf, out, model=None, perfil=None):
+    """Cobertura + metricas -> out/verificacao.json. Devolve o relatorio (dict)."""
+    pdf, out = Path(pdf), Path(out)
+    if model is None:
+        model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))
     if model["meta"].get("tipo") == "relatorio":  # R32/R47: familia de relatorio
-        import verify_relatorio
-        return verify_relatorio.run(pdf, out, model)
+        from . import relatorio as verify_relatorio
+        return verify_relatorio.run(pdf, out, model, perfil)
     docx = next(out.glob("*_COMPACTO.docx"))
     figs = [(el["pagina"], pymupdf.Rect(el["bbox"])) for el in model["elementos"] if el.get("figura")]
     o, in_fig = original_words(pdf, model["meta"]["removidas"], figs)
@@ -134,7 +135,11 @@ def main():
         "tamanho_kb": {"original": round(pdf.stat().st_size / 1024), "docx": round(docx.stat().st_size / 1024)},
     }
     (out / "verificacao.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(json.dumps(rep, ensure_ascii=False, indent=1))
+    return rep
+
+
+def main():
+    print(json.dumps(verificar(sys.argv[1], sys.argv[2]), ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":

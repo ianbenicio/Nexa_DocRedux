@@ -1,9 +1,9 @@
 """DocRedux - renderizador do tipo `relatorio` (R32-R48): modelo.json -> DOCX.
 
-Chamado por render_docx.main() quando meta.tipo == "relatorio". Usa a mesma CFG (A4, margem 1,5 cm, Calibri 10,5).
+Chamado por ficha/render.renderizar() quando meta.tipo == "relatorio". Usa a mesma CFG (A4, margem 1,5 cm, Carlito 10,5).
 Elementos: id, front, h1-h4, p, quote, bullet, ref, fig(caption, body img|table, fontes), fonte, siglas, toc, notas.
 """
-import json, re, subprocess, sys
+import json, re, sys
 from pathlib import Path
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -12,15 +12,15 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, Cm, RGBColor
 
-from extract_relatorio import join_text
-import render_docx as RD
-from render_docx import CFG, A4_W, A4_H, shade, borders, fmt, no_table_borders
+from .extract import join_text
+from ..ficha import render as RD
+from ..ficha.render import CFG, A4_W, A4_H, shade, borders, fmt, no_table_borders
+from .. import soffice
 
 COR = RGBColor(0x1F, 0x4E, 0x79)  # azul sobrio do relatorio
 COR_HEX = "1F4E79"
 CINZA = RGBColor(0x55, 0x55, 0x55)
 B, I, SUP = 1, 2, 4
-SOFFICE = r"C:\Program Files\LibreOffice\program\soffice.exe"
 
 
 def add_runs(p, runs, size=None, color=None, bold=None, italic=None):
@@ -322,9 +322,8 @@ class RR:
 
 
 def soffice_pdf(docx, outdir):
-    subprocess.run([SOFFICE, "--headless", "--convert-to", "pdf", "--outdir", str(outdir), str(docx)],
-                   capture_output=True, timeout=900)
-    return Path(outdir) / (Path(docx).stem + ".pdf")
+    # executavel por DOCREDUX_SOFFICE e perfil do LibreOffice proprio por chamada (DT-5); era fixo no Windows
+    return soffice.para_pdf(docx, outdir, timeout=900)
 
 
 def find_toc_pages(pdf, h1s, h1_pt=15):
@@ -358,6 +357,6 @@ def run(out, model, name):
             pdf = soffice_pdf(path, out)
             pages = find_toc_pages(pdf, h1s, r.h1_pt)
         except Exception as e:  # sem LibreOffice: sumario sem numeros
-            print("aviso: sumario sem paginas:", e)
+            print("aviso: sumario sem paginas:", e, file=sys.stderr)
         r = RR(out, pages); doc = r.render(model); doc.save(path)
     return r.stats, pages

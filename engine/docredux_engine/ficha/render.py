@@ -1,6 +1,6 @@
 """DocRedux - renderizador (passo 6): modelo.json -> DOCX compacto.
 
-Uso: python render_docx.py <saida_dir> [--linhas-fator 0.5]
+Uso: python -m docredux_engine.ficha.render <saida_dir> [--linhas-fator 0.5]  (no pacote: `renderizar()`)
 Regras aplicadas aqui: R1 (caixa de identificacao), R2/R7 (tamanho de imagem), R3 (texto ao lado),
 R4 (alternativas lado a lado), R6 (espacamento), R9 (hierarquia), P1 (linhas de resposta reduzidas).
 """
@@ -14,7 +14,8 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, Cm, RGBColor
 
 CFG = {
-    "fonte": "Calibri", "tam": 10.5, "cor": RGBColor(0xCF, 0x45, 0x62), "cinza": RGBColor(0x66, 0x66, 0x66),
+    "fonte": "Carlito",  # Q13/DT-11: metrica identica a Calibri e existe no Linux (era "Calibri")
+    "tam": 10.5, "cor": RGBColor(0xCF, 0x45, 0x62), "cinza": RGBColor(0x66, 0x66, 0x66),
     "margem_cm": 1.5, "linha_resposta_pt": 18, "fator_linhas": 0.5, "min_linhas": 1,
     "img_max_pct_pagina": 50, "img_alvo_pct": 25,  # R2
     "max_chars_fluxo": 90, "sep_opcoes": "     ",  # R4: opção maior que isso vai em coluna
@@ -262,22 +263,32 @@ class R:
         return self.doc
 
 
+def nome_docx(model):
+    return Path(model["meta"]["origem"]).stem.replace("_ORIGINAL", "") + "_COMPACTO.docx"
+
+
+def renderizar(out, model=None):
+    """out/modelo.json (ou `model`) -> out/<origem>_COMPACTO.docx. Devolve as estatisticas do render.
+    Relatorio: 2 passadas pelo LibreOffice para o sumario (R42)."""
+    out = Path(out)
+    if model is None:
+        model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))
+    name = nome_docx(model)
+    if model["meta"].get("tipo") == "relatorio":  # R32: familia de relatorio
+        from ..relatorio import render as render_relatorio
+        st, pg = render_relatorio.run(out, model, name)
+        return {"arquivo": name, **st, "toc_paginas": pg}
+    r = R(out)
+    doc = r.render(model)
+    doc.save(out / name)
+    return {"arquivo": name, **r.stats, "cfg": {k: v for k, v in CFG.items() if not isinstance(v, RGBColor)}}
+
+
 def main():
     out = Path(sys.argv[1])
     if "--linhas-fator" in sys.argv:
         CFG["fator_linhas"] = float(sys.argv[sys.argv.index("--linhas-fator") + 1])
-    model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))
-    if model["meta"].get("tipo") == "relatorio":  # R32: familia de relatorio
-        import render_relatorio
-        name = Path(model["meta"]["origem"]).stem.replace("_ORIGINAL", "") + "_COMPACTO.docx"
-        st, pg = render_relatorio.run(out, model, name)
-        print(json.dumps({"arquivo": name, **st, "toc_paginas": pg}, ensure_ascii=False))
-        return
-    r = R(out)
-    doc = r.render(model)
-    name = Path(model["meta"]["origem"]).stem.replace("_ORIGINAL", "") + "_COMPACTO.docx"
-    doc.save(out / name)
-    print(json.dumps({"arquivo": name, **r.stats, "cfg": {k: v for k, v in CFG.items() if not isinstance(v, RGBColor)}}, ensure_ascii=False))
+    print(json.dumps(renderizar(out), ensure_ascii=False))
 
 
 if __name__ == "__main__":

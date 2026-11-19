@@ -1,0 +1,8 @@
+{
+ "_fonte": "LOG.md do acervo (Fechamento da fase de testes; Sessão 5b). Páginas = PDF do LibreOffice; cobertura = verify.py / verify_relatorio.py. Mudança de baseline só com aprovação do responsável (Q13) e registro no LOG.md.",
+ "01-mathema-saeb-5ano-lp-p3": {"tipo": "ficha", "perfil": "mathema-saeb", "paginas_original": 52, "paginas": 19, "cobertura_min": 99.96},
+ "02-mathema-saeb-4ano-lp-p3": {"tipo": "ficha", "perfil": "mathema-saeb", "paginas_original": 34, "paginas": 14, "cobertura_min": 100.0},
+ "03-mathema-saeb-4ano-mat-p3": {"tipo": "ficha", "perfil": "mathema-saeb", "paginas_original": 16, "paginas": 5, "cobertura_min": 100.0},
+ "04-mathema-saeb-5ano-mat-p3": {"tipo": "ficha", "perfil": "mathema-saeb", "paginas_original": 26, "paginas": 12, "cobertura_min": 100.0},
+ "05-diagnostico-educacao-nacional": {"tipo": "relatorio", "perfil": "mec-sase-relatorio", "paginas_original": 294, "paginas": 142, "cobertura_min": 99.97}
+}

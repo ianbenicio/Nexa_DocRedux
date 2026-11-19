@@ -1,6 +1,6 @@
 """DocRedux - extrator do tipo `relatorio` (R32-R48): PDF -> modelo.json.
 
-Entra por extract.py quando o perfil tem tipo=relatorio. Nao usa as regras de ficha
+Entra por ficha/extract.py (extrair) quando o perfil tem tipo=relatorio. Nao usa as regras de ficha
 (R4, R8, R10, R14, R16, R18, R19, R21-R27, RE_Q): relatorio tem paragrafo por recuo (R34),
 dehifenizacao (R35), runs com negrito/italico (R36), bloco legenda+figura+fonte (R37),
 imagem por bbox (R38), notas por capitulo (R40), referencias (R41), sumario regenerado (R42),
@@ -637,14 +637,14 @@ def parse_page(doc, pno, perfil, ctx, outdir, stats):
 
 
 # ---------------------------------------------------------------- documento
-def run(pdf, outdir, doc, perfil):
+def run(pdf, outdir, doc, perfil, paginas=None):
     pdf = Path(pdf); outdir = Path(outdir); outdir.mkdir(parents=True, exist_ok=True)
     (outdir / "img").mkdir(exist_ok=True)
     for old in (outdir / "img").glob("*.jpg"):
         old.unlink()
     a, b = 1, doc.page_count
-    if "--paginas" in sys.argv:
-        a, b = [int(x) for x in sys.argv[sys.argv.index("--paginas") + 1].split("-")]
+    if paginas:
+        a, b = paginas
     stats = collections.Counter()
     ctx = {"secao": "front", "refs": False, "sumario": []}
     removed = {}
@@ -735,4 +735,4 @@ def finalize(model, doc, pdf, outdir, perfil, stats, removed, a, b, ctx):
     meta = {"origem": pdf.name, "paginas": doc.page_count, "recorte": [a, b], "removidas": removed,
             "stats": dict(stats), "tipo": "relatorio", "perfil": perfil["nome"], "sumario_linhas": ctx["sumario"]}
     (outdir / "modelo.json").write_text(json.dumps({"meta": meta, "elementos": final}, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(json.dumps(meta, ensure_ascii=False))
+    return meta

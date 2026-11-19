@@ -5,7 +5,8 @@ Abordagem whitelist: so passa para o modelo o que for reconhecido como conteudo
 linhas de resposta, quadros de desenho). Todo o resto (arte de cabecalho, faixas,
 rodape repetido, elementos decorativos) cai automaticamente  -> regras R5/R8.
 
-Uso: python extract.py <pdf> <saida_dir> [--perfil perfis/<nome>.json]
+Uso: python -m docredux_engine.ficha.extract <pdf> <saida_dir> [--perfil perfis/<nome>.json]
+(no pacote, a entrada e `extrair()`; o CLI do worker e `python -m docredux_engine`).
 """
 import json, math, re, sys
 from pathlib import Path
@@ -14,7 +15,7 @@ import pymupdf
 # ---------------------------------------------------------------- perfil do template (R32/R33)
 # O perfil e DADO, nao codigo: um JSON por template em perfis/. O campo "tipo" (ficha | relatorio) liga
 # e desliga familias de regras. Escolhido pela assinatura (fontes presentes no PDF) ou por --perfil.
-PERFIL_DIR = Path(__file__).resolve().parent.parent / "perfis"
+from ..config import PERFIL_DIR  # noqa: E402  (engine/perfis/ ou DOCREDUX_PERFIS)
 
 
 def _cores(o):
@@ -32,17 +33,29 @@ def load_perfil(path):
     return _cores(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
-def escolher_perfil(doc):
-    """R33: perfil por assinatura. Todas as fontes de 'assinatura.fontes_contem' tem de aparecer nas
-    primeiras 30 paginas. Sem perfil compativel -> erro (na plataforma: LLM de perfil, cenario B)."""
+def fontes_do_pdf(doc, n=30):
     fontes = set()
-    for p in list(doc)[:30]:
+    for p in list(doc)[:n]:
         fontes.update(f[3] for f in p.get_fonts())
-    for f in sorted(PERFIL_DIR.glob("*.json")):
-        pf = load_perfil(f)
-        if all(any(x in n for n in fontes) for x in pf.get("assinatura", {}).get("fontes_contem", ["#sem-assinatura#"])):
+    return fontes
+
+
+def casa_assinatura(perfil, fontes):
+    """R33: todas as fontes de 'assinatura.fontes_contem' aparecem (como substring) nas fontes do PDF."""
+    return all(any(x in n for n in fontes) for x in perfil.get("assinatura", {}).get("fontes_contem", ["#sem-assinatura#"]))
+
+
+def escolher_perfil(doc, perfis=None):
+    """R33: perfil por assinatura. Todas as fontes de 'assinatura.fontes_contem' tem de aparecer nas
+    primeiras 30 paginas. `perfis`: dicts ja carregados (padrao: PERFIL_DIR/*.json, em ordem de nome).
+    Sem perfil compativel -> None (contrato: template novo, Q3)."""
+    fontes = fontes_do_pdf(doc)
+    if perfis is None:
+        perfis = [load_perfil(f) for f in sorted(PERFIL_DIR.glob("*.json"))]
+    for pf in perfis:
+        if casa_assinatura(pf, fontes):
             return pf
-    raise SystemExit("nenhum perfil em perfis/ casa com as fontes do PDF: criar perfil novo (passo L)")
+    return None
 
 
 RE_Q = re.compile(r"^(\d{1,2})\.\s+")
@@ -654,16 +667,22 @@ def identification(doc):
     return " · ".join(parts)
 
 
-def main():
-    pdf = Path(sys.argv[1]); out = Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
+def extrair(pdf, out, perfil=None, *, paginas=None):
+    """PDF -> out/modelo.json (+ out/img/). Devolve o `meta` do modelo.
+    perfil: dict ja carregado (load_perfil); None = escolher pela assinatura (R33).
+    paginas: (a, b) 1-based, so no relatorio (recorte de iteracao)."""
+    pdf = Path(pdf); out = Path(out); out.mkdir(parents=True, exist_ok=True)
     (out / "img").mkdir(exist_ok=True)
     for old in (out / "img").glob("*.jpg"):  # saida limpa: sem imagens de rodadas anteriores
         old.unlink()
     doc = pymupdf.open(pdf)
-    perfil = load_perfil(sys.argv[sys.argv.index("--perfil") + 1]) if "--perfil" in sys.argv else escolher_perfil(doc)
+    if perfil is None:
+        perfil = escolher_perfil(doc)
+        if perfil is None:
+            raise ValueError("nenhum perfil casa com as fontes do PDF: criar perfil novo (passo L)")
     if perfil["tipo"] == "relatorio":  # R32: familia de regras de relatorio (R34-R48); fichas seguem abaixo
-        import extract_relatorio
-        return extract_relatorio.run(pdf, out, doc, perfil)
+        from ..relatorio import extract as extract_relatorio
+        return extract_relatorio.run(pdf, out, doc, perfil, paginas=paginas)
     stats = {k: 0 for k in ["imagens", "tabelas", "quadros", "linhas_resposta_orig", "descartado_rodape",
                             "descartado_cabecalho_corrido", "sublinhado_link"]}
     removed = {}
@@ -693,7 +712,15 @@ def main():
             el["rows"] = [[norm(c.replace("\n", " ")) for c in r] for r in el["rows"]]
     meta = {"origem": pdf.name, "paginas": doc.page_count, "removidas": removed, "stats": stats}
     (out / "modelo.json").write_text(json.dumps({"meta": meta, "elementos": merged}, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(json.dumps(meta, ensure_ascii=False))
+    return meta
+
+
+def main():
+    perfil = load_perfil(sys.argv[sys.argv.index("--perfil") + 1]) if "--perfil" in sys.argv else None
+    pag = None
+    if "--paginas" in sys.argv:
+        pag = tuple(int(x) for x in sys.argv[sys.argv.index("--paginas") + 1].split("-"))
+    print(json.dumps(extrair(sys.argv[1], sys.argv[2], perfil, paginas=pag), ensure_ascii=False))
 
 
 if __name__ == "__main__":

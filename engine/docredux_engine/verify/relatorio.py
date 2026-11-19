@@ -1,6 +1,6 @@
 """DocRedux - verificacao do tipo `relatorio` (R35, R47): cobertura de texto + checagens estruturais.
 
-Chamado por verify.main() quando meta.tipo == "relatorio".
+Chamado por verify/ficha.verificar() quando meta.tipo == "relatorio".
 Cobertura: toda palavra do original (fora de paginas removidas, faixa de cabecalho/rodape, sumario estatico e
 marcadores sobrescritos) deve existir no DOCX. O original e dehifenizado com a mesma regra da extracao (R35).
 Estrutura: legendas, 'Fonte:', notas, H1 e referencias contados no PDF e no modelo/DOCX.
@@ -11,8 +11,8 @@ import pymupdf
 from docx import Document
 from docx.oxml.ns import qn
 
-import extract
-import extract_relatorio as ER
+from ..ficha import extract
+from ..relatorio import extract as ER
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
 
@@ -109,9 +109,10 @@ def docx_counter(path):
     return c
 
 
-def run(pdf, out, model):
+def run(pdf, out, model, perfil=None):
     meta = model["meta"]
-    perfil = extract.load_perfil(Path(extract.PERFIL_DIR) / f"{meta['perfil']}.json")
+    if perfil is None:
+        perfil = extract.load_perfil(Path(extract.PERFIL_DIR) / f"{meta['perfil']}.json")
     docx = next(out.glob("*_COMPACTO.docx"))
     lines, info = orig_lines(pdf, perfil, meta["removidas"], meta["recorte"], meta.get("sumario_linhas", []))
     o = orig_counter(lines); n = docx_counter(docx)
@@ -151,4 +152,4 @@ def run(pdf, out, model):
                        "pdf": round(pdf_out.stat().st_size / 1024) if pdf_out else None},
     }
     (out / "verificacao.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(json.dumps(rep, ensure_ascii=False, indent=1))
+    return rep
