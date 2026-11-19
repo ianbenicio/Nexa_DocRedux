@@ -1,0 +1,8 @@
+# API (Vercel) e worker. O worker também precisa do motor: pip install -e ../engine
+fastapi==0.165.0
+uvicorn==0.54.0
+psycopg[binary]==3.3.9
+psycopg-pool==3.3.3
+PyJWT[crypto]==2.15.1
+httpx==0.28.1
+pydantic==2.14.3
