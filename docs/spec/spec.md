@@ -1,8 +1,8 @@
 # Spec: plataforma web de testes do piloto do DocRedux
 
-> **Versão:** 1.5 · **Data:** 2026-11-19 · **Story:** DOCREDUX-PILOTO · **Complexidade:** STANDARD (15)
+> **Versão:** 1.6 · **Data:** 2026-11-19 · **Story:** DOCREDUX-PILOTO · **Complexidade:** STANDARD (15)
 > **Autores:** @pm (requisitos e spec) · @architect (complexidade e plano) · @qa (critique)
-> **Entradas:** `requirements.json`, `complexity.json`, `critique.json` (rodada 1: 3,8, NEEDS_REVISION; rodada 2 sobre a v1.1: **4,4, APPROVED**; a v1.2 fecha as condições C-21 a C-25). A v1.3 aplica as respostas do responsável às perguntas Q1–Q18 (§18), inclusive a infraestrutura sem custo (DT-17 a DT-19). A v1.4 registra as decisões da unidade 3 (DT-21 e o modelo sem FK para `auth.users`, §6). A v1.5 aplica as decisões do responsável de 2026-11-19 sobre domínio e e-mail (Q2, Q8, Q12, Q14 → DT-22). Ver "Histórico". Sem `research.json`: nenhuma lacuna técnica bloqueou a spec (ver `complexity.json`).
+> **Entradas:** `requirements.json`, `complexity.json`, `critique.json` (rodada 1: 3,8, NEEDS_REVISION; rodada 2 sobre a v1.1: **4,4, APPROVED**; a v1.2 fecha as condições C-21 a C-25). A v1.3 aplica as respostas do responsável às perguntas Q1–Q18 (§18), inclusive a infraestrutura sem custo (DT-17 a DT-19). A v1.4 registra as decisões da unidade 3 (DT-21 e o modelo sem FK para `auth.users`, §6). A v1.5 aplica as decisões do responsável de 2026-11-19 sobre domínio e e-mail (Q2, Q8, Q12, Q14 → DT-22). A v1.6 registra a consequência técnica da DT-21 no timeout da triagem (unidade 4). Ver "Histórico". Sem `research.json`: nenhuma lacuna técnica bloqueou a spec (ver `complexity.json`).
 > **Fontes rastreadas:** `saas/piloto.md` (PL1–PL5, §2–§5), `saas/processos.md` (P1–P16, D1–D17), `saas/margem.md` §10, `saas/revisao-template-novo.md` §6, `docs/plano-de-execucao.md`, `LOG.md`.
 > **Fonte única:** esta cópia, no repositório `Nexa_DocRedux/docs/spec/`. A cópia antiga em `DocRedux/docs/spec/` (fora do git) só aponta para cá.
 > **Regra (Artigo IV):** cada requisito aponta para a fonte. O que é escolha técnica (como fazer) aparece como **decisão técnica (DT)**, com o motivo, e não como feature nova. O que falta nas fontes está em **§18 Perguntas abertas**, com um padrão proposto.
@@ -306,7 +306,7 @@ RETURNING *;
 - **Prioridades:** `triagem` = 0, `processar` = 10, `juiz` = 50. A entrega ao usuário vem antes da avaliação.
 - **Laço:** a cada volta (2 s quando ocioso), o worker atualiza `workers.visto_em` (DT-15) e procura job.
 - **Heartbeat** do job a cada 15 s.
-- **Nova tentativa** (coletor e timeout usam a mesma regra): job `processando` com `heartbeat_em` há mais de 2 min (coletor, a cada 60 s, em qualquer worker) ou que estourou o **timeout duro** (`triagem` 60 s, `processar` 15 min, `juiz` 5 min; o subprocesso é morto, DT-5) volta para `na_fila` com `disponivel_em = now() + 30 s × tentativas`, se `tentativas < max_tentativas`. Senão, chama o **tratador de falha final**.
+- **Nova tentativa** (coletor e timeout usam a mesma regra): job `processando` com `heartbeat_em` há mais de 2 min (coletor, a cada 60 s, em qualquer worker) ou que estourou o **timeout duro** (`triagem` 5 min, `processar` 15 min, `juiz` 5 min, configuráveis por `WORKER_TIMEOUT_*_S`; o subprocesso é morto, DT-5) volta para `na_fila` com `disponivel_em = now() + 30 s × tentativas`, se `tentativas < max_tentativas`. Senão, chama o **tratador de falha final**.
 - **Tratador de falha final** (`worker/falhas.py`, único para worker, timeout e coletor), por tipo:
   - `triagem`: documento → `upload_falhou`.
   - `processar` de origem `usuario`: documento → `falhou` + estorno (ou exclusão, se `exclusao_pendente`).
@@ -686,4 +686,7 @@ Q1–Q18 respondidas; Q19 aberta, com padrão que não bloqueia. A coluna "Efeit
   - Q12: login segue pela DT-19; SMTP só para as notificações. Q14: Resend no termo, item 7.
   - Q19 nova (prazo do e-mail de revisão por gate), com padrão.
   - Fonte única: o repositório. A cópia de fora (`DocRedux/docs/spec/`) passa a ser só um aviso.
+  - Sem nova critique.
+- **1.6** (2026-11-19): resultado da unidade 4 (API e worker):
+  - §7: timeout duro da triagem de 60 s para 5 min. A contagem da DT-21 extrai o texto inteiro (ex. 05: ~50 s no PC, contra ~1,5 s da contagem antiga); 60 s ficaria no limite. Consequência técnica da DT-21, não feature nova (story 4.4).
   - Sem nova critique.

@@ -1,0 +1,19 @@
+schema: 1
+story: '4.7'
+story_title: 'avisos-por-email'
+gate: PASS
+status_reason: 'Avisos pronto e em_revisao idempotentes por (documento, evento), sem nome nem conteúdo do documento; falha não derruba o job e para em 3 tentativas; desligado sem RESEND_API_KEY; nenhuma conta externa criada.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues:
+  - severity: low
+    refs: ['docs/spec/spec.md']
+    finding: 'Q19 (prazo do e-mail de revisão) segue aberta; o padrão não promete prazo'
+    suggested_action: 'Responsável define config.notificacao_prazo_revisao'
+evidence:
+  tests: 'test_notificacoes.py 7/7; pgTAP da tabela notificacoes (RLS, sem e-mail nem texto); supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'Chave só por variável de ambiente; o Resend recebe só o e-mail e o texto fixo; tabela sem leitura pelo usuário'}
+  reliability: {status: PASS, notes: 'Idempotency-Key no Resend e linha única por evento travada com FOR UPDATE'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}

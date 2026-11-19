@@ -1,0 +1,19 @@
+schema: 1
+story: '4.4'
+story_title: 'worker-fila-triagem-processamento'
+gate: PASS
+status_reason: 'Fila no Postgres com SKIP LOCKED, coletor, timeout e tratador único de falha final; DT-21 no motor (ex. 05 = 91.037, regressão 5/5); E2E da 4.6 com LibreOffice real: queda do worker retomada com tentativas = 2 e 3 falhas → falhou + estorno.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues:
+  - severity: low
+    refs: ['api/worker/jobs.py']
+    finding: 'PerfilInvalido do motor vem sem motivo e conta como falha transitória (3 tentativas)'
+    suggested_action: 'Tratar como falha definitiva numa unidade futura'
+evidence:
+  tests: 'test_worker.py 16/16; engine test_api.py 24 PASS e regressao.py 5/5 no container; E2E da story 4.6; supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'Motor em subprocesso com timeout; a árvore do processo morre quando o job é perdido; PDF só aberto no worker'}
+  reliability: {status: PASS, notes: 'NFR-1: heartbeat 15 s, coletor 60 s, backoff 30 s × tentativas; bugs achados no E2E (spawn com python -m worker; worker_id repetido após reinício do container) corrigidos e cobertos por teste'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}

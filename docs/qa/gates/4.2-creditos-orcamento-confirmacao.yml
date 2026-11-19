@@ -1,0 +1,15 @@
+schema: 1
+story: '4.2'
+story_title: 'creditos-orcamento-confirmacao'
+gate: PASS
+status_reason: 'orcar() bate com toda a tabela do §5 (ex. 05 = 91.037 → 89/107/126); confirmação reserva na mesma transação; confirmações concorrentes reservam uma vez; 402 sem gravar nada.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues: []
+evidence:
+  tests: 'test_creditos.py 24/24; orçamento e confirmação em test_documentos.py; supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'Reserva só por private.credito_reservar como docredux_backend; o usuário não toca o saldo'}
+  reliability: {status: PASS, notes: 'Invariantes de crédito vazias depois da concorrência; orcamento_mudou protege o preço visto pelo usuário'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}

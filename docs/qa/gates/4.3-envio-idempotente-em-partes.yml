@@ -1,0 +1,23 @@
+schema: 1
+story: '4.3'
+story_title: 'envio-idempotente-em-partes'
+gate: PASS
+status_reason: 'Envio idempotente por Idempotency-Key, partes de 42 MB, 413, 503 no teto, upload_falhou e nova tentativa, listagem, arquivo só em pronto, 404 entre usuários; upload real pelo JWT do usuário.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues:
+  - severity: medium
+    refs: ['api/scripts/dev_setup.py']
+    finding: 'Storage local do CLI 3.2.0 devolve 500 (42P10) em todo upload sem o índice único (bucket_id, name); dev_setup.py recria o índice só no container local'
+    suggested_action: 'Conferir upload no projeto Supabase real (unidade 7)'
+  - severity: low
+    refs: ['web/']
+    finding: 'O usuário não sobrescreve parte já enviada (sem política de UPDATE)'
+    suggested_action: 'Front da unidade 5 trata ''já existe'' como parte enviada'
+evidence:
+  tests: 'test_documentos.py 17/17; supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'URL assinada de 60 s; chave secreta só no backend; caminho no Storage montado pelo servidor'}
+  reliability: {status: PASS, notes: 'FU-001: status upload_falhou e retomada com a mesma chave'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}

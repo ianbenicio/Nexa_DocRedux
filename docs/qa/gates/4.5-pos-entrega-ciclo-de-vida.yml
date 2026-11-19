@@ -1,0 +1,15 @@
+schema: 1
+story: '4.5'
+story_title: 'pos-entrega-ciclo-de-vida'
+gate: PASS
+status_reason: 'Cancelar, excluir e expirar em cada estado do §14, com estorno de reserva aberta, juiz cancelado e textos livres apagados; exclusão de conta com ban real no Auth; invariantes vazias ao fim de cada teste.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues: []
+evidence:
+  tests: 'test_ciclo.py 15/15; supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'Ban imediato no Auth e 401 por exclusao_conta_em mesmo com JWT válido; e-mail e textos livres apagados'}
+  reliability: {status: PASS, notes: 'Retenção com pg_try_advisory_lock, no máximo a cada 23 h; exclusao_pendente concluída pelo worker'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}

@@ -1,0 +1,15 @@
+schema: 1
+story: '4.1'
+story_title: 'esqueleto-api'
+gate: PASS
+status_reason: '9 ACs: 401 sem token, inválido, expirado e conta excluída; 403 admin e termo; termo e senha; health; CORS só para WEB_ORIGIN. Papel e exclusão lidos do banco a cada requisição.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues: []
+evidence:
+  tests: 'test_api_base.py 10/10; supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'JWT com aud verificado; segredos só por variável de ambiente; api/.env gitignored; logs sem conteúdo de documento'}
+  reliability: {status: PASS, notes: 'Pool psycopg sem prepared statements (DT-14); health 503 quando o banco cai; uvicorn agora lê api/.env em dev (achado no E2E)'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}
