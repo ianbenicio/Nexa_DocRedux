@@ -1,0 +1,23 @@
+schema: 1
+story: '4.6'
+story_title: 'imagem-worker-e2e'
+gate: PASS
+status_reason: 'E2E 4/4 com LibreOffice real (ex. 03 → 5 págs com DOCX; ex. 05 em 2 partes → 142 págs em 68 s); queda do worker retomada com tentativas = 2; 3 falhas forçadas → falhou + estorno; imagens arm64 com regressão 5/5; vercel.json sem deploy.'
+reviewer: 'Quinn (@qa)'
+updated: '2026-11-19'
+top_issues:
+  - severity: low
+    refs: ['deploy/']
+    finding: 'Tempo do ex. 05 em arm64 real não medido (QEMU não vale como medida)'
+    suggested_action: 'Medir na Oracle A1 na unidade 7 (NFR-8)'
+  - severity: low
+    refs: ['deploy/vercel.json']
+    finding: 'Limites de corpo e duração das funções Python na Vercel Hobby não conferidos'
+    suggested_action: 'Conferir na unidade 7 (spec §16)'
+evidence:
+  tests: 'api/tests/e2e.py 4/4; regressao.py 5/5 em amd64 e em arm64 (QEMU); supabase db reset; supabase test db (pgTAP 225 PASS); scripts/dev_setup.py; pytest api/tests (89 PASS) com banco limpo; Supabase CLI 3.2.0 local'
+nfr_validation:
+  security: {status: PASS, notes: 'Imagem sem .env nem testes (.dockerignore); usuário não root; segredos só por env_file gitignored'}
+  reliability: {status: PASS, notes: 'NFR-1 provado com docker kill real; 3 bugs de operação achados e corrigidos com teste'}
+  maintainability: {status: PASS, notes: 'Testes automatizados por AC; README e .env.example sem segredo'}
+  coderabbit: {status: NOT_RUN, notes: 'CodeRabbit não executado nesta unidade; revisão manual (SQL só parametrizado, varredura de segredos nos arquivos versionados)'}
