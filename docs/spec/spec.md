@@ -1,9 +1,10 @@
 # Spec: plataforma web de testes do piloto do DocRedux
 
-> **Versão:** 1.4 · **Data:** 2026-11-19 · **Story:** DOCREDUX-PILOTO · **Complexidade:** STANDARD (15)
+> **Versão:** 1.5 · **Data:** 2026-11-19 · **Story:** DOCREDUX-PILOTO · **Complexidade:** STANDARD (15)
 > **Autores:** @pm (requisitos e spec) · @architect (complexidade e plano) · @qa (critique)
-> **Entradas:** `requirements.json`, `complexity.json`, `critique.json` (rodada 1: 3,8, NEEDS_REVISION; rodada 2 sobre a v1.1: **4,4, APPROVED**; a v1.2 fecha as condições C-21 a C-25). A v1.3 aplica as respostas do responsável às perguntas Q1–Q18 (§18), inclusive a infraestrutura sem custo (DT-17 a DT-19). A v1.4 registra as decisões da unidade 3 (DT-21 e o modelo sem FK para `auth.users`, §6). Ver "Histórico". Sem `research.json`: nenhuma lacuna técnica bloqueou a spec (ver `complexity.json`).
+> **Entradas:** `requirements.json`, `complexity.json`, `critique.json` (rodada 1: 3,8, NEEDS_REVISION; rodada 2 sobre a v1.1: **4,4, APPROVED**; a v1.2 fecha as condições C-21 a C-25). A v1.3 aplica as respostas do responsável às perguntas Q1–Q18 (§18), inclusive a infraestrutura sem custo (DT-17 a DT-19). A v1.4 registra as decisões da unidade 3 (DT-21 e o modelo sem FK para `auth.users`, §6). A v1.5 aplica as decisões do responsável de 2026-11-19 sobre domínio e e-mail (Q2, Q8, Q12, Q14 → DT-22). Ver "Histórico". Sem `research.json`: nenhuma lacuna técnica bloqueou a spec (ver `complexity.json`).
 > **Fontes rastreadas:** `saas/piloto.md` (PL1–PL5, §2–§5), `saas/processos.md` (P1–P16, D1–D17), `saas/margem.md` §10, `saas/revisao-template-novo.md` §6, `docs/plano-de-execucao.md`, `LOG.md`.
+> **Fonte única:** esta cópia, no repositório `Nexa_DocRedux/docs/spec/`. A cópia antiga em `DocRedux/docs/spec/` (fora do git) só aponta para cá.
 > **Regra (Artigo IV):** cada requisito aponta para a fonte. O que é escolha técnica (como fazer) aparece como **decisão técnica (DT)**, com o motivo, e não como feature nova. O que falta nas fontes está em **§18 Perguntas abertas**, com um padrão proposto.
 
 ---
@@ -12,9 +13,9 @@
 
 Construir a plataforma em que **10 participantes, durante 4 semanas** (PL1), enviam PDFs, recebem a versão reduzida e avaliam cada entrega; e em que o responsável revisa os casos marcados (PL2). Créditos funcionam como no produto, mas são grátis (PL3). **100% das entregas** passam pelo juiz Opus, pela nota do usuário e, nos casos marcados, pela revisão humana (PL5, D17). Volume esperado: ~200–300 entregas (PL1).
 
-**Dentro do escopo:** os processos da coluna "Entra no piloto" de `piloto.md` §3: P1, P2, P3, P4 (fila manual), P5, P6, P7, P8 (só registro), P9 (sem Pix), P10, P11, P12. P16 fica manual, fora da plataforma (CON-9).
+**Dentro do escopo:** os processos da coluna "Entra no piloto" de `piloto.md` §3: P1, P2, P3, P4 (fila manual), P5, P6, P7, P8 (só registro), P9 (sem Pix), P10, P11, P12, e de P13 só os dois avisos por e-mail da Q8 (DT-22). P16 fica manual, fora da plataforma (CON-9).
 
-**Fora do escopo** (piloto §3, coluna "Fica de fora"; CON-4): login Google e B2B; corretor (U-A); presets de saída; estimativa de páginas finais; C1–C4 automáticos; orquestrador multi-LLM (P15); QA visual separado; prévia lado a lado; correção automática e cobrança de formato; Pix e pacotes; regressão em CI; política completa de LGPD; painel financeiro; biblioteca automática (P16); notificações por e-mail (P13; Q8: o status fica só na tela); atendimento de template novo dentro do piloto (Q3: é recusado na triagem e vira pedido de perfil, ver FR-10).
+**Fora do escopo** (piloto §3, coluna "Fica de fora"; CON-4): login Google e B2B; corretor (U-A); presets de saída; estimativa de páginas finais; C1–C4 automáticos; orquestrador multi-LLM (P15); QA visual separado; prévia lado a lado; correção automática e cobrança de formato; Pix e pacotes; regressão em CI; política completa de LGPD; painel financeiro; biblioteca automática (P16); demais notificações por e-mail (P13; a Q8 só trouxe "documento pronto" e "em revisão", DT-22); atendimento de template novo dentro do piloto (Q3: é recusado na triagem e vira pedido de perfil, ver FR-10).
 
 ## 2. Arquitetura
 
@@ -59,11 +60,12 @@ Construir a plataforma em que **10 participantes, durante 4 semanas** (PL1), env
 | DT-14 | O **worker** conecta pelo Supavisor em **modo sessão** (IPv4, porta 5432); a **API** (função serverless) pelo Supavisor em **modo transação** (porta 6543), sem prepared statements, 1 conexão por instância | A conexão direta do Supabase só tem IPv6 sem add-on (pago); o worker mantém prepared statements e `pg_try_advisory_lock`; a função serverless abre e fecha conexões e não pode esgotar o pooler | NFR-1, unidade 7 |
 | DT-15 | Tabela `workers` com `visto_em`, atualizada a cada volta do laço | O heartbeat de job não diz se um worker ocioso está vivo; o `/health` usa esta tabela | unidade 7 (health) |
 | DT-16 | Saída versionada: `entregas` tem uma linha por versão; `documentos.entrega_atual` aponta a vigente | Reprocessar não apaga a entrega que o usuário avaliou nem as métricas da primeira passagem | FR-17, FR-20 |
-| DT-17 | **Infraestrutura sem custo fixo** na fase de testes: Supabase Free em `sa-east-1`; web e API na Vercel Hobby (subdomínio `*.vercel.app`, funções Python na região `gru1`); worker em Docker no PC do responsável (desenvolvimento e dry-run) e, para o piloto 24 h, Oracle Cloud Always Free (Ampere A1, região São Paulo, até 2 OCPU/12 GB). Se não houver capacidade na Oracle, o piloto roda com o worker no PC e a tela avisa que o processamento acontece em horário comercial. Sem domínio próprio | Q2, Q10, Q14 e Q18: sem custo agora e sem servidor fora do Brasil. A fila no Postgres (DT-1) deixa o worker só com conexões de saída. A Vercel Hobby é para uso não comercial: serve ao piloto fechado e gratuito e precisa ser revista no lançamento. O único custo variável que resta é o juiz (API Anthropic, ≈ R$ 0,60 por entrega, D17) | Q2, Q10, Q14, Q18, PL4 |
+| DT-17 | **Infraestrutura sem custo fixo** na fase de testes: Supabase Free em `sa-east-1`; web e API na Vercel Hobby (subdomínio `*.vercel.app`, funções Python na região `gru1`); worker em Docker no PC do responsável (desenvolvimento e dry-run) e, para o piloto 24 h, Oracle Cloud Always Free (Ampere A1, região São Paulo, até 2 OCPU/12 GB). Se não houver capacidade na Oracle, o piloto roda com o worker no PC e a tela avisa que o processamento acontece em horário comercial. Domínio `.com.br` (Registro.br) só como remetente de e-mail (Resend, DT-22); o site continua em `*.vercel.app`. Sem Hetzner (Q14) | Q2, Q10, Q14 e Q18: sem custo agora e sem servidor fora do Brasil. A fila no Postgres (DT-1) deixa o worker só com conexões de saída. A Vercel Hobby é para uso não comercial: serve ao piloto fechado e gratuito e precisa ser revista no lançamento. O único custo variável que resta é o juiz (API Anthropic, ≈ R$ 0,60 por entrega, D17) | Q2, Q10, Q14, Q18, PL4 |
 | DT-18 | **Original em partes** de até 42 MB (7 chunks TUS de 6 MB): `original.part00`, `original.part01`…; o worker baixa e concatena, e confere o tamanho total. Arquivos ≤ 42 MB têm uma parte só. Limite do piloto continua 80 MB (no máximo 2 partes) | O Supabase Free limita cada objeto a 50 MB, e o ex. 05 tem 62 MB | Q18, ASM-5 |
-| DT-19 | **Login por e-mail + senha**, sem SMTP: o admin cria a conta no painel do Supabase (confirmada, com senha provisória) e entrega a senha por canal privado. No primeiro acesso, o usuário troca a senha (`supabase.auth.updateUser`). Não há "esqueci a senha": o admin redefine no painel. Quando houver domínio e SMTP, volta o link mágico | Sem domínio não há remetente verificável; o SMTP padrão do Supabase só entrega à equipe do projeto (Q12). Senha não precisa de e-mail | Q12, PL1, ASM-6 |
+| DT-19 | **Login por e-mail + senha**, sem SMTP: o admin cria a conta no painel do Supabase (confirmada, com senha provisória) e entrega a senha por canal privado. No primeiro acesso, o usuário troca a senha (`supabase.auth.updateUser`). Não há "esqueci a senha": o admin redefine no painel. O domínio e o Resend da Q8 servem só às notificações (DT-22); o link mágico fica opcional para depois (Q12) | Sem domínio não há remetente verificável; o SMTP padrão do Supabase só entrega à equipe do projeto (Q12). Senha não precisa de e-mail | Q12, PL1, ASM-6 |
 | DT-20 | **Teto de Storage**: a API recusa documentos novos (`503 capacidade_piloto`) quando o uso estimado (originais + saídas de documentos não apagados) passa de `config.storage_teto_mb` (padrão 900 MB); a A5 mostra o uso | O Supabase Free tem 1 GB de Storage; a retenção de 30 dias libera espaço, mas um pico de relatórios grandes enche o bucket | Q18 |
 | DT-21 | **Palavras do preço da síntese = contagem do verify** (`verify`: soma dos tokens normalizados do original, `palavras_original` do relatório), gravada em `documentos.palavras` já na triagem: a triagem passa a contar com a mesma função do verify, ou a chamá-la direto (mudança no motor, unidade 4). A contagem atual da triagem (`get_text("words")`) deixa de valer para o preço | Decisão do responsável em 2026-11-19 (registrada no plano de execução, unidade 2). O preço precisa existir antes da confirmação, quando o verify ainda não rodou; por isso a triagem usa a mesma contagem. No ex. 05: verify 91.037 → 55 / 73 / 92; a contagem antiga da triagem dava 93.166 → 56 / 75 / 94 | margem §10.3, DT-10 |
+| DT-22 | **Avisos por e-mail via Resend** (plano grátis: 100/dia, 3.000/mês), remetente no domínio `.com.br` da Q2. Dois eventos: `pronto` (primeira entrega `pronto` do documento, inclusive depois de `em_revisao`) e `em_revisao` (gate bloqueado, ou recusa `template_novo` que vira pedido de perfil). Prazo X: "até 2 meses" no template novo (Q3); no gate, o texto de `config.notificacao_prazo_revisao`, nulo por padrão (Q19). O e-mail leva só um texto fixo e o link `{WEB_URL}/documentos/{id}`: nem nome nem conteúdo do documento. Envio idempotente por (`documento_id`, `evento`): tabela `notificacoes` + cabeçalho `Idempotency-Key` do Resend. O worker envia no fim do job; falha no envio é registrada e repetida pelo laço (até 3 tentativas), sem derrubar o job. Conta excluída (e-mail nulo) não recebe. `RESEND_API_KEY` só em variável de ambiente; sem a chave, o envio fica desligado e o registro marca `desligado` | Q8 = sim (responsável, 2026-11-19); o login continua pela DT-19 (Q12); o Resend entra no termo, item 7 (Q14) | Q2, Q8, Q12, Q14 |
 
 ## 3. Monorepo
 
@@ -258,6 +260,7 @@ Postgres do Supabase. Todas as tabelas com **RLS ligada**. O papel `authenticate
 | `revisoes_humanas` | `id`, `documento_id`, `versao null`, `revisor_id`, `motivo`, `veredito` (`aprovado`\|`reprovado`), `concorda_juiz bool null` (nulo quando não há avaliação do juiz para comparar), `minutos int`, `acao` (`nenhuma`\|`reprocessado`\|`cancelado_estornado`\|`perfil_anexado`), `notas`, `criado_em` | nenhuma |
 | `metricas_entrega` | ver §12 | nenhuma |
 | `config` | `chave`, `valor jsonb`, `atualizado_em` (DT-9) | nenhuma |
+| `notificacoes` | `id`, `documento_id`, `usuario_id`, `evento` (`pronto`\|`em_revisao`), `status` (`pendente`\|`enviado`\|`falhou`\|`desligado`\|`sem_destinatario`), `tentativas`, `erro`, `provedor_id`, `criado_em`, `enviado_em`; único (`documento_id`, `evento`) (DT-22). Não guarda o e-mail nem o texto | nenhuma |
 
 **Papel de backend:** a API e o worker conectam ao Postgres (DT-14) com um papel próprio, `docredux_backend` (login, `BYPASSRLS`, sem superusuário), com os grants de tabela de que precisam. É o "service role" desta spec no caminho SQL; a chave `service_role` do Supabase fica para a API do Storage e do Auth. Pool: API ≤ 5 conexões; cada processo do worker, 1 (cabe no limite do pooler do plano, conferido na unidade 7).
 
@@ -317,8 +320,8 @@ RETURNING *;
 
 | Tipo | Faz | Sucesso | Falha final |
 |---|---|---|---|
-| `triagem` | baixa as partes do original e concatena (DT-18), `triar()`, grava páginas, palavras, tipo, perfil e recusa; `perfil_id` nulo → recusa `template_novo` (Q3) | `aguardando_confirmacao` ou `recusado` | `upload_falhou` |
-| `processar` | `processar()` com o perfil e as opções; sobe as saídas na versão nova; grava `entregas` e `metricas_entrega` | gate ok → `pronto` + captura (só na primeira entrega) + enfileira `juiz`; gate bloqueado → `em_revisao` + enfileira `juiz` (reprocessar: ver §5) | tratador de falha final |
+| `triagem` | baixa as partes do original e concatena (DT-18), `triar()`, grava páginas, palavras, tipo, perfil e recusa; `perfil_id` nulo → recusa `template_novo` (Q3) + aviso `em_revisao` com prazo de 2 meses (DT-22) | `aguardando_confirmacao` ou `recusado` | `upload_falhou` |
+| `processar` | `processar()` com o perfil e as opções; sobe as saídas na versão nova; grava `entregas` e `metricas_entrega` | gate ok → `pronto` + captura (só na primeira entrega) + enfileira `juiz` + aviso `pronto` (DT-22); gate bloqueado → `em_revisao` + enfileira `juiz` + aviso `em_revisao` (reprocessar: ver §5) | tratador de falha final |
 | `juiz` | §11 | grava `avaliacoes_juiz` e métricas; recalcula a fila do backoffice | `juiz_falhou` |
 
 **Exclusão durante um job** (LGPD): o worker confere `exclusao_pendente` e os status `excluido`/`expirado` **no fim de todo job** (triagem, processar, juiz) e **antes de cada chamada à API Anthropic**. Se marcado: descarta as saídas, não sobe nada, não chama o juiz, estorna se a reserva estiver aberta, apaga o conteúdo e leva o documento a `excluido` (ou `expirado`). Documentos `excluido`/`expirado` não geram motivos na fila do backoffice.
@@ -483,10 +486,10 @@ Next.js com `supabase-js` só para o login e o upload. O resto passa pela API. T
 
 ## 13. Segurança
 
-- Segredos (`SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `ANTHROPIC_API_KEY`) só nas variáveis de ambiente da Vercel (API), no `.env` do host do worker (fora do git, permissão só do usuário do Docker) ou no painel do Supabase; o front só tem a chave pública (anon). O worker não precisa da chave `service_role` do Auth, só da de Storage.
+- Segredos (`SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`) só nas variáveis de ambiente da Vercel (API), no `.env` do host do worker (fora do git, permissão só do usuário do Docker) ou no painel do Supabase; o front só tem a chave pública (anon). O worker não precisa da chave `service_role` do Auth, só da de Storage.
 - Cadastro aberto **desligado** no Supabase Auth; contas criadas pelo admin no painel, confirmadas, com senha provisória (DT-19, ASM-6). Recuperação de senha por e-mail desligada no front (o SMTP padrão não entrega a participantes).
 - Senha mínima de 10 caracteres (configuração do Auth); proteção contra senha vazada, se o plano gratuito oferecer.
-- Sem SMTP no piloto (Q12). Quando houver domínio, um provedor transacional gratuito (Brevo ou Resend) e o link mágico voltam (DT-19).
+- O Auth continua sem SMTP (Q12): o login é pela DT-19. O Resend, com remetente no domínio `.com.br`, envia só os dois avisos da Q8 (DT-22); o link mágico fica opcional para depois.
 - PDF não confiável só é aberto no worker, em subprocesso com timeout (DT-2, DT-5).
 - URLs assinadas de 60 s; buckets privados; RLS em tudo; funções do saldo fora do schema exposto; testes de RLS na unidade 3.
 - Logs sem conteúdo de documento, só ids e métricas.
@@ -500,7 +503,7 @@ Next.js com `supabase-js` só para o login e o upload. O resto passa pela API. T
 4. O usuário pode apagar qualquer documento e a própria conta a qualquer momento (Q7).
 5. Documentos com dados de alunos: o usuário declara que pode enviá-los (P11, "aviso e tratamento"; "direito autoral declarado").
 6. Notas, comentários e métricas numéricas (sem conteúdo do documento) ficam para a análise do piloto. Ao fim do piloto, a conta continua ativa até nova comunicação; os documentos seguem a regra dos 30 dias (Q17).
-7. Onde os dados são processados: Supabase em São Paulo; processamento num computador do responsável ou num servidor em São Paulo (DT-17); site e API na Vercel (região São Paulo); avaliação pela Anthropic, nos EUA (transferência internacional, P11).
+7. Onde os dados são processados: Supabase em São Paulo; processamento num computador do responsável ou num servidor em São Paulo (DT-17); site e API na Vercel (região São Paulo); avaliação pela Anthropic, nos EUA (transferência internacional, P11); avisos por e-mail ("documento pronto", "em revisão") enviados pelo Resend, nos EUA, que recebe só o seu e-mail e um texto fixo, sem conteúdo do documento (Q8, Q14).
 
 **Apagar conteúdo** (usado pela retenção e pela exclusão): cancela os jobs `na_fila` do documento (triagem, processar, juiz); se houver job `processando` de qualquer tipo, marca `exclusao_pendente` e o worker conclui a remoção no fim dele (§7); remove do Storage o original e todas as versões de saída; apaga `evidencias` e `resumo` de `avaliacoes_juiz` e as `descricao` de `entregas.relatorio.modificacoes` (podem citar texto). Ficam as métricas, os vereditos, as notas e os comentários (item 6). O plano gratuito não tem backups automáticos, e não se fazem dumps de dados (Q16): o schema vive nas migrations do git.
 
@@ -566,6 +569,7 @@ Next.js com `supabase-js` só para o login e o upload. O resto passa pela API. T
 | FR-19 | documento com `expira_em` no passado em cada estado → efeito do §14; exclusão em cada estado → efeito do §14; excluir durante um reprocessamento e durante um juiz → nada no Storage e nenhuma chamada à Anthropic depois da exclusão; métricas ficam. Excluir a conta com documentos em vários estados (um processando) → login bloqueado na hora; e-mail, comentários e descrições apagados; Storage vazio; usuário removido do Auth depois do job; saldo zerado por `ajuste`; agregados do piloto inalterados | 4, 5, 6 |
 | FR-20 | dry-run: 10 documentos, métricas completas, A5 bate com o CSV, internos fora dos agregados | 8 |
 | FR-21 | cancelar em `na_fila` estorna; cancelar em `processando` → 409 | 4 |
+| DT-22 (Q8) | cliente falso do Resend: `pronto` e `em_revisao` enviados uma vez por documento, mesmo com o job repetido; e-mail sem nome nem conteúdo do documento; falha do envio não muda o status do documento e é repetida; sem `RESEND_API_KEY` → `desligado` | 4 |
 | NFR-3, NFR-4 | testes de RLS do §6, por SQL e por REST/RPC | 3 |
 | NFR-8 | ex. 05 no host do worker do piloto (Oracle A1 ou PC) termina dentro do timeout de 15 min (esperado: ~1 min de CPU) | 7, 8 |
 
@@ -603,30 +607,31 @@ Next.js com `supabase-js` só para o login e o upload. O resto passa pela API. T
 | NFR-8 | PL1, LOG 5b | §7, §16 |
 | NFR-9 | D9, U-H | §9, §10 |
 
-## 18. Perguntas ao responsável (respondidas em 2026-11-18)
+## 18. Perguntas ao responsável (respondidas em 2026-11-18; Q2, Q8, Q12 e Q14 atualizadas em 2026-11-19)
 
-Todas as perguntas foram respondidas. A coluna "Efeito" diz onde a resposta entrou na spec.
+Q1–Q18 respondidas; Q19 aberta, com padrão que não bloqueia. A coluna "Efeito" diz onde a resposta entrou na spec.
 
 | # | Pergunta | Resposta | Efeito |
 |---|---|---|---|
-| Q1 | Local do repositório | Repositório novo `https://github.com/ianbenicio/Nexa_DocRedux.git`, com o monorepo. A pasta atual fica como acervo do método. Os PDFs dos ex. 01–05 (até 62 MB) ficam **fora do git**, num diretório de fixtures apontado por variável de ambiente | unidade 2; push só pelo @devops |
-| Q2 | VPS e domínio | Ainda não há. Usar soluções gratuitas nos testes iniciais: Vercel Hobby (`*.vercel.app`), worker no PC do responsável e Oracle Always Free São Paulo | DT-17, §2, unidade 7 |
+| Q1 | Local do repositório | **Confirmado em 2026-11-19.** Repositório novo `https://github.com/ianbenicio/Nexa_DocRedux.git`, com o monorepo. A pasta atual fica como acervo do método. Os PDFs dos ex. 01–05 (até 62 MB) ficam **fora do git**, num diretório de fixtures apontado por variável de ambiente | unidade 2; push só pelo @devops |
+| Q2 | VPS e domínio | **Decidido em 2026-11-19:** a infraestrutura segue a DT-17 (Vercel Hobby em `*.vercel.app`, worker na Oracle Always Free São Paulo com o PC como alternativa; sem Hetzner, por causa da Q14). Entra um domínio `.com.br` no Registro.br (~R$ 40/ano), usado só como remetente dos e-mails da Q8; a compra fica com o responsável | DT-17, DT-22, §2, unidade 7 |
 | Q3 | Prazo do template novo | 2 meses → no piloto, template novo é **recusado na triagem**, sem reserva, e vira pedido de perfil (até 2 meses) | §1, §5, §8, §9, §10, FR-10, DT-13 |
-| Q4 | Síntese só para relatório | Sim | §4, U4 |
+| Q4 | Síntese só para relatório | Sim (confirmado em 2026-11-19) | §4, U4 |
 | Q5 | Perfis semente para todas as contas | Sim, nesta primeira fase | §6 seed |
 | Q6 | Limiares | Definidos pelo @pm: nota baixa ≤ 3; divergência = juiz `reprovado`/`duvidoso` com nota ≥ 4, ou juiz `aprovado` com nota ≤ 2; juiz reprovou e não há nota em 48 h → entra na fila. Ajustáveis em `config` | §9 |
 | Q7 | Apagar documentos ou a conta | Os dois | §9 `DELETE /me`, §10 U7, §14 |
-| Q8 | E-mail quando o documento fica pronto | Não no piloto: o status de cada envio aparece na tela (U3/U5). Sem SMTP (Q12), não há como enviar | §1 |
+| Q8 | E-mail quando o documento fica pronto | **Decidido em 2026-11-19: sim.** O backend envia dois e-mails, "documento pronto" e "em revisão, prazo X", via Resend no plano grátis (100/dia, 3.000/mês), com remetente no domínio da Q2. O e-mail não leva conteúdo nem nome do documento, só o link para a plataforma. O status continua na tela (U3/U5) | §1, DT-22, §6 `notificacoes`, story 4.7 |
 | Q9 | Tabela P9 e arredondamento | Corrigir P9 (feito em `processos.md`); teto, que é a regra da margem (DT-10) | DT-10, `processos.md` P9 |
 | Q10 | Região do Supabase | Ainda não configurado. Criar o projeto em `sa-east-1` (São Paulo) | DT-17, termo item 7 |
 | Q11 | Amostra de 10% | Sim | §9 motivos |
-| Q12 | SMTP do Auth | Ainda não há. Login por e-mail + senha criada pelo admin, sem e-mail | DT-19, §10 U1/U1b, §13 |
-| Q13 | Carlito no lugar da Calibri | Aceito, com novo baseline aprovado pelo responsável e registrado no `LOG.md`, se o Linux mudar alguma contagem; cobertura nunca cai | DT-11, unidade 2 |
-| Q14 | Servidor fora do Brasil | Agora não: Supabase, worker e funções da Vercel no Brasil; só a Anthropic fica fora (termo item 7) | DT-17 |
+| Q12 | SMTP do Auth | **Atualizado em 2026-11-19:** o login continua pela DT-19 (e-mail + senha criada pelo admin). O SMTP (Resend + domínio) atende só às notificações da Q8; o link mágico fica opcional para depois | DT-19, DT-22, §10 U1/U1b, §13 |
+| Q13 | Carlito no lugar da Calibri | Aceito (confirmado em 2026-11-19, com aprovação visual do responsável), com novo baseline aprovado pelo responsável e registrado no `LOG.md`, se o Linux mudar alguma contagem; cobertura nunca cai | DT-11, unidade 2 |
+| Q14 | Servidor fora do Brasil | **Atualizado em 2026-11-19:** Supabase, worker e funções da Vercel no Brasil; fora ficam só a Anthropic e o Resend (EUA), ambos no termo, item 7. O Resend recebe só o e-mail do usuário e um texto fixo, sem conteúdo de documento | DT-17, DT-22, §14 item 7 |
 | Q15 | Usuários internos | Marcar como `interno` e excluir das métricas | §6, §12 |
 | Q16 | Backups além dos 30 dias | Não guardar: o plano gratuito não tem backup automático e não se fazem dumps de dados | §6, §14 |
 | Q17 | Fim do piloto | Contas mantidas até segunda ordem; documentos seguem os 30 dias | §14 item 6 |
 | Q18 | Custo do Supabase Pro | Sem custo agora: plano gratuito | DT-17, DT-18, DT-20 |
+| Q19 | Prazo X do e-mail "em revisão" quando a causa é o gate de cobertura | **Aberta (v1.5).** Padrão: o e-mail não promete prazo ("uma pessoa vai conferir; você recebe outro aviso quando ficar pronto"); o responsável define o texto em `config.notificacao_prazo_revisao`, sem deploy. No template novo o prazo é o da Q3 (até 2 meses) | DT-22 |
 
 **Pendências que dependem só de execução** (unidade 7):
 - conseguir capacidade de Ampere A1 na Oracle em São Paulo (o cadastro pede cartão para verificação, sem cobrança no Always Free);
@@ -675,3 +680,10 @@ Todas as perguntas foram respondidas. A coluna "Efeito" diz onde a resposta entr
   - DT-21: o preço da síntese usa a contagem do verify, decidida pelo responsável em 2026-11-19; a triagem passa a contar com a mesma função (motor, unidade 4). O caso do §5 continua 55 / 73 / 92 (totais 89 / 107 / 126).
   - §6: sem FK para `auth.users`; o id fica como pseudônimo depois da exclusão da conta.
   - Sem nova critique. A unidade 4 troca a contagem de palavras da triagem e testa o caso do ex. 05.
+- **1.5** (2026-11-19): decisões do responsável sobre domínio e e-mail (início da unidade 4):
+  - Q2: domínio `.com.br` só como remetente; a infraestrutura segue a DT-17; sem Hetzner (Q14).
+  - Q8 = sim: avisos "documento pronto" e "em revisão" via Resend, sem conteúdo nem nome do documento (DT-22, tabela `notificacoes`, story 4.7).
+  - Q12: login segue pela DT-19; SMTP só para as notificações. Q14: Resend no termo, item 7.
+  - Q19 nova (prazo do e-mail de revisão por gate), com padrão.
+  - Fonte única: o repositório. A cópia de fora (`DocRedux/docs/spec/`) passa a ser só um aviso.
+  - Sem nova critique.

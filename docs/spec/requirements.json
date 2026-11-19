@@ -679,8 +679,8 @@
       "owner": "responsável + @devops",
       "blocks": "unidade 7",
       "status": "respondida",
-      "answer": "Ainda sem VPS e domínio: soluções gratuitas (DT-17).",
-      "answeredAt": "2026-11-18"
+      "answer": "Infraestrutura gratuita da DT-17, sem Hetzner (Q14). Atualizada em 2026-11-19: domínio .com.br (Registro.br) só como remetente dos e-mails da Q8 (DT-22).",
+      "answeredAt": "2026-11-19"
     },
     {
       "id": "Q3",
@@ -733,8 +733,8 @@
       "owner": "responsável",
       "blocks": "unidade 4",
       "status": "respondida",
-      "answer": "Não no piloto (sem SMTP); status na tela.",
-      "answeredAt": "2026-11-18"
+      "answer": "Sim (2026-11-19): avisos \"documento pronto\" e \"em revisão, prazo X\" via Resend grátis, sem nome nem conteúdo do documento, só o link (DT-22, story 4.7).",
+      "answeredAt": "2026-11-19"
     },
     {
       "id": "Q9",
@@ -769,8 +769,8 @@
       "owner": "responsável + @devops",
       "blocks": "unidade 7",
       "status": "respondida",
-      "answer": "Sem SMTP: login com senha criada pelo admin (DT-19).",
-      "answeredAt": "2026-11-18"
+      "answer": "Login segue pela DT-19 (senha criada pelo admin). Atualizada em 2026-11-19: o SMTP (Resend + domínio) serve só às notificações da Q8.",
+      "answeredAt": "2026-11-19"
     },
     {
       "id": "Q13",
@@ -787,8 +787,8 @@
       "owner": "responsável",
       "blocks": "unidade 7",
       "status": "respondida",
-      "answer": "Agora não: tudo no Brasil, exceto a Anthropic.",
-      "answeredAt": "2026-11-18"
+      "answer": "Tudo no Brasil, exceto a Anthropic e (2026-11-19) o Resend, ambos no termo, item 7.",
+      "answeredAt": "2026-11-19"
     },
     {
       "id": "Q15",

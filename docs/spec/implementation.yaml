@@ -3,11 +3,12 @@
 # em stories prontas para o @sm (*draft). Cada story rastreia para requirements.json (FR/NFR/CON)
 # e para as seções de spec.md. Nenhuma story inventa feature: as decisões estão em spec.md §18.
 # v1.3 (2026-11-18): respostas Q1–Q18 aplicadas; infraestrutura gratuita (DT-17 a DT-20).
+# v1.5 (2026-11-19): Q8 = sim (avisos por e-mail via Resend, DT-22) → story 4.7; 4.4 deixa de dizer "sem e-mail".
 
 storyId: DOCREDUX-PILOTO
 plannedAt: "2026-11-18T21:00:00-03:00"
 plannedBy: "@architect"
-specVersion: "1.3"
+specVersion: "1.5"
 complexity: STANDARD
 workflow: "SDC por story (@sm *draft → @po *validate → executor → @qa *qa-gate); push/deploy só @devops"
 
@@ -234,7 +235,7 @@ unidades:
           - "worker/falhas.py: tratador único de falha final por tipo e origem (spec §7)"
           - "Triagem baixa e concatena as partes do original, confere tamanho e SHA-256 (DT-18); perfil_id nulo → recusado com motivo template_novo, sem reserva, e pedido de perfil na fila (Q3)"
           - "Jobs triagem e processar com as transições do spec §8; entregas versionadas (DT-16); captura só na primeira entrega; enfileira juiz em pronto e em_revisao"
-          - "Sem e-mail de pronto (Q8): o status fica na tela"
+          - "Chama o aviso por e-mail da story 4.7 em pronto, em_revisao e recusa template_novo (Q8, DT-22); falha no aviso não muda o job"
           - "metricas_entrega preenchida (tamanho, tempos, cobertura, primeira passagem, tentativas, versão do motor, interno)"
           - "exclusao_pendente e status excluido/expirado conferidos no fim de todo job (triagem, processar, juiz): descarta saídas, estorna se a reserva estiver aberta, apaga (spec §7)"
           - "Tratador de falha final de reprocessar usa jobs.estado_origem (de pronto: só reprocessando = false)"
