@@ -12,6 +12,7 @@ from docx.oxml.ns import qn
 
 from ..ficha.render import CFG, A4_W, A4_H  # noqa: E402
 from . import numeros
+from .. import gerado
 from ..pdftexto import DICT  # noqa: E402
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
@@ -67,23 +68,36 @@ def original_words(pdf, removed, figs):
     return c, in_fig
 
 
-def docx_textos(path):
-    """Texto de cada paragrafo fisico do DOCX, uma vez, inclusive em celulas mescladas/aninhadas."""
-    d = Document(path); out = []
+def docx_partes(path):
+    """(textos, gerados): texto de cada paragrafo fisico do DOCX, uma vez, inclusive em celulas
+    mescladas/aninhadas. O texto criado pelo motor (A5, `gerado.py`) vai para `gerados`."""
+    d = Document(path); out, ger = [], []
     for p in d.element.body.iter(qn("w:p")):
-        texto = []
-        for node in p.iter():
-            if node.tag == qn("w:t"):
-                texto.append(node.text or "")
-            elif node.tag in (qn("w:br"), qn("w:tab"), qn("w:cr")):
-                texto.append(" ")
-        out.append("".join(texto))
-    return out
+        texto, g = [], []
+        for r in p.iter(qn("w:r")):
+            alvo = g if gerado.eh_gerado(r) else texto
+            for node in r.iter():
+                if node.tag == qn("w:t"):
+                    alvo.append(node.text or "")
+                elif node.tag in (qn("w:br"), qn("w:tab"), qn("w:cr")):
+                    alvo.append(" ")
+        t = "".join(texto)
+        if gerado.LINHA_ID.match(t):  # linha de identificacao sem marca
+            g, t = [t], ""
+        out.append(t)
+        if g:
+            ger.append("".join(g))
+    return out, ger
 
 
-def docx_words(path):
+def docx_textos(path, incluir_gerado=False):
+    textos, ger = docx_partes(path)
+    return textos + ger if incluir_gerado else textos
+
+
+def docx_words(path, incluir_gerado=False):
     c = collections.Counter()
-    for t in docx_textos(path):
+    for t in docx_textos(path, incluir_gerado):
         c.update(words(t))
     return c
 
@@ -162,7 +176,7 @@ def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=Non
     o = collections.Counter()
     for t in textos:
         o.update(words(t))
-    saida_textos = docx_textos(docx)
+    saida_textos, gerados = docx_partes(docx)
     n = collections.Counter()
     for t in saida_textos:
         n.update(words(t))
@@ -180,6 +194,7 @@ def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=Non
         "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(30)),
         "numeros": numeros.comparar(numeros.contar(textos_num), numeros.contar(saida_textos)),
+        "texto_gerado_fora": gerados,  # A5: identificacao do motor, fora da comparacao
         "linhas_resposta": {"original": st["linhas_resposta_orig"],
                             "saida": sum(max(1, math.ceil(e["n"] * CFG["fator_linhas"])) for e in model["elementos"] if e["t"] == "lines")},
         "imagens": st["imagens"], "tabelas": st["tabelas"], "quadros": st["quadros"],

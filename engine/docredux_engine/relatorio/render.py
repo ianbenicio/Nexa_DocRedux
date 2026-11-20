@@ -16,6 +16,7 @@ from .extract import join_text
 from ..ficha import render as RD
 from ..ficha.render import CFG, A4_W, A4_H, shade, borders, fmt, no_table_borders
 from .. import soffice
+from ..gerado import marcar as marcar_gerado
 from ..pdftexto import DICT
 
 COR = RGBColor(0x1F, 0x4E, 0x79)  # azul sobrio do relatorio
@@ -127,6 +128,8 @@ class RR:
         r = p.add_run(el["text"]); r.bold = True; r.font.size = Pt(13); r.font.color.rgb = COR
         p2 = c.add_paragraph(); fmt(p2, 0, 2)
         r2 = p2.add_run(f"Versão compacta gerada a partir de: {el['arquivo']}"); r2.font.size = Pt(8); r2.font.color.rgb = CINZA
+        # A5: titulo vem do cabecalho corrido (fora da base de comparacao) e a 2a linha e do motor
+        marcar_gerado(self.doc, r, r2)
 
     def front(self, blocks):
         t = self.doc.add_table(rows=1, cols=1); t.style = "Table Grid"
@@ -225,6 +228,8 @@ class RR:
             r = p.add_run(e["text"]); r.font.size = Pt(10)
             r2 = p.add_run("\t" + str(self.toc_pages.get(e["text"], "")))
             r2.font.size = Pt(10)
+            # A5: copia do H1 e numero de pagina da saida; o sumario do original fica fora da base
+            marcar_gerado(self.doc, r, r2)
 
     # ------------------------------------------------------------ figuras e tabelas
     def table(self, body, keep=True):

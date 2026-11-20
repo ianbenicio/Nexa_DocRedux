@@ -36,7 +36,7 @@ def validar_pdf_renderizado(pdf_saida, docx=None):
         if not any(t.strip() or ficha_extract.has_visual_content(p) for t, p in zip(textos, doc)):
             raise RuntimeError("PDF gerado sem conteúdo visível")
         if docx is not None:
-            esperado = verify_ficha.docx_words(docx)
+            esperado = verify_ficha.docx_words(docx, incluir_gerado=True)  # o PDF traz tudo, gerado ou nao
             total = sum(esperado.values())
             if total:
                 achado = Counter()

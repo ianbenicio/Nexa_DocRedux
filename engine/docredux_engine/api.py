@@ -300,7 +300,7 @@ def _estrutura(meta, model) -> dict[str, int]:
 
 def _palavras_docx(docx) -> int:
     from .verify.ficha import docx_words
-    return sum(docx_words(docx).values())
+    return sum(docx_words(docx, incluir_gerado=True).values())
 
 
 # ---------------------------------------------------------------- processar

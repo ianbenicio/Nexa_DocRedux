@@ -13,6 +13,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, Cm, RGBColor
 
+from ..gerado import marcar as marcar_gerado
+
 CFG = {
     "fonte": "Carlito",  # Q13/DT-11: metrica identica a Calibri e existe no Linux (era "Calibri")
     "tam": 10.5, "cor": RGBColor(0xCF, 0x45, 0x62), "cinza": RGBColor(0x66, 0x66, 0x66),
@@ -121,6 +123,8 @@ class R:
         r = p.add_run(el["text"].replace("5ᵒ", "5º")); r.bold = True; r.font.size = Pt(11); r.font.color.rgb = CFG["cor"]
         p2 = c.add_paragraph(); fmt(p2, 0, 2)
         r2 = p2.add_run(f"Versão compacta gerada a partir de: {el['arquivo']}"); r2.font.size = Pt(8); r2.font.color.rgb = CFG["cinza"]
+        # A5: titulo vem do rodape corrido (fora da base de comparacao) e a 2a linha e do motor
+        marcar_gerado(self.doc, r, r2)
 
     def h1(self, el):
         p = self.doc.add_heading(level=1); fmt(p, CFG["h1_espaco_antes"], 4, keep=True)

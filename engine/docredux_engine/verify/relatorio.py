@@ -14,6 +14,7 @@ from docx.oxml.ns import qn
 from ..ficha import extract
 from ..relatorio import extract as ER
 from . import numeros
+from .. import gerado
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
 
@@ -88,34 +89,49 @@ def docx_counter(path):
     return c
 
 
-def docx_textos(path):
-    """Texto de cada paragrafo do DOCX como a cobertura o le (sem sobrescritos nem numero de nota)."""
-    d = Document(path); out = []
+def docx_partes(path):
+    """(textos, gerados): texto de cada paragrafo do DOCX como a cobertura o le (sem sobrescritos nem
+    numero de nota). O texto criado pelo motor (A5: identificacao, sumario) vai para `gerados`."""
+    d = Document(path); out, ger = [], []
+
+    def guardar(t, g):
+        if gerado.LINHA_ID.match(t):  # linha de identificacao sem marca
+            g, t = g + [t], ""
+        out.append(t)
+        if g:
+            ger.append("".join(g))
 
     def runs_words(p):
-        t = []
+        t, g = [], []
         first = True
         for r in p.runs:
             if r.font.superscript:
                 continue
+            if gerado.eh_gerado(r._r):
+                g.append(r.text); continue
             if first and re.match(r"^\d+\.\t$", r.text) and r.bold:  # numero da nota (formato do Notas)
                 first = False; continue
             first = False
             t.append(r.text)
-        return "".join(t)
+        return "".join(t), g
     for p in d.paragraphs:
-        out.append(runs_words(p))
+        guardar(*runs_words(p))
     for t in d.tables:
         for tc in t._tbl.iter(qn("w:tc")):
             for p in tc.iter(qn("w:p")):
-                txt = []
+                txt, g = [], []
                 for r in p.iter(qn("w:r")):
                     va = r.find(qn("w:rPr") + "/" + qn("w:vertAlign"))
                     if va is not None and va.get(qn("w:val")) == "superscript":
                         continue
-                    txt.append("".join(x.text or "" for x in r.iter(qn("w:t"))))
-                out.append("".join(txt))
-    return out
+                    (g if gerado.eh_gerado(r) else txt).append("".join(x.text or "" for x in r.iter(qn("w:t"))))
+                guardar("".join(txt), g)
+    return out, ger
+
+
+def docx_textos(path, incluir_gerado=False):
+    textos, ger = docx_partes(path)
+    return textos + ger if incluir_gerado else textos
 
 
 def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
@@ -128,7 +144,7 @@ def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
     # paginas mantidas como imagem (manter_capa_elementos): texto na imagem, fora da cobranca
     fora = {**meta["removidas"], **{str(k): v for k, v in meta.get("paginas_imagem", {}).items()}}
     lines, info = orig_lines(pdf, perfil, fora, meta["recorte"], meta.get("sumario_linhas", []))
-    saida_textos = docx_textos(docx)
+    saida_textos, gerados = docx_partes(docx)
     o = orig_counter(lines); n = orig_counter(saida_textos)
     missing = o - n; extra = n - o
     cov = 1 - sum(missing.values()) / max(1, sum(o.values()))
@@ -166,6 +182,7 @@ def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
         "palavras_original": sum(o.values()), "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(40)), "palavras_a_mais": dict(extra.most_common(15)),
         "numeros": numeros.comparar(numeros.contar(lines), numeros.contar(saida_textos)),
+        "texto_gerado_fora": gerados,  # A5: identificacao e sumario do motor, fora da comparacao
         "estrutura": est, "estrutura_ok": ok,
         "imagens": meta["stats"].get("imagens", 0), "tabelas": meta["stats"].get("tabelas", 0),
         "paginas_removidas": meta["removidas"],
