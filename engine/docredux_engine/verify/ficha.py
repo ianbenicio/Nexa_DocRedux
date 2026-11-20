@@ -193,7 +193,7 @@ def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=Non
         "figuras_vetoriais": len(figs),
         "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(30)),
-        "numeros": numeros.comparar(numeros.contar(textos_num), numeros.contar(saida_textos)),
+        "numeros": numeros.verificar(textos_num, saida_textos),
         "texto_gerado_fora": gerados,  # A5: identificacao do motor, fora da comparacao
         "linhas_resposta": {"original": st["linhas_resposta_orig"],
                             "saida": sum(max(1, math.ceil(e["n"] * CFG["fator_linhas"])) for e in model["elementos"] if e["t"] == "lines")},

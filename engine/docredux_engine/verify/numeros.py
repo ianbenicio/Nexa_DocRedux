@@ -71,3 +71,123 @@ def comparar(original, saida, limite=20):
         "faltando": dict(faltando.most_common(limite)),
         "a_mais": dict(a_mais.most_common(limite)),
     }
+
+
+# ----------------------------------------------------------------------------- contexto local (M12, story 2.13)
+# A contagem global aceita um número certo vindo de outro lugar: "tem 4 lados ... tem 6 faces" trocado por
+# "tem 6 lados ... tem 4 faces" tem os mesmos tokens. Aqui cada número do original precisa reaparecer entre os
+# mesmos vizinhos (palavra ou número antes e depois). Na fronteira de bloco basta um vizinho: o render muda o que
+# fica antes/depois de um parágrafo (selo "Aula 5" mudou de lugar, texto ao lado da imagem), não o miolo da frase.
+# Fronteira = começo/fim de linha no original ou começo/fim de parágrafo na saída. No meio da linha, achar os mesmos
+# dois vizinhos com outro número entre eles é troca, mesmo que o número certo apareça ao lado de um deles.
+SEQ = re.compile(NUM.pattern + r"|[^\W\d_]+")
+URL = re.compile(r"%[0-9A-Fa-f]{2}|://|www\.", re.IGNORECASE)
+# pedaço de URL partido na linha anterior ("view/86203/81685", "saude-2024-brasil", "dengue_1920x.jpg"): letra e
+# separador de caminho no mesmo pedaço sem espaço
+CAMINHO = re.compile(r"^(?=.*[^\W\d_])(?=.*[/_=?&#-]).*$")
+IGNORADO = "~"  # número dentro de URL/caminho: a quebra de linha muda os vizinhos; a contagem global cobre
+
+
+def _url(pedaco):
+    return bool(URL.search(pedaco) or CAMINHO.match(pedaco))
+
+
+def sequencia(textos):
+    """(tokens, fronteiras): palavras e números de todos os textos, na ordem e sem operadores, e o conjunto dos
+    índices que começam um texto (linha do original, parágrafo da saída)."""
+    out, ini = [], set()
+    for t in textos:
+        t = t.replace("ᵒ", "º")
+        urls = [(m.start(), m.end()) for m in re.finditer(r"\S+", t) if _url(m.group(0))]
+        primeiro = True
+        for m in SEQ.finditer(t):
+            w = m.group(0)
+            if w[0].isdigit():
+                w = re.sub(r"\s+", "", w)
+                if any(a <= m.start() < b for a, b in urls):
+                    w = IGNORADO + w
+            else:
+                w = w.lower()
+            if primeiro:
+                ini.add(len(out)); primeiro = False
+            out.append(w)
+    return out, ini
+
+
+def _eh_num(w):
+    return w is not None and (w[0].isdigit() or w[0] == IGNORADO)
+
+
+def contexto(original, saida, limite=10):
+    """Números do original que não reaparecem entre os mesmos vizinhos na saída.
+
+    original/saida: resultados de `sequencia()`. Cada ocorrência de número na saída serve a uma ocorrência do
+    original só, achada nesta ordem:
+      1. mesmos vizinhos dos dois lados (passada própria, antes das outras);
+      2. no meio de linha do original, a saída tem os mesmos dois vizinhos com OUTRO número entre eles: troca;
+      3. um vizinho só, se o outro lado é fronteira (fim/começo de linha no original ou de parágrafo na saída).
+    Número colado a outro número (tabela lida por linha no original e por coluna no DOCX, gabarito "1 2 3 ... 29",
+    grade de contas) fica com a contagem global, que já o cobra.
+    Devolve {"total": n, "trechos": [...]} com até `limite` trechos do original (3 tokens de cada lado)."""
+    (so, ini_o), (sd, ini_d) = original, saida
+    sd = [w.lstrip(IGNORADO) for w in sd]  # a marca so decide o que cobrar no original; na saida o numero e igual
+    n = len(sd)
+    idx = collections.defaultdict(list)  # chave -> posicoes de numero na saida
+    for j in range(n):
+        if not sd[j][0].isdigit():
+            continue
+        e = sd[j - 1] if j else None
+        d = sd[j + 1] if j + 1 < n else None
+        ini, fim = j in ini_d, j + 1 in ini_d or d is None
+        idx[("trio", e, sd[j], d)].append(j)
+        if e is not None:
+            idx[("esq", e, sd[j])].append(j)
+            if fim:
+                idx[("esq_borda", e, sd[j])].append(j)
+        if d is not None:
+            idx[("dir", sd[j], d)].append(j)
+            if ini:
+                idx[("dir_borda", sd[j], d)].append(j)
+        if not ini and not fim and not _eh_num(e) and not _eh_num(d):
+            idx[("molde", e, d)].append(j)
+    usados = set()
+
+    def pegar(chave):
+        for j in idx.get(chave, ()):
+            if j not in usados:
+                usados.add(j); return True
+        return False
+
+    def viz(i):
+        return so[i - 1] if i else None, so[i + 1] if i + 1 < len(so) else None
+
+    # 1a passada: mesmos vizinhos dos dois lados (antes de qualquer casamento parcial gastar a ocorrencia)
+    resto = [i for i, w in enumerate(so) if w[0].isdigit() and not pegar(("trio", viz(i)[0], w, viz(i)[1]))]
+    trechos, total = [], 0
+    for i in resto:
+        w = so[i]
+        esq, dir_ = viz(i)
+        borda_esq, borda_dir = i in ini_o or esq is None, i + 1 in ini_o or dir_ is None
+        if _eh_num(esq) or _eh_num(dir_):  # colado a outro numero: so a contagem global (nao gasta ocorrencia)
+            continue
+        if not borda_esq and not borda_dir and pegar(("molde", esq, dir_)):
+            pass  # troca: conta como fora de contexto
+        elif esq is not None and (pegar(("esq_borda", esq, w)) or (borda_dir and pegar(("esq", esq, w)))):
+            continue
+        elif dir_ is not None and (pegar(("dir_borda", w, dir_)) or (borda_esq and pegar(("dir", w, dir_)))):
+            continue
+        total += 1
+        if len(trechos) < limite:
+            trechos.append(" ".join(x.lstrip(IGNORADO) for x in so[max(0, i - 3):i + 4]))
+    return {"total": total, "trechos": trechos}
+
+
+def verificar(textos_original, textos_saida, limite=20):
+    """Contagem global (M09) + contexto local (M12). ok=False se falta número/operador ou se há número fora do
+    lugar de origem."""
+    r = comparar(contar(textos_original), contar(textos_saida), limite)
+    ctx = contexto(sequencia(textos_original), sequencia(textos_saida))
+    r["fora_de_contexto"] = ctx["total"]
+    r["fora_de_contexto_trechos"] = ctx["trechos"]
+    r["ok"] = r["ok"] and not ctx["total"]
+    return r

@@ -356,10 +356,13 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
         if cobertura < GATE_COBERTURA:
             motivos.append(f"cobertura {cobertura * 100:.2f}% < {GATE_COBERTURA * 100:.1f}%".replace(".", ","))
         num = v.get("numeros")
-        if num is not None and not num["ok"]:  # M09, story 2.7: número ou sinal do original ausente na saída
+        if num is not None and num["faltando"]:  # M09, story 2.7: número ou sinal do original ausente na saída
             itens = ", ".join(k.replace("op:", "operador ") + (f" (×{n})" if n > 1 else "")
                               for k, n in list(num["faltando"].items())[:5])
             motivos.append(f"números do original ausentes na saída: {itens}")
+        if num is not None and num.get("fora_de_contexto"):  # M12, story 2.13: número fora do lugar de origem
+            itens = "; ".join(f"“{t}”" for t in num["fora_de_contexto_trechos"][:3])
+            motivos.append(f"{num['fora_de_contexto']} número(s) do original fora do lugar de origem: {itens}")
         gate, motivo = ("bloqueado", "; ".join(motivos)) if motivos else ("ok", None)
         if v.get("estrutura_ok") is False:
             avisos.append("verificação estrutural divergente (legendas, Fonte, notas ou capítulos)")

@@ -181,7 +181,7 @@ def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
         "paginas_original": meta["paginas"], "paginas_docx_pdf": pages,
         "palavras_original": sum(o.values()), "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(40)), "palavras_a_mais": dict(extra.most_common(15)),
-        "numeros": numeros.comparar(numeros.contar(lines), numeros.contar(saida_textos)),
+        "numeros": numeros.verificar(lines, saida_textos),
         "texto_gerado_fora": gerados,  # A5: identificacao e sumario do motor, fora da comparacao
         "estrutura": est, "estrutura_ok": ok,
         "imagens": meta["stats"].get("imagens", 0), "tabelas": meta["stats"].get("tabelas", 0),

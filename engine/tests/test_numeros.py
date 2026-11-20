@@ -161,6 +161,17 @@ def test_gate_ok_quando_numeros_conferem(tmp_path, perfil_por_nome, monkeypatch)
     assert rel.gate == "ok" and rel.motivo_gate is None
 
 
+def test_gate_bloqueia_numero_fora_do_lugar(tmp_path, perfil_por_nome, monkeypatch):
+    """M12, story 2.13: contagem global confere, mas o número saiu do lugar de origem."""
+    v = {"cobertura_texto_pct": 100.0, "palavras_original": 10,
+         "numeros": {"ok": False, "tokens_original": 2, "faltando": {}, "a_mais": {},
+                     "fora_de_contexto": 2, "fora_de_contexto_trechos": ["o quadrado tem 4 lados", "o cubo tem 6 faces"]}}
+    (tmp_path / "out").mkdir()
+    rel = _processar_com_verificacao(tmp_path, perfil_por_nome["mathema-saeb"], monkeypatch, v)
+    assert rel.gate == "bloqueado" and "ausentes" not in rel.motivo_gate
+    assert "2 número(s) do original fora do lugar de origem" in rel.motivo_gate and "tem 4 lados" in rel.motivo_gate
+
+
 # ------------------------------------------------------------------ marcador de nota em título/legenda (achado do M09)
 def test_marcador_de_nota_em_legenda_nao_gruda_no_numero(tmp_path):
     runs = [["Gráfico 4 – Brasil – 2012-2023", ER.B], ["2", ER.B | ER.SUP]]

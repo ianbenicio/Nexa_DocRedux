@@ -1,0 +1,35 @@
+{
+ "_metodo": "troca dois numeros diferentes (regex de numero isolado) entre paragrafos distintos da saida real dos ex. 01-05 (regressao padrao da 2.12); semente 7; 300 trocas (150 no ex. 05); conta quantas a contagem global (2.7) e o contexto (2.13) detectam",
+ "resultado": {
+  "01": {
+   "trocas": 300,
+   "contagem_global": 0,
+   "contexto": 208,
+   "pct": 69.3
+  },
+  "02": {
+   "trocas": 300,
+   "contagem_global": 0,
+   "contexto": 209,
+   "pct": 69.7
+  },
+  "03": {
+   "trocas": 300,
+   "contagem_global": 0,
+   "contexto": 282,
+   "pct": 94.0
+  },
+  "04": {
+   "trocas": 300,
+   "contagem_global": 0,
+   "contexto": 253,
+   "pct": 84.3
+  },
+  "05": {
+   "trocas": 150,
+   "contagem_global": 0,
+   "contexto": 138,
+   "pct": 92.0
+  }
+ }
+}
