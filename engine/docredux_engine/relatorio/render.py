@@ -239,17 +239,26 @@ class RR:
         size = max(body["size"], 6.5)
         t = self.doc.add_table(rows=nr, cols=nc); t.alignment = WD_TABLE_ALIGNMENT.CENTER
         fixed_layout(t); table_borders(t); cell_margins(t, 1.5)
-        for i, row in enumerate(t.rows):
+        # grade calculada uma vez: t.cell() do python-docx refaz a grade inteira a cada chamada (O(n²); 3,8 s no
+        # ex. 05, story 2.14). Antes de mesclar, cada posição é a sua célula; células do modelo que não se sobrepõem
+        # continuam valendo depois das mesclas anteriores. Sobreposição (modelo malformado) volta a t.cell().
+        grade = []
+        for row in t.rows:
             cant_split(row)
-            for j, c in enumerate(row.cells):
+            grade.append(list(row.cells))
+            for j, c in enumerate(grade[-1]):
                 c.width = Pt(colw[j])
+        ocupadas = set()
         for cd in body["cells"]:
             r0, c0, rs, cs = cd["r"], cd["c"], cd["rs"], cd["cs"]
             if r0 + rs > nr or c0 + cs > nc:
                 continue
-            c = t.cell(r0, c0)
+            area = {(r, k) for r in range(r0, r0 + rs) for k in range(c0, c0 + cs)}
+            celula = t.cell if area & ocupadas else (lambda r, k: grade[r][k])
+            ocupadas |= area
+            c = celula(r0, c0)
             if rs > 1 or cs > 1:
-                c = c.merge(t.cell(r0 + rs - 1, c0 + cs - 1))
+                c = c.merge(celula(r0 + rs - 1, c0 + cs - 1))
             if cd["fill"]:
                 shade(c, cd["fill"])
             p = c.paragraphs[0]; fmt(p, 0, 0)

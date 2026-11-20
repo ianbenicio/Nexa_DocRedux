@@ -1,0 +1,164 @@
+{
+ "ambiente": {
+  "motor": "0.2.0",
+  "python": "3.13.13",
+  "so": "Windows-10-10.0.19045-SP0",
+  "cpus": 12,
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "max_perfis": 8
+ },
+ "lo_antes": 0,
+ "frio": {
+  "exemplo": "03",
+  "frio": {
+   "job": "frio-0",
+   "s": 12.48,
+   "pico_mb": 431,
+   "codigo": 0,
+   "gate": "ok",
+   "tempos_s": {
+    "extracao": 1.08,
+    "render_docx": 0.12,
+    "pdf": 10.79,
+    "encaixe": 0.03,
+    "verify": 0.04
+   }
+  },
+  "quente": {
+   "job": "frio-1",
+   "s": 6.22,
+   "pico_mb": 427,
+   "codigo": 0,
+   "gate": "ok",
+   "tempos_s": {
+    "extracao": 1.06,
+    "render_docx": 0.12,
+    "pdf": 4.53,
+    "encaixe": 0.03,
+    "verify": 0.04
+   }
+  }
+ },
+ "lotes": [
+  {
+   "concorrencia": 1,
+   "jobs": 5,
+   "total_s": 72.2,
+   "docs_por_min": 4.16,
+   "pico_ram_lote_mb": 894,
+   "falhas": [],
+   "por_exemplo": {
+    "01": {
+     "p50_s": 8.48,
+     "max_s": 8.48,
+     "pico_mb": 456
+    },
+    "02": {
+     "p50_s": 6.76,
+     "max_s": 6.76,
+     "pico_mb": 433
+    },
+    "03": {
+     "p50_s": 6.15,
+     "max_s": 6.15,
+     "pico_mb": 426
+    },
+    "04": {
+     "p50_s": 13.91,
+     "max_s": 13.91,
+     "pico_mb": 466
+    },
+    "05": {
+     "p50_s": 36.88,
+     "max_s": 36.88,
+     "pico_mb": 894
+    }
+   },
+   "latencia_p50_s": 8.48,
+   "latencia_p95_s": 32.29,
+   "lo_vivos_depois": 0,
+   "jobs_detalhe": [
+    {
+     "exemplo": "01",
+     "job": "c1-01-0",
+     "s": 8.48,
+     "pico_mb": 456,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.61,
+      "render_docx": 0.33,
+      "pdf": 4.87,
+      "encaixe": 0.12,
+      "verify": 0.12
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c1-02-0",
+     "s": 6.76,
+     "pico_mb": 433,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.22,
+      "render_docx": 0.22,
+      "pdf": 4.67,
+      "encaixe": 0.1,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c1-03-0",
+     "s": 6.15,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.05,
+      "render_docx": 0.12,
+      "pdf": 4.45,
+      "encaixe": 0.03,
+      "verify": 0.04
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c1-04-0",
+     "s": 13.91,
+     "pico_mb": 466,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.07,
+      "render_docx": 0.31,
+      "pdf": 4.86,
+      "encaixe": 5.16,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c1-05-0",
+     "s": 36.88,
+     "pico_mb": 894,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 8.59,
+      "render_docx": 17.12,
+      "pdf": 9.26,
+      "verify": 1.26
+     }
+    }
+   ]
+  }
+ ],
+ "pico_por_processo_mb": {
+  "python.exe": 395,
+  "soffice.bin": 542,
+  "soffice.com": 6
+ },
+ "lo_fim": 0
+}

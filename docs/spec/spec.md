@@ -313,7 +313,7 @@ RETURNING *;
   - `processar` de origem `usuario`: documento → `falhou` + estorno (ou exclusão, se `exclusao_pendente`).
   - `processar` de origem `reprocessar`: aplica a coluna "Falha final" da tabela de reprocessamento do §5, pelo `estado_origem` do job (de `pronto`: só `reprocessando = false`).
   - `juiz`: motivo `juiz_falhou` na fila do backoffice.
-- **Concorrência:** `WORKER_PROCESSOS` (padrão 2; na Oracle A1 com 2 OCPU, 2). Cada job usa um diretório temporário e um perfil do LibreOffice só dele. O original baixado fica em cache local por documento até o fim do processamento.
+- **Concorrência:** `WORKER_PROCESSOS` (padrão 2; na Oracle A1 com 2 OCPU, 2). Cada job usa um diretório temporário e um perfil do LibreOffice só dele. O original baixado fica em cache local por documento até o fim do processamento. Medição da story 2.14 (máquina de desenvolvimento x86, não a A1): pico de RAM por job de 430–470 MB (ficha) e ~900 MB (relatório de 294 páginas); com 2 processos, pico de 1,3 GB no lote. Timeout no meio da conversão não deixa processo do LibreOffice para trás.
 - **Índices:** parcial em `(prioridade, criado_em) WHERE status = 'na_fila'`; único parcial de um job ativo por (`documento_id`, `tipo`).
 - **Limpeza** (retenção, §14): tarefa diária no laço do worker, com `pg_try_advisory_lock` para rodar em um worker só. Não é job da fila.
 
