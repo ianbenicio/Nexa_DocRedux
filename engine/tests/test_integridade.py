@@ -258,6 +258,51 @@ def test_conversao_para_pdf_vazio_falha(tmp_path, perfil_por_nome, monkeypatch):
         api.processar(pdf, api.Opcoes(), perfil_por_nome["mathema-saeb"], tmp_path / "out")
 
 
+def test_conversao_truncada_com_codigo_zero_falha(tmp_path, perfil_por_nome, monkeypatch):
+    """Revisão 2026-11-20, A2: PDF que perdeu texto do DOCX não é entregue, mesmo com conversão 'ok'."""
+    pdf = pdf_texto(tmp_path / "entrada.pdf")
+
+    def converter(docx, out):
+        path = Path(out) / (Path(docx).stem + ".pdf")
+        with pymupdf.open() as d:
+            d.new_page().insert_text((72, 100), "Saida parcial.")
+            d.save(path)
+        return path
+
+    monkeypatch.setattr(pipeline.soffice, "para_pdf", converter)
+    with pytest.raises(api.RenderFalhou, match="PDF incompleto"):
+        api.processar(pdf, api.Opcoes(), perfil_por_nome["mathema-saeb"], tmp_path / "out")
+
+
+def _docx_e_pdf(tmp_path, texto_docx, texto_pdf):
+    from docx import Document
+    docx = tmp_path / "s.docx"
+    d = Document()
+    for t in texto_docx:
+        d.add_paragraph(t)
+    d.save(docx)
+    pdf = tmp_path / "s.pdf"
+    with pymupdf.open() as d:
+        p = d.new_page()
+        for i, t in enumerate(texto_pdf):
+            p.insert_text((72, 100 + 14 * i), t)
+        d.save(pdf)
+    return docx, pdf
+
+
+def test_pdf_completo_passa_na_completude(tmp_path):
+    linhas = ["Resolva a atividade com calma.", "A resposta correta tem 12 lados e 30 arestas."]
+    docx, pdf = _docx_e_pdf(tmp_path, linhas, linhas)
+    assert pipeline.validar_pdf_renderizado(pdf, docx) == 1
+
+
+def test_pdf_sem_parte_do_docx_falha_na_completude(tmp_path):
+    linhas = [f"Questao {i}: calcule o valor pedido no enunciado." for i in range(20)]
+    docx, pdf = _docx_e_pdf(tmp_path, linhas, linhas[:19])  # última linha sumiu: 95%
+    with pytest.raises(RuntimeError, match="PDF incompleto"):
+        pipeline.validar_pdf_renderizado(pdf, docx)
+
+
 def test_pdf_com_imagem_informativa_e_aceito(tmp_path):
     path = tmp_path / "imagem.pdf"
     with pymupdf.open() as d:

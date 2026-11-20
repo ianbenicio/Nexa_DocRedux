@@ -96,3 +96,64 @@ def test_sem_variavel_usa_pool_do_processo(monkeypatch):
     monkeypatch.setattr(soffice, "_pool_processo", None)
     a = soffice.pool()
     assert a.exists() and soffice.pool() == a
+
+
+# ---------------------------------------------------------------- revisão 2026-11-20
+def _parcial(pool, codigo):
+    """Conversor que grava um PDF e sai com `codigo` (saída parcial do LibreOffice)."""
+    def rodar(perfil, docx, outdir, timeout):
+        pool.chamadas.append(perfil)
+        (outdir / (docx.stem + ".pdf")).write_bytes(b"%PDF-parcial")
+        return types.SimpleNamespace(returncode=codigo, stderr=b"conversao incompleta")
+    return rodar
+
+
+def test_codigo_de_erro_com_pdf_nao_e_entregue(pool, monkeypatch):
+    """A2: código != 0 e arquivo no disco = parcial. Nada é entregue e o erro sobe."""
+    monkeypatch.setattr(soffice, "_rodar", _parcial(pool, 23))
+    with pytest.raises(RuntimeError, match="código 23"):
+        soffice.para_pdf(pool.docx, pool.out)
+    assert not (pool.out / "a.pdf").exists()
+    assert len(pool.chamadas) == 2  # perfil do pool e depois perfil temporário
+
+
+def test_codigo_de_erro_troca_o_perfil_do_pool(pool, monkeypatch):
+    """A2: o perfil da conversão com código de erro não volta como saudável."""
+    monkeypatch.setattr(soffice, "_rodar", _parcial(pool, 23))
+    with pytest.raises(RuntimeError):
+        soffice.para_pdf(pool.docx, pool.out)
+    ruim = pool.chamadas[0]
+    perfil, trava = soffice._reservar()
+    try:
+        assert perfil != ruim and not ruim.exists()
+    finally:
+        soffice._soltar(trava)
+
+
+def test_codigo_de_erro_no_pool_e_sucesso_no_temporario(pool, monkeypatch):
+    """A2: o PDF que sai é o do perfil temporário (código 0), não o parcial do pool."""
+    parcial = _parcial(pool, 23)
+
+    def rodar(perfil, docx, outdir, timeout):
+        if perfil.parent == pool.dir:
+            return parcial(perfil, docx, outdir, timeout)
+        pool.chamadas.append(perfil)
+        (outdir / (docx.stem + ".pdf")).write_bytes(b"%PDF-completo")
+        return types.SimpleNamespace(returncode=0, stderr=b"")
+
+    monkeypatch.setattr(soffice, "_rodar", rodar)
+    assert soffice.para_pdf(pool.docx, pool.out).read_bytes() == b"%PDF-completo"
+    assert (pool.chamadas[0] / soffice.MARCA).exists()
+
+
+def test_pool_relativo_vira_absoluto(tmp_path, monkeypatch):
+    """A6: DOCREDUX_LO_POOL relativo; o URI do perfil precisa de caminho absoluto."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv(soffice.POOL_ENV, "cache/_libreoffice")
+    p = soffice.pool()
+    assert p.is_absolute() and p == (tmp_path / "cache" / "_libreoffice").resolve()
+    perfil, trava = soffice._reservar()
+    try:
+        assert perfil.as_uri().startswith("file:")
+    finally:
+        soffice._soltar(trava)

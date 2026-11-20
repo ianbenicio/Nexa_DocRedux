@@ -5,6 +5,7 @@ agora numa função só, com tempos por etapa. `api.processar` monta o contrato 
 """
 import json
 import time
+from collections import Counter
 from pathlib import Path
 
 import pymupdf
@@ -15,13 +16,35 @@ from .ficha import render as ficha_render
 from .verify import ficha as verify_ficha
 
 
-def validar_pdf_renderizado(pdf_saida):
-    """Protecao minima do artefato entregue, sem confundir ausencia de texto com pagina vazia."""
+COMPLETUDE_PDF = 0.995  # fração mínima das palavras do DOCX presentes no PDF entregue
+_TEXTO = pymupdf.TEXTFLAGS_TEXT & ~pymupdf.TEXT_PRESERVE_LIGATURES  # "fi" ligado quebraria a palavra
+
+
+def validar_pdf_renderizado(pdf_saida, docx=None):
+    """Protecao do artefato entregue, sem confundir ausencia de texto com pagina vazia.
+
+    Com `docx`, confere também se o PDF está completo: as palavras do DOCX precisam estar no texto do PDF
+    (>= COMPLETUDE_PDF). A cobertura do gate é medida sobre o DOCX, então sem isto um PDF truncado pelo
+    LibreOffice passaria (revisão 2026-11-20, A2). Medido nos ex. 01-05: 100% nas fichas, 99,997% no ex. 05
+    (3 palavras: URL partida na quebra de linha e número de nota colado).
+    """
     with pymupdf.open(pdf_saida) as doc:
         if not doc.is_pdf or doc.page_count == 0:
             raise RuntimeError("PDF gerado sem páginas válidas")
-        if not any(p.get_text("text").strip() or ficha_extract.has_visual_content(p) for p in doc):
+        textos = [p.get_text("text", flags=_TEXTO) for p in doc]
+        if not any(t.strip() or ficha_extract.has_visual_content(p) for t, p in zip(textos, doc)):
             raise RuntimeError("PDF gerado sem conteúdo visível")
+        if docx is not None:
+            esperado = verify_ficha.docx_words(docx)
+            total = sum(esperado.values())
+            if total:
+                achado = Counter()
+                for t in textos:
+                    achado.update(verify_ficha.words(t))
+                completude = 1 - sum((esperado - achado).values()) / total
+                if completude < COMPLETUDE_PDF:
+                    raise RuntimeError(f"PDF incompleto: {completude * 100:.2f}% das palavras do DOCX "
+                                       f"(mínimo {COMPLETUDE_PDF * 100:.1f}%)".replace(".", ","))
         return doc.page_count
 
 
@@ -54,8 +77,8 @@ def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=Tr
 
     t = time.perf_counter(); avisar("pdf")
     pdf_saida = soffice.para_pdf(docx, out)
+    paginas_pdf = validar_pdf_renderizado(pdf_saida, docx)
     tempos["pdf"] = time.perf_counter() - t
-    paginas_pdf = validar_pdf_renderizado(pdf_saida)
 
     verificacao = None
     if verificar:

@@ -17,11 +17,15 @@ from docredux_engine.verify import relatorio as VR
     ("três quartos: 3/4 e 3 / 4", ["3/4", "3/4"]),
     ("cresceu 25 % e depois 25%", ["25%", "25%"]),
     ("5º ano, 5ᵒ ano, 2ª série", ["5º", "5º", "2ª"]),
-    ("saldo de -3 e de −3", ["-3", "-3"]),
+    ("saldo de -3 e de −3", ["3", "3"]),  # o sinal vira "op:-" (ver test_operadores_entre_numeros)
     ("PNE 2014-2024", ["2014", "2024"]),  # hífen de intervalo não vira sinal
     ("jan./jun.2009", ["2009"]),
     ("jan./jun. 2009", ["2009"]),
     ("arquivo pt2023v48", []),  # dígito colado a letra não é número solto
+    ("calcule 3 × -2 e (−5)", ["3", "2", "5"]),  # número sem sinal; o sinal é token à parte
+    ("3 -4 e 3 - 4", ["3", "4", "3", "4"]),  # depois de dígito é operador, com ou sem espaço (A4)
+    ("x-3 e x - 3", ["3", "3"]),  # depois de letra é hífen, não sinal
+    ("itens:\n- 3 lápis", ["3"]),  # travessão de lista separado do número
 ])
 def test_tokens_numericos(texto, esperado):
     assert [t for t in numeros.tokens(texto) if not t.startswith("op:")] == esperado
@@ -34,6 +38,13 @@ def test_tokens_numericos(texto, esperado):
     ("x ≥ 2", []),  # só conta operador entre dois números
     ("10 < 20 ≤ 30", ["op:<", "op:≤"]),
     ("1 : 10 = 0,1", ["op::", "op:="]),
+    ("3 - 4 e 3-4", ["op:-", "op:-"]),  # hífen ASCII como subtração (A3)
+    ("3 +4", ["op:+"]),  # espaço só de um lado (A4)
+    ("3 × -2", ["op:×", "op:-"]),  # sinal unário conta uma vez
+    ("saldo de -3 e de −3", ["op:-", "op:-"]),
+    ("2,0% -24,8% e 12,0 -24,8%", ["op:-", "op:-"]),  # unário depois de % e operador depois de dígito: um só
+    ("x-3 e x - 3", []),  # hífen colado a letra
+    ("PNE 2014-2024", ["op:-"]),  # intervalo: mesmo token dos dois lados
 ])
 def test_operadores_entre_numeros(texto, ops):
     assert sorted(t for t in numeros.tokens(texto) if t.startswith("op:")) == sorted(ops)
@@ -46,10 +57,33 @@ def test_operadores_entre_numeros(texto, ops):
     ("A média foi 6,9.", "A média foi 6,8."),        # decimal
     ("Pinte 3/4 da figura.", "Pinte 3/5 da figura."),  # fração
     ("Subiu 12%.", "Subiu 21%."),                    # porcentagem
+    ("Calcule 3 - 4.", "Calcule 3 + 4."),            # subtração com hífen ASCII (A3)
+    ("Calcule 3 - 4.", "Calcule 3 4."),              # sinal sumiu (A3)
+    ("Calcule 3 × -2.", "Calcule 3 × 2."),           # sinal do negativo sumiu
 ])
 def test_troca_de_numero_ou_sinal_e_detectada(original, saida):
     r = numeros.comparar(numeros.contar([original]), numeros.contar([saida]))
     assert not r["ok"] and r["faltando"]
+
+
+@pytest.mark.parametrize("original,saida", [
+    ("Calcule 3 +4.", "Calcule 3 + 4."),  # A4: espaço não muda o valor
+    ("Calcule 3-4.", "Calcule 3 - 4."),
+    ("Calcule 3 − 4.", "Calcule 3 - 4."),  # sinal de menos tipográfico e hífen
+])
+def test_mesma_conta_com_outro_espacamento_passa(original, saida):
+    assert numeros.comparar(numeros.contar([original]), numeros.contar([saida]))["ok"]
+
+
+def test_celulas_negativas_juntas_numa_linha_passam():
+    """Ex. 05: cada célula numa linha do original; o DOCX junta a linha da tabela com espaços."""
+    original = ["2,0%", "-24,8%", "-18,9%", "12,0", "-13,5%"]
+    saida = ["2,0% -24,8% -18,9% 12,0 -13,5%"]
+    assert numeros.comparar(numeros.contar(original), numeros.contar(saida))["ok"]
+
+
+def test_sinal_negativo_perdido_e_detectado():
+    assert not numeros.comparar(numeros.contar(["Saldo de -3."]), numeros.contar(["Saldo de 3."]))["ok"]
 
 
 def test_mesmos_numeros_em_outra_quebra_de_linha_passam():

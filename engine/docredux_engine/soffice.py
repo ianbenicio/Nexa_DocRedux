@@ -100,7 +100,9 @@ def pool():
     global _pool_processo
     env = os.environ.get(POOL_ENV)
     if env:
-        p = Path(env)
+        # absoluto: o URI do perfil (-env:UserInstallation) exige caminho absoluto, e o motor pode rodar com
+        # outro diretório corrente (revisão 2026-11-20, A6)
+        p = Path(env).resolve()
         p.mkdir(parents=True, exist_ok=True)
         return p
     if _pool_processo is None:
@@ -135,13 +137,25 @@ def _rodar(perfil, docx, outdir, timeout):
                           capture_output=True, timeout=timeout)
 
 
+def _converteu(r, alvo):
+    """Sucesso só com código 0 E o PDF no disco. Código de erro com arquivo = saída parcial: o arquivo é
+    apagado para não ser entregue (revisão 2026-11-20, A2)."""
+    if r.returncode == 0 and alvo.exists():
+        return True
+    alvo.unlink(missing_ok=True)
+    return False
+
+
 def para_pdf(docx, outdir, timeout=900):
-    """Converte `docx` em `outdir/<stem>.pdf` e devolve o caminho. Levanta RuntimeError se o PDF não sair."""
+    """Converte `docx` em `outdir/<stem>.pdf` e devolve o caminho. Levanta RuntimeError se o PDF não sair.
+
+    Só conta como conversão a que termina com código 0 e deixa o PDF. Com código de erro, o arquivo que
+    sobrar é apagado e o perfil do pool fica marcado (é trocado na próxima reserva).
+    """
     docx, outdir = Path(docx), Path(outdir)
     alvo = outdir / (docx.stem + ".pdf")
-    if alvo.exists():
-        alvo.unlink()
-    r = None
+    alvo.unlink(missing_ok=True)
+    r, ok = None, False
     slot = _reservar()
     if slot is not None:
         perfil, trava = slot
@@ -149,17 +163,19 @@ def para_pdf(docx, outdir, timeout=900):
             marca = perfil / MARCA
             marca.touch()
             r = _rodar(perfil, docx, outdir, timeout)  # timeout propaga; a marca fica e o perfil é trocado
-            if alvo.exists():
+            ok = _converteu(r, alvo)
+            if ok:
                 marca.unlink()
         finally:
             _soltar(trava)
-    if not alvo.exists():  # sem perfil livre, ou o reaproveitado falhou: perfil só desta chamada
+    if not ok:  # sem perfil livre, ou o reaproveitado falhou: perfil só desta chamada
         perfil = Path(tempfile.mkdtemp(prefix="docredux-lo-"))
         try:
             r = _rodar(perfil, docx, outdir, timeout)
+            ok = _converteu(r, alvo)
         finally:
             shutil.rmtree(perfil, ignore_errors=True)
-    if not alvo.exists():
+    if not ok:
         err = (r.stderr or b"").decode(errors="replace")[-500:]
         raise RuntimeError(f"LibreOffice não gerou o PDF (código {r.returncode}): {err}")
     return alvo

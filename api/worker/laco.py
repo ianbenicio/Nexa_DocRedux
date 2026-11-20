@@ -72,7 +72,8 @@ class Worker:
         self.cache = cache or jobs.cache_padrao()
         # perfis do LibreOffice reaproveitados entre jobs (DT-5, story 2.8): um pool por máquina, herdado
         # pelo subprocesso do motor; cada conversão trava o seu perfil. A limpeza pula pastas com "_".
-        os.environ.setdefault("DOCREDUX_LO_POOL", str(self.cache / jobs.POOL_LIBREOFFICE))
+        # Absoluto: o motor roda com o diretório do job como cwd (revisão 2026-11-20, A6).
+        os.environ.setdefault("DOCREDUX_LO_POOL", str((self.cache / jobs.POOL_LIBREOFFICE).resolve()))
         self.timeouts = timeouts or timeouts_padrao()
         self.email = email
         self.conn = conn or conectar(autocommit=True)
