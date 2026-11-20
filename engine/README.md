@@ -17,6 +17,7 @@ Precisa do LibreOffice (DOCX → PDF) e da fonte **Carlito** (métrica da Calibr
 | Variável | Para quê | Padrão |
 |---|---|---|
 | `DOCREDUX_SOFFICE` | caminho do `soffice` | `PATH`, depois o caminho padrão do SO |
+| `DOCREDUX_LO_POOL` | pasta do pool de perfis do LibreOffice, reaproveitados entre conversões com trava por perfil (story 2.8) | temporário do processo, apagado na saída |
 | `DOCREDUX_PERFIS` | diretório dos perfis JSON | `engine/perfis/` |
 | `DOCREDUX_FIXTURES` | PDFs dos ex. 01–05 (fora do git) para testes e regressão | — (testes que precisam deles são pulados) |
 

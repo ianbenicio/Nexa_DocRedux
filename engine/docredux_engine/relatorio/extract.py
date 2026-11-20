@@ -12,6 +12,7 @@ table, img, fonte, siglas, toc, notas.  Runs: [[texto, flags]], flags 1=negrito 
 import collections, json, re, sys
 from pathlib import Path
 import pymupdf
+from ..pdftexto import DICT
 
 LIG = {"ﬁ": "fi", "ﬂ": "fl", "ﬀ": "ff", "ﬃ": "ffi", "ﬄ": "ffl", "\xa0": " ", "­": "", "\t": " "}
 B, I, SUP = 1, 2, 4
@@ -99,7 +100,7 @@ def page_lines(page, perfil, stats=None):
     e do numero de pagina (baseline > faixa_rodape_y) por POSICAO (R12), nao por regex."""
     top, bot = perfil["faixa_topo_y"], perfil["faixa_rodape_y"]
     out, hdr = [], []
-    for blk in page.get_text("dict")["blocks"]:
+    for blk in page.get_text("dict", flags=DICT)["blocks"]:
         for ln in blk.get("lines", []):
             if abs(ln["dir"][1]) > 0.1:
                 continue
@@ -206,6 +207,7 @@ def table_cells(page, t):
         return min(range(len(vals)), key=lambda i: abs(vals[i] - v))
     fills = [(d["rect"], d["fill"]) for d in page.get_drawings() if d.get("fill") and d["rect"].width > 6 and d["rect"].height > 4]
     words = page.get_text("words")
+    centros = [((w[0] + w[2]) / 2, (w[1] + w[3]) / 2) for w in words]
     cells, used = [], set()
     for r in sorted(rects, key=lambda r: (r.y0, r.x0)):
         c0, c1 = idx(xs, r.x0), idx(xs, r.x1)
@@ -213,7 +215,11 @@ def table_cells(page, t):
         if c1 <= c0 or r1 <= r0 or (r0, c0) in used:
             continue
         used.add((r0, c0))
-        inside = [w for k, w in enumerate(words) if k not in used and r.contains(pymupdf.Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2))]
+        # pré-filtro em Python (folga de 0,01 pt); o teste exato do MuPDF (float32, semiaberto) só nos candidatos.
+        # Antes: Rect.contains em todas as palavras × células (ex. 05: 477 mil chamadas, 3,3 s). Story 2.8.
+        fx0, fy0, fx1, fy1 = r.x0 - 0.01, r.y0 - 0.01, r.x1 + 0.01, r.y1 + 0.01
+        inside = [w for k, (w, (cx, cy)) in enumerate(zip(words, centros))
+                  if fx0 <= cx <= fx1 and fy0 <= cy <= fy1 and k not in used and r.contains(pymupdf.Point(cx, cy))]
         for w in inside:
             used.add(words.index(w) if False else id(w))
         inside.sort(key=lambda w: (round(w[1] / 3), w[0]))
@@ -235,14 +241,14 @@ def table_cells(page, t):
         for fr, fc in fills:
             if fr.contains(pymupdf.Point((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2)) and (best is None or fr.get_area() < best):
                 best = fr.get_area(); fill = fc
-        sp = [s_ for blk in page.get_text("dict", clip=r + (1, 1, -1, -1))["blocks"] for ln in blk.get("lines", []) for s_ in ln["spans"] if s_["text"].strip()]
+        sp = [s_ for blk in page.get_text("dict", flags=DICT, clip=r + (1, 1, -1, -1))["blocks"] for ln in blk.get("lines", []) for s_ in ln["spans"] if s_["text"].strip()]
         cor = "%06X" % sp[0]["color"] if sp else "231F20"
         neg = bool(sp) and all(("Bold" in s_["font"] or s_["flags"] & 16) for s_ in sp)
         cells.append({"r": r0, "c": c0, "rs": r1 - r0, "cs": c1 - c0, "text": clean(text).strip(), "cor": cor, "neg": neg,
                       "fill": "%02X%02X%02X" % tuple(int(round(x * 255)) for x in fill[:3]) if fill and len(fill) == 3 else None})
     # tamanho de fonte do texto da tabela
     sizes = []
-    for blk in page.get_text("dict", clip=pymupdf.Rect(t.bbox))["blocks"]:
+    for blk in page.get_text("dict", flags=DICT, clip=pymupdf.Rect(t.bbox))["blocks"]:
         for ln in blk.get("lines", []):
             for s in ln["spans"]:
                 if s["text"].strip():
@@ -340,7 +346,7 @@ def grid_table(page, rect):
             for fr, fc in fills:
                 if fr.contains(pt) and (best is None or fr.get_area() < best):
                     best = fr.get_area(); fill = fc
-            sp = [s_ for blk in page.get_text("dict", clip=pymupdf.Rect(c["x0"] - 1, r["y"] - 5, c["x1"] + 1, r["y"] + 5))["blocks"]
+            sp = [s_ for blk in page.get_text("dict", flags=DICT, clip=pymupdf.Rect(c["x0"] - 1, r["y"] - 5, c["x1"] + 1, r["y"] + 5))["blocks"]
                   for ln in blk.get("lines", []) for s_ in ln["spans"] if s_["text"].strip()]
             cells_out.append({"r": ri, "c": c0, "rs": 1, "cs": c1 - c0 + 1, "text": clean(c["t"]).strip(),
                               "cor": "%06X" % sp[0]["color"] if sp else "231F20",

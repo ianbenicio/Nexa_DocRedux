@@ -2,6 +2,7 @@
 
 DOCREDUX_PERFIS   diretório dos perfis JSON (padrão: engine/perfis/)
 DOCREDUX_SOFFICE  executável do LibreOffice (ver soffice.py)
+DOCREDUX_LO_POOL  pasta do pool de perfis do LibreOffice (ver soffice.py)
 DOCREDUX_FIXTURES diretório dos fixtures NN-slug/original/*.pdf (só testes)
 """
 import os

@@ -12,6 +12,7 @@ from docx.oxml.ns import qn
 
 from ..ficha.render import CFG, A4_W, A4_H  # noqa: E402
 from . import numeros
+from ..pdftexto import DICT  # noqa: E402
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
 
@@ -37,7 +38,7 @@ def original_textos(pdf, removed, figs):
                 continue
             fr = [r for pg, r in figs if pg == pno + 1]
             h = p.rect.height
-            for b in p.get_text("dict")["blocks"]:
+            for b in p.get_text("dict", flags=DICT)["blocks"]:
                 for ln in b.get("lines", []):
                     if abs(ln["dir"][1]) > 0.1:
                         continue

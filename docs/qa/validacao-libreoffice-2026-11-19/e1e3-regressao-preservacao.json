@@ -1,0 +1,98 @@
+{
+ "ambiente": {
+  "motor": "0.2.0",
+  "python": "3.13.13",
+  "so": "Windows-10-10.0.19045-SP0",
+  "maquina": "AMD64",
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "manter_capa_elementos": true
+ },
+ "exemplos": [
+  {
+   "exemplo": "01-mathema-saeb-5ano-lp-p3",
+   "ok": true,
+   "paginas": "52→27",
+   "paginas_baseline": "52→19",
+   "cobertura_pct": 99.96,
+   "cobertura_min": 99.96,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 16.7,
+   "tempos_s": {
+    "extracao": 3.74,
+    "render_docx": 0.48,
+    "pdf": 12.38,
+    "verify": 0.11
+   }
+  },
+  {
+   "exemplo": "02-mathema-saeb-4ano-lp-p3",
+   "ok": true,
+   "paginas": "34→19",
+   "paginas_baseline": "34→14",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 7.7,
+   "tempos_s": {
+    "extracao": 1.87,
+    "render_docx": 0.29,
+    "pdf": 5.45,
+    "verify": 0.08
+   }
+  },
+  {
+   "exemplo": "03-mathema-saeb-4ano-mat-p3",
+   "ok": true,
+   "paginas": "16→8",
+   "paginas_baseline": "16→5",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 6.8,
+   "tempos_s": {
+    "extracao": 1.56,
+    "render_docx": 0.16,
+    "pdf": 5.0,
+    "verify": 0.04
+   }
+  },
+  {
+   "exemplo": "04-mathema-saeb-5ano-mat-p3",
+   "ok": true,
+   "paginas": "26→17",
+   "paginas_baseline": "26→12",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 9.5,
+   "tempos_s": {
+    "extracao": 3.8,
+    "render_docx": 0.45,
+    "pdf": 5.17,
+    "verify": 0.07
+   }
+  },
+  {
+   "exemplo": "05-diagnostico-educacao-nacional",
+   "ok": true,
+   "paginas": "294→174",
+   "paginas_baseline": "294→142",
+   "cobertura_pct": 99.97,
+   "cobertura_min": 99.97,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 45.6,
+   "tempos_s": {
+    "extracao": 12.36,
+    "render_docx": 21.02,
+    "pdf": 11.07,
+    "verify": 1.0
+   }
+  }
+ ],
+ "falhas": 0
+}

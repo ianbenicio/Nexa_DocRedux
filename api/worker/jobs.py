@@ -317,5 +317,8 @@ def enviar_avisos(ctx: Contexto) -> None:
     ctx.avisos.clear()
 
 
+POOL_LIBREOFFICE = "_libreoffice"  # pasta do cache que não é de documento (a limpeza pula "_*")
+
+
 def cache_padrao() -> Path:
     return Path(os.environ.get("WORKER_CACHE") or (Path(tempfile.gettempdir()) / "docredux-cache"))

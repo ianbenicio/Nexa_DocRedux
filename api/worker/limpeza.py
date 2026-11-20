@@ -84,7 +84,8 @@ def rodar(conn: psycopg.Connection, cache: Path | None = None) -> dict:
     if cache and cache.exists():
         limite = time.time() - 86400
         for p in cache.iterdir():
-            if p.is_dir() and p.stat().st_mtime < limite:
+            # "_*" não é documento (pool de perfis do LibreOffice, story 2.8): apagar em uso quebraria a conversão
+            if p.is_dir() and not p.name.startswith("_") and p.stat().st_mtime < limite:
                 shutil.rmtree(p, ignore_errors=True)
                 r["cache"] += 1
     return r

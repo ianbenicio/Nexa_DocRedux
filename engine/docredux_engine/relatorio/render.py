@@ -16,6 +16,7 @@ from .extract import join_text
 from ..ficha import render as RD
 from ..ficha.render import CFG, A4_W, A4_H, shade, borders, fmt, no_table_borders
 from .. import soffice
+from ..pdftexto import DICT
 
 COR = RGBColor(0x1F, 0x4E, 0x79)  # azul sobrio do relatorio
 COR_HEX = "1F4E79"
@@ -346,27 +347,28 @@ class RR:
 
 
 def soffice_pdf(docx, outdir):
-    # executavel por DOCREDUX_SOFFICE e perfil do LibreOffice proprio por chamada (DT-5); era fixo no Windows
+    # executavel por DOCREDUX_SOFFICE e perfil do LibreOffice reservado do pool por chamada (DT-5, story 2.8)
     return soffice.para_pdf(docx, outdir, timeout=900)
 
 
 def find_toc_pages(pdf, h1s, h1_pt=15):
     import pymupdf
-    d = pymupdf.open(pdf)
     res, start = {}, 0
-    # ignora paginas ate o fim do proprio sumario: so conta spans do tamanho do H1
-    for t in h1s:
-        for pno in range(start, d.page_count):
-            hit = False
-            for b in d[pno].get_text("dict")["blocks"]:
-                for ln in b.get("lines", []):
-                    s = ln["spans"][0] if ln["spans"] else None
-                    if s and abs(s["size"] - h1_pt) < 0.3:
-                        tx = "".join(x["text"] for x in ln["spans"]).strip()
-                        if tx and t.startswith(tx[:25]):
-                            hit = True
-            if hit:
-                res[t] = pno + 1; start = pno; break
+    # fechado no fim: a 2a passada do LibreOffice regrava este mesmo PDF (no Windows, arquivo aberto nao se apaga)
+    with pymupdf.open(pdf) as d:
+        # ignora paginas ate o fim do proprio sumario: so conta spans do tamanho do H1
+        for t in h1s:
+            for pno in range(start, d.page_count):
+                hit = False
+                for b in d[pno].get_text("dict", flags=DICT)["blocks"]:
+                    for ln in b.get("lines", []):
+                        s = ln["spans"][0] if ln["spans"] else None
+                        if s and abs(s["size"] - h1_pt) < 0.3:
+                            tx = "".join(x["text"] for x in ln["spans"]).strip()
+                            if tx and t.startswith(tx[:25]):
+                                hit = True
+                if hit:
+                    res[t] = pno + 1; start = pno; break
     return res
 
 

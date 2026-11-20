@@ -16,6 +16,7 @@ import pymupdf
 # O perfil e DADO, nao codigo: um JSON por template em perfis/. O campo "tipo" (ficha | relatorio) liga
 # e desliga familias de regras. Escolhido pela assinatura (fontes presentes no PDF) ou por --perfil.
 from ..config import PERFIL_DIR  # noqa: E402  (engine/perfis/ ou DOCREDUX_PERFIS)
+from ..pdftexto import DICT  # noqa: E402
 
 
 def _cores(o):
@@ -395,7 +396,7 @@ def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
 
     # linhas de texto -> rows (mesma linha de base fundidas)
     raw = []
-    for blk in page.get_text("dict")["blocks"]:
+    for blk in page.get_text("dict", flags=DICT)["blocks"]:
         for ln in blk.get("lines", []):
             if abs(ln["dir"][1]) > 0.1:  # texto rotacionado = rodape vertical
                 stats["descartado_rodape"] += 1

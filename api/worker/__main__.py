@@ -2,7 +2,7 @@
 
 Variáveis: as da API (DATABASE_URL no modo sessão, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_*) e
 WORKER_TIPOS, WORKER_PROCESSOS, WORKER_TIMEOUT_TRIAGEM_S, WORKER_TIMEOUT_PROCESSAR_S, WORKER_CACHE,
-DOCREDUX_SOFFICE. Fora do container, lê api/.env se existir.
+DOCREDUX_SOFFICE, DOCREDUX_LO_POOL (padrão: <WORKER_CACHE>/_libreoffice). Fora do container, lê api/.env se existir.
 """
 from __future__ import annotations
 

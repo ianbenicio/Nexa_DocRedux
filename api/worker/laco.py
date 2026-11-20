@@ -70,6 +70,9 @@ class Worker:
         self.worker_id = worker_id or f"{socket.gethostname()}-{os.getpid()}-{secrets.token_hex(3)}"
         self.tipos = tipos or tipos_padrao()
         self.cache = cache or jobs.cache_padrao()
+        # perfis do LibreOffice reaproveitados entre jobs (DT-5, story 2.8): um pool por máquina, herdado
+        # pelo subprocesso do motor; cada conversão trava o seu perfil. A limpeza pula pastas com "_".
+        os.environ.setdefault("DOCREDUX_LO_POOL", str(self.cache / jobs.POOL_LIBREOFFICE))
         self.timeouts = timeouts or timeouts_padrao()
         self.email = email
         self.conn = conn or conectar(autocommit=True)
