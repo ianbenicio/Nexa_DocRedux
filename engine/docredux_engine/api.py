@@ -272,7 +272,8 @@ def _regras(meta, model, perfil) -> list[str]:
                 "R10": tipos["lines"], "R4": tipos["opt"], "R16": st.get("paragrafos_fundidos"),
                 "R14": st.get("quadros"), "R26": st.get("malhas"), "R21": st.get("figuras_vetoriais"),
                 "R22": st.get("tabelas_figura"), "R27": st.get("lacunas"), "R28": st.get("composicoes_em_linha"),
-                "R7": st.get("imagens"), "R5": st.get("desenhos_decorativos")}
+                "R7": st.get("imagens"), "R5": st.get("desenhos_decorativos"), "R51": st.get("grades_contas"),
+                "R52": sum(1 for e in model["elementos"] if e.get("encaixe"))}
     else:
         cond = {"R34": tipos["p"], "R35": tipos["p"], "R36": tipos["p"], "R37": tipos["fig"],
                 "R38": st.get("imagens"), "R39": st.get("imagens"), "R40": st.get("notas"), "R41": tipos["ref"],

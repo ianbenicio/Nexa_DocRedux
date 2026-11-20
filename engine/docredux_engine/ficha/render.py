@@ -21,6 +21,7 @@ CFG = {
     "max_chars_fluxo": 90, "sep_opcoes": "     ",  # R4: opção maior que isso vai em coluna
     "h1_espaco_antes": 22,
     "quadro_fator": 0.6,
+    "conta_linha_pt": 22,  # R51: altura da linha da grade de contas (original: 33 pt entre linhas)
 }
 A4_W, A4_H = 595.3, 841.9
 
@@ -194,7 +195,8 @@ class R:
             k = math.sqrt(CFG["img_alvo_pct"] / el["pct"]); w, h = w * k, h * k
         if w > self.text_w:
             h, w = h * self.text_w / w, self.text_w
-        return w, h
+        k = el.get("encaixe", 1)  # R52: encolhida na 2a passada para caber no fim da pagina
+        return w * k, h * k
 
     def imgs(self, group):
         if len(group) == 1 and group[0]["side"]:  # R3: texto ao lado
@@ -235,6 +237,17 @@ class R:
                 p = fmt(c.paragraphs[0], 1, 1); run = p.add_run(txt); run.font.size = Pt(9)
                 if i == 0 and has_header:
                     shade(c, "CF4562"); run.bold = True; run.font.color.rgb = RGBColor(255, 255, 255)
+
+    def contas(self, el):
+        """R51: grade de contas sem bordas; a celula larga deixa o espaco da resposta depois do "="."""
+        rows = el["rows"]; nc = len(rows[0])
+        t = self.doc.add_table(rows=len(rows), cols=nc); no_table_borders(t)
+        for i, r in enumerate(rows):
+            row_height(t.rows[i], CFG["conta_linha_pt"], exact=True)
+            for j, txt in enumerate(r):
+                c = t.rows[i].cells[j]; c.width = Pt(self.text_w / nc)
+                fmt(c.paragraphs[0], 0, 0, 0.6 if j == 0 else 0).add_run(txt)
+        self.stats["contas"] = self.stats.get("contas", 0) + sum(1 for r in rows for c in r if c)
 
     def box(self, el):
         t = self.doc.add_table(rows=1, cols=1); t.style = "Table Grid"
@@ -283,6 +296,8 @@ class R:
                 self.lines(el, ctx_left)
             elif t == "table":
                 self.table(el)
+            elif t == "contas":
+                self.contas(el)
             elif t == "box":
                 self.box(el)
             else:

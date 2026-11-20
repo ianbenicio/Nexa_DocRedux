@@ -127,10 +127,13 @@ def estimate_pages(model):
             w, ih = el["w"], el["h"]
             if w > text_w:
                 ih *= text_w / w
+            ih *= el.get("encaixe", 1)  # R52
             side = sum(tl(s["text"], w) * lh for s in el["side"])
             h += max(ih, side) + 6
         elif t == "table":
             h += sum(max(20, max(tl(c, text_w * 0.58) for c in r) * 11) for r in el["rows"])
+        elif t == "contas":  # R51
+            h += len(el["rows"]) * CFG["conta_linha_pt"] + 4
         elif t == "box":
             h += el["h"] * CFG["quadro_fator"] + 4
         elif t == "source":

@@ -11,6 +11,7 @@ from pathlib import Path
 import pymupdf
 
 from . import soffice
+from .ficha import encaixe
 from .ficha import extract as ficha_extract
 from .ficha import render as ficha_render
 from .verify import ficha as verify_ficha
@@ -48,6 +49,32 @@ def validar_pdf_renderizado(pdf_saida, docx=None):
         return doc.page_count
 
 
+def _encaixar(model, out, render, docx, pdf_saida, paginas_pdf):
+    """R52: ate PASSADAS_MAX passadas extras, cada uma encolhendo a imagem do 1o buraco que ela resolve.
+
+    Passada recusada (imagem nao subiu ou pagina a mais) volta o DOCX/PDF anterior; a proxima tenta outro buraco."""
+    tentados = set()
+    for _ in range(encaixe.PASSADAS_MAX):
+        alvo = encaixe.candidato(pdf_saida, model, tentados)
+        if alvo is None:
+            break
+        antes = docx.read_bytes(), pdf_saida.read_bytes()
+        for i in alvo["idx"]:
+            model["elementos"][i]["encaixe"] = alvo["k"]
+        novo = ficha_render.renderizar(out, model)
+        pdf_novo = soffice.para_pdf(docx, out)
+        paginas_novo = validar_pdf_renderizado(pdf_novo, docx)
+        if not encaixe.aceito(pdf_novo, model, alvo, paginas_pdf):
+            for i in alvo["idx"]:
+                del model["elementos"][i]["encaixe"]
+            docx.write_bytes(antes[0]); pdf_saida.write_bytes(antes[1])
+            tentados.update(alvo["idx"])
+            continue
+        render, pdf_saida, paginas_pdf = novo, pdf_novo, paginas_novo
+    render["encaixes"] = sum(1 for e in model["elementos"] if e.get("encaixe"))
+    return render, paginas_pdf
+
+
 def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=True, ao_progresso=None,
           manter_capa_elementos=False):
     """Roda o pipeline e devolve um dict com meta, render, verificacao, caminhos, páginas e tempos.
@@ -79,6 +106,11 @@ def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=Tr
     pdf_saida = soffice.para_pdf(docx, out)
     paginas_pdf = validar_pdf_renderizado(pdf_saida, docx)
     tempos["pdf"] = time.perf_counter() - t
+
+    if model["meta"].get("tipo") != "relatorio":  # R52: imagem que deixou buraco no fim da pagina
+        t = time.perf_counter()
+        render, paginas_pdf = _encaixar(model, out, render, docx, pdf_saida, paginas_pdf)
+        tempos["encaixe"] = time.perf_counter() - t
 
     verificacao = None
     if verificar:

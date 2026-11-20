@@ -346,6 +346,50 @@ def vector_figures(page, tables, imgs, W, H, stats, manter=False):
 
 
 # ---------------------------------------------------------------- pagina
+# R51: conta armada para o aluno resolver: numero, operador, numero, "=" e nada depois (a resposta vai ao lado)
+RE_CONTA = re.compile(r"^\d[\d .,]*\s*[:+×÷−*x-]\s*\d[\d .,]*\s*=$")
+CONTAS_GAP = 45   # pt entre linhas da mesma grade
+CONTAS_COL = 40   # pt: x de contas mais distantes que isto sao colunas diferentes
+
+
+def contas_grade(rows, raw):
+    """R51: separa as linhas que sao so contas ("1 : 10 =", varias na mesma linha) e as agrupa em grades.
+
+    Devolve (rows sem essas linhas, [{"y0", "rows": [[celula por coluna]]}]). Cada conta fica na coluna
+    do x original (coluna vazia na linha = celula vazia), entao a grade nao se desalinha.
+    """
+    def pedacos(r):  # contas da linha, pelo texto de cada trecho original na mesma linha de base
+        ps = sorted((x for x in raw if abs(x["bb"].y0 - r["bb"].y0) < 3 and r["bb"].contains(x["bb"])),
+                    key=lambda x: x["bb"].x0)
+        return ps if ps and all(RE_CONTA.match(p["txt"]) for p in ps) else None
+
+    resto, grades, atual = [], [], None
+    for r in rows:
+        ps = pedacos(r) if r["txt"].rstrip().endswith("=") and r["txt"][:1].isdigit() else None
+        if ps is None:
+            resto.append(r); atual = None
+            continue
+        if atual is None or r["bb"].y0 - atual["y1"] > CONTAS_GAP:
+            atual = {"y0": r["bb"].y0, "y1": r["bb"].y1, "linhas": []}
+            grades.append(atual)
+        atual["linhas"].append(ps); atual["y1"] = r["bb"].y1
+    for g in grades:
+        xs = sorted(p["bb"].x0 for ln in g["linhas"] for p in ln)
+        cols = [xs[0]]
+        for x in xs[1:]:
+            if x - cols[-1] > CONTAS_COL:
+                cols.append(x)
+        g["rows"] = []
+        for ln in g.pop("linhas"):
+            cel = [""] * len(cols)
+            for p in ln:
+                j = min(range(len(cols)), key=lambda k: abs(cols[k] - p["bb"].x0))
+                cel[j] = (cel[j] + " " + p["txt"]).strip()
+            g["rows"].append(cel)
+        del g["y1"]
+    return resto, grades
+
+
 def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
     page = doc[pno]
     W, H = page.rect.width, page.rect.height
@@ -524,6 +568,15 @@ def page_items(pdf_path, doc, pno, perfil, out_img_dir, stats, manter=False):
                                     "pct": round(c.get_area() / page.rect.get_area() * 100, 1), "bbox": [round(v, 1) for v in c],
                                     "side": [], "figura": True, "manter_tamanho": True, "pagina": pno + 1}))
             stats["composicoes_em_linha"] = stats.get("composicoes_em_linha", 0) + 1
+
+    # R51: grade de contas para resolver ("1 : 10 =   25 : 10 =   1 248 : 10 ="): cada conta ocupa uma
+    # celula na coluna em que estava, com espaco de resposta depois do "=". Sem isto a R16 junta as contas
+    # num paragrafo e o espaco some (revisao 2026-11-20, A1)
+    rows, grades = contas_grade(rows, raw)
+    for g in grades:
+        items.append((g["y0"], 4, {"t": "contas", "rows": g["rows"]}))
+        stats["grades_contas"] = stats.get("grades_contas", 0) + 1
+        stats["contas"] = stats.get("contas", 0) + sum(1 for r in g["rows"] for c in r if c)
 
     # base x da pagina: x dos marcadores de questao
     qx = [r["bb"].x0 for r in rows if RE_Q.match(r["txt"]) and r["color"] in perfil["cores_marcador"]]
