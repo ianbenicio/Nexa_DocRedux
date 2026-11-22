@@ -1,0 +1,32 @@
+schema: 1
+story: "2.16"
+story_title: "gate-estrutural"
+gate: "PASS"
+status_reason: "Os 5 ACs cumpridos. No relatório, estrutura_ok=False bloqueia o gate e cada divergência vai para o motivo_gate. O resultado completo sai em verificacao_estrutural, que é null em ficha e síntese. Os exemplos reais não mudam: regressão 5/5 nos dois modos. Testes de gate verificados por mutação."
+reviewer: "Quinn (@qa)"
+updated: "2026-11-22"
+top_issues:
+  - severity: "low"
+    refs: ["engine/tests/test_gate_estrutural.py", "docs/stories/2.16.gate-estrutural.story.md"]
+    finding: "O bloqueio só foi exercitado com divergências simuladas (pipeline controlado). Nenhum dos 5 exemplos reais diverge, então a taxa de falso positivo do critério 'tudo bloqueia' em documento novo é desconhecida."
+    suggested_action: "Acompanhar 'gate na primeira passagem' (§12) no piloto; incluir um relatório com legenda/Fonte difícil nas fixtures quando houver"
+  - severity: "low"
+    refs: ["engine/tests/test_sintese.py"]
+    finding: "verificacao_estrutural=None na síntese foi conferido na mão (ex. 05, fração 0,35), mas nenhum teste da suíte o afirma"
+    suggested_action: "Acrescentar assert r.verificacao_estrutural is None em test_processar_sintese_ex05"
+  - severity: "low"
+    refs: ["db/supabase/migrations/20261119000120_views.sql", "db/supabase/migrations/20261119000100_schema.sql"]
+    finding: "O motivo da fila do backoffice e o enum se chamam gate_cobertura, mas o gate já bloqueia por números (2.7, 2.13) e agora por estrutura. É nome legado, sem efeito funcional; a A2 mostra o motivo_gate real."
+    suggested_action: "Renomear só se a A2 precisar distinguir a causa; senão, documentar"
+  - severity: "low"
+    refs: ["docs/qa/motor_auditoria_repro.py"]
+    finding: "O repro da auditoria segue com 5 casos vermelhos de achados tratados por outro caminho ou ainda abertos (M09 valor alterado, M12 ordem, M10 levanta RenderFalhou em vez de gate, síntese DT-21). Isso confunde quem roda o repro para conferir o que está aberto."
+    suggested_action: "Migrar cada caso para a suíte normal com a expectativa atual, ou marcar o que segue aberto"
+history: []
+evidence:
+  tests: "Motor 199 passed, 1 skipped (204 s; 193 antes; +6 em test_gate_estrutural.py). Repro da auditoria: 6 → 5 falhas, só test_gate_nao_libera_estrutura_divergente passou a verde; o mesmo repro na c7af7b1 dá as mesmas 5 + M11. Mutação (bloqueio desligado): 4 testes novos + o repro falham; seguem verdes os casos ok e ficha, como esperado. Regressão padrão 5/5 (19/14/5/12/142) e preservação 5/5 (26/18/8/17/174). Ex. 05: verificacao_estrutural.ok=true, sem divergências, nos dois modos. Síntese ex. 05: gate ok, verificacao_estrutural=None. Worker grava o relatório inteiro em entregas.relatorio (jsonb): o campo novo passa sem mudança na API. Evidências: docs/qa/gate-estrutural-2026-11-22/"
+nfr_validation:
+  security: {status: "PASS", notes: "Sem segredos nem caminhos pessoais no diff ou nas evidências; nenhum PDF/DOCX versionado"}
+  reliability: {status: "PASS", notes: "Gate mais restritivo; falso positivo vai para em_revisao (revisão humana), sem perda de entrega"}
+  maintainability: {status: "PASS", notes: "Regra na spec §4; campo aditivo, sem quebra para quem lê relatorio.json; testes por caso"}
+  coderabbit: {status: "NOT_RUN", notes: "CodeRabbit não executado; revisão manual do diff e testes de mutação"}
