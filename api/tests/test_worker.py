@@ -388,6 +388,33 @@ def test_motor_falha_3_vezes_falhou_e_estorna(client, conta, admin, worker, monk
                          (d,)).fetchone()["tentativas"] == 3
 
 
+def test_processar_real_usa_pool_e_limpeza_preserva(client, conta, admin, worker, monkeypatch, tmp_path):
+    """Story 2.8 AC 4 (gate de QA 2026-11-22): motor real pelo worker. O perfil do LibreOffice fica no pool em
+    <cache>/_libreoffice, caminho absoluto (2.9 A6), e a limpeza diária apaga cache velho de documento, não o pool."""
+    import os
+    import time
+
+    from worker import jobs, limpeza
+    monkeypatch.delenv("DOCREDUX_LO_POOL", raising=False)  # o Worker só preenche se estiver vazio
+    c, w = conta(), worker()
+    pool = (tmp_path / "cache" / jobs.POOL_LIBREOFFICE).resolve()
+    assert os.environ["DOCREDUX_LO_POOL"] == str(pool)
+    d = triar_e_confirmar(client, c, admin, w, exemplo("03"))
+    assert w.volta()
+    assert doc(admin, d)["status"] == "pronto"
+    perfis = [p for p in pool.iterdir() if p.is_dir()]
+    assert perfis, "a conversão não usou o pool"
+    velho = time.time() - 3 * 86400
+    doc_velho = tmp_path / "cache" / "doc-velho"
+    doc_velho.mkdir()
+    for p in (pool, doc_velho):
+        os.utime(p, (velho, velho))
+    r = limpeza.rodar(w.conn, w.cache)
+    assert not doc_velho.exists() and r["cache"] >= 1
+    assert pool.exists() and all(p.exists() for p in perfis)
+    assert invariantes(admin) == []
+
+
 def test_health_verde_com_worker_ocioso(client, worker):
     w = worker()
     assert w.volta() is False
