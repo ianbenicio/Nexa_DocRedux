@@ -5,11 +5,7 @@ gate: "PASS"
 status_reason: "Uma conversão só; PDF idêntico em texto e pixels, com 21 links novos no ex. 05. A 1ª passada do gate (CONCERNS) achou que, com dois itens de sumário de mesmo texto, o DOCX guardava a página da 1ª ocorrência nos dois. Corrigido com página por item (paginas_sumario); saída idêntica à da 095b7e6 nos 10 casos."
 reviewer: "Quinn (@qa)"
 updated: "2026-11-22"
-top_issues:
-  - severity: "low"
-    refs: ["docs/stories/2.15.sumario-numa-conversao.story.md"]
-    finding: "Commits 095b7e6 e da correção ainda não publicados em origin/main"
-    suggested_action: "Push via @devops quando o responsável pedir"
+top_issues: []
 history:
   - gate: "CONCERNS"
     finding: "preencher_sumario indexava a página por texto: itens Anexo/Anexo nas págs. 2 e 5 gravavam 2 e 2 no DOCX (o PDF mostrava 2 e 5)"
