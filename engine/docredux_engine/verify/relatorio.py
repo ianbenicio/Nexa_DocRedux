@@ -13,7 +13,7 @@ from docx.oxml.ns import qn
 
 from ..ficha import extract
 from ..relatorio import extract as ER
-from . import numeros
+from . import numeros, ordem
 from .. import gerado
 
 WORD = re.compile(r"[\wÀ-ÿ%]+", re.UNICODE)
@@ -182,6 +182,7 @@ def run(pdf, out, model, perfil=None, *, docx_path=None, pdf_path=None):
         "palavras_original": sum(o.values()), "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(40)), "palavras_a_mais": dict(extra.most_common(15)),
         "numeros": numeros.verificar(lines, saida_textos),
+        "ordem": ordem.verificar(pdf, fora, model, docx, lines, saida_textos),  # M12, story 2.17
         "texto_gerado_fora": gerados,  # A5: identificacao e sumario do motor, fora da comparacao
         "estrutura": est, "estrutura_ok": ok,
         "imagens": meta["stats"].get("imagens", 0), "tabelas": meta["stats"].get("tabelas", 0),

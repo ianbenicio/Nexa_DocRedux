@@ -11,7 +11,7 @@ from docx import Document
 from docx.oxml.ns import qn
 
 from ..ficha.render import CFG, A4_W, A4_H  # noqa: E402
-from . import numeros
+from . import numeros, ordem
 from .. import gerado
 from ..pdftexto import DICT  # noqa: E402
 
@@ -194,6 +194,7 @@ def verificar(pdf, out, model=None, perfil=None, *, docx_path=None, pdf_path=Non
         "cobertura_texto_pct": round(cov * 100, 2),
         "palavras_faltando": dict(missing.most_common(30)),
         "numeros": numeros.verificar(textos_num, saida_textos),
+        "ordem": ordem.verificar(pdf, fora, model, docx, textos, saida_textos),  # M12, story 2.17
         "texto_gerado_fora": gerados,  # A5: identificacao do motor, fora da comparacao
         "linhas_resposta": {"original": st["linhas_resposta_orig"],
                             "saida": sum(max(1, math.ceil(e["n"] * CFG["fator_linhas"])) for e in model["elementos"] if e["t"] == "lines")},

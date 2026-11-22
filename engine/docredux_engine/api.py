@@ -286,6 +286,21 @@ def _regras(meta, model, perfil) -> list[str]:
     return sorted(r, key=lambda x: int(re.sub(r"\D", "", x)))
 
 
+_NOMES_ORDEM = (("palavras", "palavra(s) fora de ordem"), ("rotulos", "rótulo(s) com outro conteúdo"),
+                ("imagens", "imagem(ns) longe do texto de origem"), ("tabelas", "célula(s) fora da linha ou coluna"))
+
+
+def _motivo_ordem(o) -> str:
+    """M12, story 2.17: uma parte por checagem que falhou, com até 3 trechos cada."""
+    partes = []
+    for k, nome in _NOMES_ORDEM:
+        r = o.get(k) or {}
+        if r.get("total"):
+            itens = "; ".join(f"“{t}”" for t in r["trechos"][:3])
+            partes.append(f"{r['total']} {nome}" + (f": {itens}" if itens else ""))
+    return "ordem ou associação divergente do original: " + " | ".join(partes)
+
+
 _PARES_ESTRUTURA = (("h1_capitulos", "capítulos"), ("legendas", "legendas"), ("fontes", "Fontes"), ("notas", "notas"))
 
 
@@ -384,6 +399,9 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
         if num is not None and num.get("fora_de_contexto"):  # M12, story 2.13: número fora do lugar de origem
             itens = "; ".join(f"“{t}”" for t in num["fora_de_contexto_trechos"][:3])
             motivos.append(f"{num['fora_de_contexto']} número(s) do original fora do lugar de origem: {itens}")
+        orde = v.get("ordem")
+        if orde is not None and not orde["ok"]:  # M12, story 2.17: ordem ou associação divergente do original
+            motivos.append(_motivo_ordem(orde))
         vest = _verificacao_estrutural(v)
         if vest is not None and not vest["ok"]:  # M11, story 2.16: estrutura divergente vai para revisão
             itens = "; ".join(vest["divergencias"][:5]) or "capítulos, legendas, Fontes ou notas"

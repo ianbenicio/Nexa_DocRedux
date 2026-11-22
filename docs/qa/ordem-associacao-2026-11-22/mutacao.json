@@ -1,0 +1,112 @@
+{
+ "01": {
+  "palavras": {
+   "detectadas": 95,
+   "trocas": 100,
+   "pct": 95.0
+  },
+  "rotulos": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "imagens": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "tabelas": {
+   "detectadas": 93,
+   "trocas": 100,
+   "pct": 93.0
+  }
+ },
+ "02": {
+  "palavras": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "rotulos": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "imagens": {
+   "detectadas": 0,
+   "trocas": 0,
+   "pct": null
+  },
+  "tabelas": {
+   "detectadas": 0,
+   "trocas": 100,
+   "pct": 0.0
+  }
+ },
+ "03": {
+  "palavras": {
+   "detectadas": 99,
+   "trocas": 100,
+   "pct": 99.0
+  },
+  "rotulos": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "imagens": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "tabelas": {
+   "detectadas": 99,
+   "trocas": 100,
+   "pct": 99.0
+  }
+ },
+ "04": {
+  "palavras": {
+   "detectadas": 89,
+   "trocas": 100,
+   "pct": 89.0
+  },
+  "rotulos": {
+   "detectadas": 100,
+   "trocas": 100,
+   "pct": 100.0
+  },
+  "imagens": {
+   "detectadas": 96,
+   "trocas": 100,
+   "pct": 96.0
+  },
+  "tabelas": {
+   "detectadas": 79,
+   "trocas": 100,
+   "pct": 79.0
+  }
+ },
+ "05": {
+  "palavras": {
+   "detectadas": 98,
+   "trocas": 100,
+   "pct": 98.0
+  },
+  "rotulos": {
+   "detectadas": 0,
+   "trocas": 0,
+   "pct": null
+  },
+  "imagens": {
+   "detectadas": 99,
+   "trocas": 100,
+   "pct": 99.0
+  },
+  "tabelas": {
+   "detectadas": 88,
+   "trocas": 100,
+   "pct": 88.0
+  }
+ }
+}
