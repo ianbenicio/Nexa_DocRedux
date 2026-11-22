@@ -1,0 +1,23 @@
+schema: 1
+story: "2.15"
+story_title: "sumario-numa-conversao"
+gate: "CONCERNS"
+status_reason: "Uma conversão só; PDF idêntico em texto e pixels, com 21 links novos no ex. 05. Defeito de borda no AC 3: com dois itens de sumário de mesmo texto, o PDF sai certo (PAGEREF), mas o número guardado no DOCX repete o da primeira ocorrência."
+reviewer: "Quinn (@qa)"
+updated: "2026-11-22"
+top_issues:
+  - severity: "medium"
+    refs: ["engine/docredux_engine/relatorio/render.py"]
+    finding: "preencher_sumario usa find_toc_pages, que indexa por texto e recomeça a busca na mesma página. Itens Anexo/Anexo nas págs. 2 e 5 gravam 2 e 2 no DOCX (reproduzido). O Word mostra 2 e 2 até atualizar os campos; o PDF mostra 2 e 5"
+    suggested_action: "Página por item (índice k), não por texto; por exemplo, o destino dos links LINK_GOTO do sumário no PDF, que já vem do LibreOffice. Teste com título repetido"
+  - severity: "low"
+    refs: ["docs/stories/2.15.sumario-numa-conversao.story.md"]
+    finding: "Commit 095b7e6 ainda não publicado em origin/main"
+    suggested_action: "Push via @devops quando o responsável pedir"
+evidence:
+  tests: "Reexecução QA 2026-11-22 na main 095b7e6 (docs/qa/revisao-qa-2026-11-22/): pytest motor 191 passed, 1 skipped (220 s); regressão padrão 5/5 no baseline (19/14/5/12/142); preservação 5/5 (26/18/8/17/174); sondas do revisor (test_revisao_motor.py) 8/8. LibreOffice 26.8.3.1 + Carlito, Windows. Evidências da story: docs/qa/sumario-pageref-2026-11-22/"
+nfr_validation:
+  security: {status: "PASS", notes: "Repositório público: nenhum PDF/DOCX/.env versionado; sem segredo nos arquivos da story"}
+  reliability: {status: "CONCERNS", notes: "DOCX diverge do PDF com título repetido; ex. 01–05 não têm o caso"}
+  maintainability: {status: "PASS", notes: "test_sumario.py com ponta a ponta no LibreOffice"}
+  coderabbit: {status: "NOT_RUN", notes: "CodeRabbit não executado; revisão manual de código e reexecução das evidências"}

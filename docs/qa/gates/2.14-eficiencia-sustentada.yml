@@ -1,0 +1,19 @@
+schema: 1
+story: "2.14"
+story_title: "eficiencia-sustentada"
+gate: "PASS"
+status_reason: "Bancada reprodutível sem dependência nova; 150 jobs sem falha nem LibreOffice órfão, inclusive após timeout; grade única na tabela com saída idêntica byte a byte; WORKER_PROCESSOS mantido por falta de medição na A1."
+reviewer: "Quinn (@qa)"
+updated: "2026-11-22"
+top_issues:
+  - severity: "low"
+    refs: ["engine/tests/bancada.py"]
+    finding: "Medido só em Windows x86; container, Oracle A1 (ARM) e o caminho /proc da bancada não exercitados"
+    suggested_action: "Rodar a bancada no container/A1 antes de mudar WORKER_PROCESSOS"
+evidence:
+  tests: "Reexecução QA 2026-11-22 na main 095b7e6 (docs/qa/revisao-qa-2026-11-22/): pytest motor 191 passed, 1 skipped (220 s); regressão padrão 5/5 no baseline (19/14/5/12/142); preservação 5/5 (26/18/8/17/174); sondas do revisor (test_revisao_motor.py) 8/8. LibreOffice 26.8.3.1 + Carlito, Windows. Evidências da story: docs/qa/eficiencia-2026-11-20/"
+nfr_validation:
+  security: {status: "PASS", notes: "Repositório público: nenhum PDF/DOCX/.env versionado; sem segredo nos arquivos da story"}
+  reliability: {status: "PASS", notes: "Timeout sem processo órfão"}
+  maintainability: {status: "PASS", notes: "test_render_tabela.py prova o fallback"}
+  coderabbit: {status: "NOT_RUN", notes: "CodeRabbit não executado; revisão manual de código e reexecução das evidências"}
