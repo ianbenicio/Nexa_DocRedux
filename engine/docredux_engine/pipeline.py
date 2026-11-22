@@ -14,6 +14,7 @@ from . import soffice
 from .ficha import encaixe
 from .ficha import extract as ficha_extract
 from .ficha import render as ficha_render
+from .relatorio import render as relatorio_render
 from .verify import ficha as verify_ficha
 
 
@@ -106,6 +107,11 @@ def rodar(pdf, out, perfil=None, *, paginas=None, transformar=None, verificar=Tr
     pdf_saida = soffice.para_pdf(docx, out)
     paginas_pdf = validar_pdf_renderizado(pdf_saida, docx)
     tempos["pdf"] = time.perf_counter() - t
+
+    if model["meta"].get("tipo") == "relatorio" and relatorio_render.itens_sumario(model):
+        t = time.perf_counter()  # R42: numeros do sumario do PDF final para o resultado guardado no DOCX
+        render["toc_paginas"] = relatorio_render.preencher_sumario(docx, pdf_saida, model)
+        tempos["sumario"] = time.perf_counter() - t
 
     if model["meta"].get("tipo") != "relatorio":  # R52: imagem que deixou buraco no fim da pagina
         t = time.perf_counter()

@@ -3,7 +3,7 @@
 Chamado por ficha/render.renderizar() quando meta.tipo == "relatorio". Usa a mesma CFG (A4, margem 1,5 cm, Carlito 10,5).
 Elementos: id, front, h1-h4, p, quote, bullet, ref, fig(caption, body img|table, fontes), fonte, siglas, toc, notas.
 """
-import json, re, sys
+import collections, json, re
 from pathlib import Path
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -15,7 +15,6 @@ from docx.shared import Pt, Cm, RGBColor
 from .extract import join_text
 from ..ficha import render as RD
 from ..ficha.render import CFG, A4_W, A4_H, shade, borders, fmt, no_table_borders
-from .. import soffice
 from ..gerado import marcar as marcar_gerado
 from ..pdftexto import DICT
 
@@ -69,6 +68,38 @@ def page_field(par, size=8):
             it = OxmlElement("w:instrText"); it.set(qn("xml:space"), "preserve"); it.text = txt; r._r.append(it)
 
 
+# R42 (story 2.15): o sumario aponta para um marcador no H1 e o LibreOffice calcula a pagina na propria conversao.
+# Antes eram 2 passadas: converter so para achar as paginas, renderizar de novo e converter outra vez.
+MARCADOR = "_DocRedux_sum{}"  # "_" no comeco: marcador oculto no Word
+PAGEREF = re.compile(r"PAGEREF\s+_DocRedux_sum(\d+)\b")
+
+
+def pageref_field(par, nome, size):
+    """Campo PAGEREF para o marcador `nome`. O resultado guardado fica vazio ate preencher_sumario()."""
+    runs = []
+    for kind, txt in (("begin", None), (None, f" PAGEREF {nome} \\h "), ("separate", None), ("res", ""),
+                      ("end", None)):
+        r = par.add_run(); r.font.size = Pt(size); runs.append(r)
+        if kind == "res":
+            continue
+        if kind:
+            f = OxmlElement("w:fldChar"); f.set(qn("w:fldCharType"), kind); r._r.append(f)
+        else:
+            it = OxmlElement("w:instrText"); it.set(qn("xml:space"), "preserve"); it.text = txt; r._r.append(it)
+    return runs
+
+
+def marcador(par, nome, ident):
+    s = OxmlElement("w:bookmarkStart"); s.set(qn("w:id"), str(ident)); s.set(qn("w:name"), nome)
+    e = OxmlElement("w:bookmarkEnd"); e.set(qn("w:id"), str(ident))
+    ppr = par._p.pPr
+    if ppr is not None:
+        ppr.addnext(s)
+    else:
+        par._p.insert(0, s)
+    par._p.append(e)
+
+
 def cell_margins(tbl, pt=1.5):
     tblPr = tbl._tbl.tblPr
     m = OxmlElement("w:tblCellMar")
@@ -93,9 +124,10 @@ def cant_split(row):
 
 
 class RR:
-    def __init__(self, out, toc_pages=None):
+    def __init__(self, out):
         self.out = out
-        self.toc_pages = toc_pages or {}
+        self.alvos = collections.defaultdict(collections.deque)  # texto do H1 -> marcadores na ordem do sumario
+        self.nomes = collections.deque()  # marcador de cada item do sumario, na ordem (None: sem H1 igual)
         self.doc = Document()
         st = self.doc.styles["Normal"]
         st.font.name = CFG["fonte"]; st.font.size = Pt(CFG["tam"])
@@ -166,6 +198,9 @@ class RR:
                 r.italic = True
             if lvl == 2 and el.get("sintetico"):
                 r.font.size = Pt(10)
+        if lvl == 1 and self.alvos.get(el["text"]):
+            nome = self.alvos[el["text"]].popleft()
+            marcador(p, nome, int(nome.rsplit("sum", 1)[1]) + 1)
         return p
 
     def para(self, el):
@@ -226,10 +261,12 @@ class RR:
             p = self.doc.add_paragraph(); fmt(p, 0, 1.5)
             p.paragraph_format.tab_stops.add_tab_stop(Pt(self.text_w), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
             r = p.add_run(e["text"]); r.font.size = Pt(10)
-            r2 = p.add_run("\t" + str(self.toc_pages.get(e["text"], "")))
-            r2.font.size = Pt(10)
+            r2 = p.add_run("\t"); r2.font.size = Pt(10)
+            nome = self.nomes.popleft() if self.nomes else None
+            # sem H1 de mesmo texto nao ha marcador: o campo imprimiria "Erro: referencia nao encontrada"
+            campo = pageref_field(p, nome, 10) if nome else []
             # A5: copia do H1 e numero de pagina da saida; o sumario do original fica fora da base
-            marcar_gerado(self.doc, r, r2)
+            marcar_gerado(self.doc, r, r2, *campo)
 
     # ------------------------------------------------------------ figuras e tabelas
     def table(self, body, keep=True):
@@ -319,6 +356,14 @@ class RR:
     # ------------------------------------------------------------ fluxo
     def render(self, model):
         els = model["elementos"]; i = 0
+        h1 = collections.Counter(e["text"] for e in els if e["t"] == "h1")
+        for k, texto in enumerate(itens_sumario(model)):  # item k -> k-esimo H1 livre com o mesmo texto
+            nome = None
+            if h1[texto] > 0:
+                h1[texto] -= 1
+                nome = MARCADOR.format(k)
+                self.alvos[texto].append(nome)
+            self.nomes.append(nome)
         RD.cabecalho_docx(self.doc, model["meta"], CINZA)
         while i < len(els):
             el = els[i]; t = el["t"]
@@ -360,15 +405,13 @@ class RR:
         return self.doc
 
 
-def soffice_pdf(docx, outdir):
-    # executavel por DOCREDUX_SOFFICE e perfil do LibreOffice reservado do pool por chamada (DT-5, story 2.8)
-    return soffice.para_pdf(docx, outdir, timeout=900)
+def itens_sumario(model):
+    return [i["text"] for e in model["elementos"] if e["t"] == "toc" for i in e["itens"]]
 
 
 def find_toc_pages(pdf, h1s, h1_pt=15):
     import pymupdf
     res, start = {}, 0
-    # fechado no fim: a 2a passada do LibreOffice regrava este mesmo PDF (no Windows, arquivo aberto nao se apaga)
     with pymupdf.open(pdf) as d:
         # ignora paginas ate o fim do proprio sumario: so conta spans do tamanho do H1
         for t in h1s:
@@ -386,17 +429,39 @@ def find_toc_pages(pdf, h1s, h1_pt=15):
     return res
 
 
+def preencher_sumario(docx, pdf, model):
+    """Depois da conversao: grava no DOCX o resultado dos campos PAGEREF (quem abre no Word ve os numeros sem
+    atualizar campos). O PDF nao muda: o LibreOffice ja calculou a pagina de cada marcador. As paginas vem do PDF
+    final, pelo mesmo criterio de antes (tamanho do H1 + texto). Devolve {texto do item: pagina}."""
+    itens = itens_sumario(model)
+    if not itens:
+        return {}
+    pages = find_toc_pages(pdf, itens)
+    doc = Document(docx)
+    mudou = False
+    for instr in doc.element.body.iter(qn("w:instrText")):
+        m = PAGEREF.search(instr.text or "")
+        valor = str(pages.get(itens[int(m.group(1))], "")) if m else ""
+        if not valor:
+            continue
+        depois_separate = False
+        for r in instr.getparent().itersiblings(qn("w:r")):
+            if depois_separate:  # 1o run depois do "separate" e o resultado
+                t = r.find(qn("w:t"))
+                if t is None:
+                    t = OxmlElement("w:t"); r.append(t)
+                t.text = valor; mudou = True
+                break
+            fc = r.find(qn("w:fldChar"))
+            if fc is not None and fc.get(qn("w:fldCharType")) == "separate":
+                depois_separate = True
+    if mudou:
+        doc.save(docx)
+    return pages
+
+
 def run(out, model, name):
-    h1s = [e["text"] for e in model["elementos"] if e["t"] == "toc" for e in e["itens"]]
-    pages = {}
+    """Uma passada, sem LibreOffice. Os numeros do sumario saem da conversao da pipeline (story 2.15)."""
     r = RR(out); doc = r.render(model)
-    path = out / name
-    doc.save(path)
-    if h1s:  # R42: sumario regenerado com a paginacao nova (2 passadas)
-        try:
-            pdf = soffice_pdf(path, out)
-            pages = find_toc_pages(pdf, h1s, r.h1_pt)
-        except Exception as e:  # sem LibreOffice: sumario sem numeros
-            print("aviso: sumario sem paginas:", e, file=sys.stderr)
-        r = RR(out, pages); doc = r.render(model); doc.save(path)
-    return r.stats, pages
+    doc.save(out / name)
+    return r.stats, {}

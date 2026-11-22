@@ -158,11 +158,15 @@ class Monitor:
             for chave, raiz in list(self.raizes.items()):
                 soma = 0
                 for pid in descendentes(raiz, procs):
+                    nome = procs[pid][1]
+                    # no Windows o PPID de um processo antigo pode coincidir com o PID reaproveitado pelo job:
+                    # só python e LibreOffice são da árvore do motor
+                    if not nome.startswith(("python",) + LO):
+                        continue
                     m = memoria(pid)
                     if m is None:
                         continue
                     soma += m[0]
-                    nome = procs[pid][1]
                     self.pico_nome[nome] = max(self.pico_nome.get(nome, 0), m[1])
                 self.pico_job[chave] = max(self.pico_job.get(chave, 0), soma)
                 total += soma

@@ -317,7 +317,7 @@ def nome_docx(model):
 
 def renderizar(out, model=None):
     """out/modelo.json (ou `model`) -> out/<origem>_COMPACTO.docx. Devolve as estatisticas do render.
-    Relatorio: 2 passadas pelo LibreOffice para o sumario (R42)."""
+    Relatorio: sumario com campos PAGEREF; os numeros saem da conversao da pipeline (R42, story 2.15)."""
     out = Path(out)
     if model is None:
         model = json.loads((out / "modelo.json").read_text(encoding="utf-8"))

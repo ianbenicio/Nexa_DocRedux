@@ -1,0 +1,15 @@
+# Comparação com a 2.14 (rf = antes, rg = depois), por caso
+## padrão
+01-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 19/19p texto= docx_texto= document.xml=
+02-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 14/14p texto= docx_texto= document.xml=
+03-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 5/5p texto= docx_texto= document.xml=
+04-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 12/12p texto= docx_texto= document.xml=
+05-diagnosti modelo.json= verificacao.json DIFERE relatorio.json= pdf 142/142p texto= docx_texto= document.xml difere
+## preservação
+01-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 26/26p texto= docx_texto= document.xml=
+02-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 18/18p texto= docx_texto= document.xml=
+03-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 8/8p texto= docx_texto= document.xml=
+04-mathema-s modelo.json= verificacao.json= relatorio.json= pdf 17/17p texto= docx_texto= document.xml=
+05-diagnosti modelo.json= verificacao.json DIFERE relatorio.json= pdf 174/174p texto= docx_texto= document.xml difere
+## verificacao.json do ex. 05: só tamanho_kb (docx 4475 -> 4476, pdf 7285 -> 7293)
+## ex. 05: páginas idênticas pixel a pixel (50 dpi), 142/142 no padrão e 174/174 na preservação; links internos no PDF 0 -> 21 (um por item do sumário)

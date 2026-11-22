@@ -1,0 +1,1409 @@
+{
+ "ambiente": {
+  "motor": "0.2.0",
+  "python": "3.13.13",
+  "so": "Windows-10-10.0.19045-SP0",
+  "cpus": 12,
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "max_perfis": 8
+ },
+ "lo_antes": 0,
+ "frio": {
+  "exemplo": "03",
+  "frio": {
+   "job": "frio-0",
+   "s": 13.03,
+   "pico_mb": 431,
+   "codigo": 0,
+   "gate": "ok",
+   "tempos_s": {
+    "extracao": 1.06,
+    "render_docx": 0.11,
+    "pdf": 11.28,
+    "encaixe": 0.03,
+    "verify": 0.04
+   }
+  },
+  "quente": {
+   "job": "frio-1",
+   "s": 6.51,
+   "pico_mb": 429,
+   "codigo": 0,
+   "gate": "ok",
+   "tempos_s": {
+    "extracao": 1.09,
+    "render_docx": 0.12,
+    "pdf": 4.77,
+    "encaixe": 0.03,
+    "verify": 0.04
+   }
+  }
+ },
+ "lotes": [
+  {
+   "concorrencia": 1,
+   "jobs": 15,
+   "total_s": 174.3,
+   "docs_por_min": 5.16,
+   "pico_ram_lote_mb": 877,
+   "falhas": [],
+   "por_exemplo": {
+    "01": {
+     "p50_s": 8.31,
+     "max_s": 8.53,
+     "pico_mb": 449
+    },
+    "02": {
+     "p50_s": 6.58,
+     "max_s": 7.01,
+     "pico_mb": 426
+    },
+    "03": {
+     "p50_s": 5.96,
+     "max_s": 6.11,
+     "pico_mb": 429
+    },
+    "04": {
+     "p50_s": 13.61,
+     "max_s": 13.96,
+     "pico_mb": 468
+    },
+    "05": {
+     "p50_s": 23.26,
+     "max_s": 23.64,
+     "pico_mb": 877
+    }
+   },
+   "latencia_p50_s": 8.31,
+   "latencia_p95_s": 23.37,
+   "lo_vivos_depois": 0,
+   "jobs_detalhe": [
+    {
+     "exemplo": "01",
+     "job": "c1-01-0",
+     "s": 8.53,
+     "pico_mb": 449,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.71,
+      "render_docx": 0.32,
+      "pdf": 4.81,
+      "encaixe": 0.12,
+      "verify": 0.12
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c1-02-0",
+     "s": 7.01,
+     "pico_mb": 425,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.21,
+      "render_docx": 0.22,
+      "pdf": 4.96,
+      "encaixe": 0.1,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c1-03-0",
+     "s": 6.11,
+     "pico_mb": 428,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.04,
+      "render_docx": 0.12,
+      "pdf": 4.44,
+      "encaixe": 0.03,
+      "verify": 0.04
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c1-04-0",
+     "s": 13.96,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.18,
+      "render_docx": 0.3,
+      "pdf": 4.74,
+      "encaixe": 5.2,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c1-05-0",
+     "s": 23.64,
+     "pico_mb": 877,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 8.6,
+      "render_docx": 3.16,
+      "pdf": 9.15,
+      "sumario": 0.83,
+      "verify": 1.28
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c1-01-1",
+     "s": 8.31,
+     "pico_mb": 449,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.55,
+      "render_docx": 0.33,
+      "pdf": 4.76,
+      "encaixe": 0.12,
+      "verify": 0.11
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c1-02-1",
+     "s": 6.5,
+     "pico_mb": 425,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.21,
+      "render_docx": 0.21,
+      "pdf": 4.46,
+      "encaixe": 0.1,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c1-03-1",
+     "s": 5.86,
+     "pico_mb": 429,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.01,
+      "render_docx": 0.11,
+      "pdf": 4.23,
+      "encaixe": 0.03,
+      "verify": 0.04
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c1-04-1",
+     "s": 13.6,
+     "pico_mb": 467,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.12,
+      "render_docx": 0.33,
+      "pdf": 4.68,
+      "encaixe": 4.97,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c1-05-1",
+     "s": 23.26,
+     "pico_mb": 876,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 8.58,
+      "render_docx": 3.11,
+      "pdf": 8.97,
+      "sumario": 0.75,
+      "verify": 1.25
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c1-01-2",
+     "s": 8.17,
+     "pico_mb": 445,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.62,
+      "render_docx": 0.31,
+      "pdf": 4.57,
+      "encaixe": 0.12,
+      "verify": 0.11
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c1-02-2",
+     "s": 6.58,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.21,
+      "render_docx": 0.21,
+      "pdf": 4.53,
+      "encaixe": 0.1,
+      "verify": 0.09
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c1-03-2",
+     "s": 5.96,
+     "pico_mb": 428,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.03,
+      "render_docx": 0.12,
+      "pdf": 4.29,
+      "encaixe": 0.03,
+      "verify": 0.05
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c1-04-2",
+     "s": 13.61,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.11,
+      "render_docx": 0.3,
+      "pdf": 4.73,
+      "encaixe": 4.97,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c1-05-2",
+     "s": 23.17,
+     "pico_mb": 875,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 8.47,
+      "render_docx": 3.18,
+      "pdf": 8.86,
+      "sumario": 0.78,
+      "verify": 1.28
+     }
+    }
+   ]
+  },
+  {
+   "concorrencia": 2,
+   "jobs": 15,
+   "total_s": 100.9,
+   "docs_por_min": 8.92,
+   "pico_ram_lote_mb": 1319,
+   "falhas": [],
+   "por_exemplo": {
+    "01": {
+     "p50_s": 8.76,
+     "max_s": 15.07,
+     "pico_mb": 449
+    },
+    "02": {
+     "p50_s": 6.81,
+     "max_s": 6.9,
+     "pico_mb": 426
+    },
+    "03": {
+     "p50_s": 6.21,
+     "max_s": 6.22,
+     "pico_mb": 429
+    },
+    "04": {
+     "p50_s": 14.27,
+     "max_s": 14.87,
+     "pico_mb": 468
+    },
+    "05": {
+     "p50_s": 24.12,
+     "max_s": 25.31,
+     "pico_mb": 879
+    }
+   },
+   "latencia_p50_s": 8.76,
+   "latencia_p95_s": 24.48,
+   "lo_vivos_depois": 0,
+   "jobs_detalhe": [
+    {
+     "exemplo": "01",
+     "job": "c2-01-0",
+     "s": 15.07,
+     "pico_mb": 449,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.65,
+      "render_docx": 0.33,
+      "pdf": 11.41,
+      "encaixe": 0.13,
+      "verify": 0.12
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c2-02-0",
+     "s": 6.9,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.21,
+      "render_docx": 0.22,
+      "pdf": 4.85,
+      "encaixe": 0.1,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c2-03-0",
+     "s": 6.21,
+     "pico_mb": 428,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.04,
+      "render_docx": 0.12,
+      "pdf": 4.55,
+      "encaixe": 0.03,
+      "verify": 0.04
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c2-04-0",
+     "s": 14.27,
+     "pico_mb": 466,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.21,
+      "render_docx": 0.31,
+      "pdf": 4.96,
+      "encaixe": 5.27,
+      "verify": 0.06
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c2-05-0",
+     "s": 24.0,
+     "pico_mb": 878,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 8.7,
+      "render_docx": 3.26,
+      "pdf": 9.23,
+      "sumario": 0.77,
+      "verify": 1.41
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c2-01-1",
+     "s": 8.7,
+     "pico_mb": 449,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.68,
+      "render_docx": 0.33,
+      "pdf": 5.0,
+      "encaixe": 0.12,
+      "verify": 0.12
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c2-02-1",
+     "s": 6.75,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.2,
+      "render_docx": 0.22,
+      "pdf": 4.71,
+      "encaixe": 0.1,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c2-03-1",
+     "s": 6.22,
+     "pico_mb": 429,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.05,
+      "render_docx": 0.12,
+      "pdf": 4.56,
+      "encaixe": 0.03,
+      "verify": 0.04
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c2-04-1",
+     "s": 14.24,
+     "pico_mb": 466,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.17,
+      "render_docx": 0.3,
+      "pdf": 4.98,
+      "encaixe": 5.28,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c2-05-1",
+     "s": 24.12,
+     "pico_mb": 877,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 8.78,
+      "render_docx": 3.24,
+      "pdf": 9.42,
+      "sumario": 0.78,
+      "verify": 1.28
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c2-01-2",
+     "s": 8.76,
+     "pico_mb": 446,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.7,
+      "render_docx": 0.32,
+      "pdf": 5.04,
+      "encaixe": 0.13,
+      "verify": 0.13
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c2-02-2",
+     "s": 6.81,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.21,
+      "render_docx": 0.22,
+      "pdf": 4.74,
+      "encaixe": 0.1,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c2-03-2",
+     "s": 6.17,
+     "pico_mb": 427,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.04,
+      "render_docx": 0.12,
+      "pdf": 4.51,
+      "encaixe": 0.03,
+      "verify": 0.04
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c2-04-2",
+     "s": 14.87,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.15,
+      "render_docx": 0.31,
+      "pdf": 5.24,
+      "encaixe": 5.66,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c2-05-2",
+     "s": 25.31,
+     "pico_mb": 879,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 9.22,
+      "render_docx": 3.41,
+      "pdf": 9.84,
+      "sumario": 0.82,
+      "verify": 1.38
+     }
+    }
+   ]
+  },
+  {
+   "concorrencia": 4,
+   "jobs": 15,
+   "total_s": 67.4,
+   "docs_por_min": 13.34,
+   "pico_ram_lote_mb": 1760,
+   "falhas": [],
+   "por_exemplo": {
+    "01": {
+     "p50_s": 9.78,
+     "max_s": 17.34,
+     "pico_mb": 452
+    },
+    "02": {
+     "p50_s": 8.03,
+     "max_s": 8.11,
+     "pico_mb": 434
+    },
+    "03": {
+     "p50_s": 7.2,
+     "max_s": 7.44,
+     "pico_mb": 429
+    },
+    "04": {
+     "p50_s": 15.89,
+     "max_s": 24.31,
+     "pico_mb": 468
+    },
+    "05": {
+     "p50_s": 26.77,
+     "max_s": 27.4,
+     "pico_mb": 878
+    }
+   },
+   "latencia_p50_s": 9.78,
+   "latencia_p95_s": 26.96,
+   "lo_vivos_depois": 0,
+   "jobs_detalhe": [
+    {
+     "exemplo": "01",
+     "job": "c4-01-0",
+     "s": 17.34,
+     "pico_mb": 452,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.96,
+      "render_docx": 0.39,
+      "pdf": 13.15,
+      "encaixe": 0.13,
+      "verify": 0.12
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c4-02-0",
+     "s": 8.03,
+     "pico_mb": 434,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.45,
+      "render_docx": 0.26,
+      "pdf": 5.51,
+      "encaixe": 0.13,
+      "verify": 0.09
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c4-03-0",
+     "s": 7.2,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.2,
+      "render_docx": 0.13,
+      "pdf": 5.18,
+      "encaixe": 0.04,
+      "verify": 0.05
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c4-04-0",
+     "s": 24.31,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.59,
+      "render_docx": 0.33,
+      "pdf": 13.4,
+      "encaixe": 6.29,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c4-05-0",
+     "s": 27.4,
+     "pico_mb": 874,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 9.77,
+      "render_docx": 3.69,
+      "pdf": 10.84,
+      "sumario": 0.8,
+      "verify": 1.52
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c4-01-1",
+     "s": 9.78,
+     "pico_mb": 449,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.07,
+      "render_docx": 0.35,
+      "pdf": 5.57,
+      "encaixe": 0.14,
+      "verify": 0.13
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c4-02-1",
+     "s": 8.11,
+     "pico_mb": 425,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.39,
+      "render_docx": 0.25,
+      "pdf": 5.73,
+      "encaixe": 0.11,
+      "verify": 0.09
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c4-03-1",
+     "s": 7.44,
+     "pico_mb": 429,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.25,
+      "render_docx": 0.14,
+      "pdf": 5.46,
+      "encaixe": 0.04,
+      "verify": 0.05
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c4-04-1",
+     "s": 15.89,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.65,
+      "render_docx": 0.36,
+      "pdf": 5.57,
+      "encaixe": 5.69,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c4-05-1",
+     "s": 26.77,
+     "pico_mb": 878,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 9.67,
+      "render_docx": 3.54,
+      "pdf": 10.42,
+      "sumario": 0.79,
+      "verify": 1.59
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c4-01-2",
+     "s": 9.62,
+     "pico_mb": 445,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.13,
+      "render_docx": 0.34,
+      "pdf": 5.38,
+      "encaixe": 0.13,
+      "verify": 0.13
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c4-02-2",
+     "s": 7.7,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.32,
+      "render_docx": 0.25,
+      "pdf": 5.34,
+      "encaixe": 0.14,
+      "verify": 0.11
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c4-03-2",
+     "s": 6.89,
+     "pico_mb": 427,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.14,
+      "render_docx": 0.13,
+      "pdf": 5.02,
+      "encaixe": 0.04,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c4-04-2",
+     "s": 15.65,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.52,
+      "render_docx": 0.32,
+      "pdf": 5.4,
+      "encaixe": 5.8,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c4-05-2",
+     "s": 25.33,
+     "pico_mb": 874,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 9.41,
+      "render_docx": 3.5,
+      "pdf": 9.6,
+      "sumario": 0.77,
+      "verify": 1.3
+     }
+    }
+   ]
+  },
+  {
+   "concorrencia": 8,
+   "jobs": 15,
+   "total_s": 50.5,
+   "docs_por_min": 17.82,
+   "pico_ram_lote_mb": 2896,
+   "falhas": [],
+   "por_exemplo": {
+    "01": {
+     "p50_s": 24.26,
+     "max_s": 24.84,
+     "pico_mb": 460
+    },
+    "02": {
+     "p50_s": 9.83,
+     "max_s": 9.99,
+     "pico_mb": 426
+    },
+    "03": {
+     "p50_s": 9.01,
+     "max_s": 9.03,
+     "pico_mb": 429
+    },
+    "04": {
+     "p50_s": 19.43,
+     "max_s": 31.99,
+     "pico_mb": 467
+    },
+    "05": {
+     "p50_s": 30.35,
+     "max_s": 32.65,
+     "pico_mb": 877
+    }
+   },
+   "latencia_p50_s": 17.43,
+   "latencia_p95_s": 32.19,
+   "lo_vivos_depois": 0,
+   "jobs_detalhe": [
+    {
+     "exemplo": "01",
+     "job": "c8-01-0",
+     "s": 24.26,
+     "pico_mb": 460,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.02,
+      "render_docx": 0.46,
+      "pdf": 18.78,
+      "encaixe": 0.16,
+      "verify": 0.16
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c8-02-0",
+     "s": 9.99,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.02,
+      "render_docx": 0.33,
+      "pdf": 6.74,
+      "encaixe": 0.13,
+      "verify": 0.11
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c8-03-0",
+     "s": 9.01,
+     "pico_mb": 428,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.58,
+      "render_docx": 0.18,
+      "pdf": 6.49,
+      "encaixe": 0.05,
+      "verify": 0.05
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c8-04-0",
+     "s": 31.99,
+     "pico_mb": 467,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.85,
+      "render_docx": 0.43,
+      "pdf": 19.16,
+      "encaixe": 6.81,
+      "verify": 0.09
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c8-05-0",
+     "s": 32.65,
+     "pico_mb": 868,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 11.92,
+      "render_docx": 4.47,
+      "pdf": 13.09,
+      "sumario": 0.9,
+      "verify": 1.43
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c8-01-1",
+     "s": 24.84,
+     "pico_mb": 452,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.06,
+      "render_docx": 0.46,
+      "pdf": 19.32,
+      "encaixe": 0.17,
+      "verify": 0.16
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c8-02-1",
+     "s": 9.83,
+     "pico_mb": 425,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.02,
+      "render_docx": 0.32,
+      "pdf": 6.6,
+      "encaixe": 0.13,
+      "verify": 0.11
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c8-03-1",
+     "s": 9.03,
+     "pico_mb": 429,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.59,
+      "render_docx": 0.18,
+      "pdf": 6.52,
+      "encaixe": 0.04,
+      "verify": 0.05
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c8-04-1",
+     "s": 19.43,
+     "pico_mb": 465,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.8,
+      "render_docx": 0.42,
+      "pdf": 7.27,
+      "encaixe": 7.31,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c8-05-1",
+     "s": 30.35,
+     "pico_mb": 876,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 12.21,
+      "render_docx": 4.45,
+      "pdf": 10.86,
+      "sumario": 0.81,
+      "verify": 1.35
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c8-01-2",
+     "s": 12.15,
+     "pico_mb": 455,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 3.35,
+      "render_docx": 0.53,
+      "pdf": 7.34,
+      "encaixe": 0.18,
+      "verify": 0.17
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c8-02-2",
+     "s": 9.57,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.49,
+      "render_docx": 0.31,
+      "pdf": 6.94,
+      "encaixe": 0.14,
+      "verify": 0.11
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c8-03-2",
+     "s": 9.01,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.64,
+      "render_docx": 0.21,
+      "pdf": 6.38,
+      "encaixe": 0.04,
+      "verify": 0.06
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c8-04-2",
+     "s": 17.43,
+     "pico_mb": 466,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.66,
+      "render_docx": 0.4,
+      "pdf": 6.1,
+      "encaixe": 5.58,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c8-05-2",
+     "s": 26.26,
+     "pico_mb": 877,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 10.5,
+      "render_docx": 3.44,
+      "pdf": 9.48,
+      "sumario": 0.78,
+      "verify": 1.29
+     }
+    }
+   ]
+  },
+  {
+   "concorrencia": 12,
+   "jobs": 15,
+   "total_s": 43.3,
+   "docs_por_min": 20.8,
+   "pico_ram_lote_mb": 4380,
+   "falhas": [],
+   "por_exemplo": {
+    "01": {
+     "p50_s": 15.64,
+     "max_s": 32.43,
+     "pico_mb": 459
+    },
+    "02": {
+     "p50_s": 13.47,
+     "max_s": 13.63,
+     "pico_mb": 433
+    },
+    "03": {
+     "p50_s": 12.01,
+     "max_s": 12.01,
+     "pico_mb": 431
+    },
+    "04": {
+     "p50_s": 38.82,
+     "max_s": 38.86,
+     "pico_mb": 468
+    },
+    "05": {
+     "p50_s": 35.58,
+     "max_s": 35.82,
+     "pico_mb": 877
+    }
+   },
+   "latencia_p50_s": 15.64,
+   "latencia_p95_s": 38.83,
+   "lo_vivos_depois": 0,
+   "jobs_detalhe": [
+    {
+     "exemplo": "01",
+     "job": "c12-01-0",
+     "s": 15.39,
+     "pico_mb": 448,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.82,
+      "render_docx": 0.64,
+      "pdf": 8.76,
+      "encaixe": 0.13,
+      "verify": 0.14
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c12-02-0",
+     "s": 13.47,
+     "pico_mb": 426,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.27,
+      "render_docx": 0.46,
+      "pdf": 9.64,
+      "encaixe": 0.15,
+      "verify": 0.09
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c12-03-0",
+     "s": 12.01,
+     "pico_mb": 431,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.86,
+      "render_docx": 0.25,
+      "pdf": 8.89,
+      "encaixe": 0.04,
+      "verify": 0.1
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c12-04-0",
+     "s": 38.86,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 5.77,
+      "render_docx": 0.72,
+      "pdf": 25.55,
+      "encaixe": 5.95,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c12-05-0",
+     "s": 35.58,
+     "pico_mb": 876,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 15.03,
+      "render_docx": 3.69,
+      "pdf": 13.54,
+      "sumario": 0.86,
+      "verify": 1.44
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c12-01-1",
+     "s": 32.43,
+     "pico_mb": 459,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.99,
+      "render_docx": 0.66,
+      "pdf": 25.57,
+      "encaixe": 0.14,
+      "verify": 0.16
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c12-02-1",
+     "s": 13.47,
+     "pico_mb": 427,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.2,
+      "render_docx": 0.42,
+      "pdf": 9.76,
+      "encaixe": 0.15,
+      "verify": 0.1
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c12-03-1",
+     "s": 12.01,
+     "pico_mb": 428,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.82,
+      "render_docx": 0.23,
+      "pdf": 8.89,
+      "encaixe": 0.04,
+      "verify": 0.13
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c12-04-1",
+     "s": 38.82,
+     "pico_mb": 468,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 5.76,
+      "render_docx": 0.7,
+      "pdf": 25.48,
+      "encaixe": 6.0,
+      "verify": 0.07
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c12-05-1",
+     "s": 35.82,
+     "pico_mb": 877,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 15.17,
+      "render_docx": 3.67,
+      "pdf": 13.68,
+      "sumario": 0.85,
+      "verify": 1.47
+     }
+    },
+    {
+     "exemplo": "01",
+     "job": "c12-01-2",
+     "s": 15.64,
+     "pico_mb": 448,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.91,
+      "render_docx": 0.7,
+      "pdf": 8.82,
+      "encaixe": 0.13,
+      "verify": 0.19
+     }
+    },
+    {
+     "exemplo": "02",
+     "job": "c12-02-2",
+     "s": 13.63,
+     "pico_mb": 433,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 2.17,
+      "render_docx": 0.49,
+      "pdf": 9.84,
+      "encaixe": 0.13,
+      "verify": 0.13
+     }
+    },
+    {
+     "exemplo": "03",
+     "job": "c12-03-2",
+     "s": 9.86,
+     "pico_mb": 429,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 1.67,
+      "render_docx": 0.18,
+      "pdf": 7.09,
+      "encaixe": 0.05,
+      "verify": 0.06
+     }
+    },
+    {
+     "exemplo": "04",
+     "job": "c12-04-2",
+     "s": 20.88,
+     "pico_mb": 467,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 4.43,
+      "render_docx": 0.36,
+      "pdf": 7.84,
+      "encaixe": 7.52,
+      "verify": 0.08
+     }
+    },
+    {
+     "exemplo": "05",
+     "job": "c12-05-2",
+     "s": 29.8,
+     "pico_mb": 876,
+     "codigo": 0,
+     "gate": "ok",
+     "tempos_s": {
+      "extracao": 12.25,
+      "render_docx": 4.05,
+      "pdf": 10.74,
+      "sumario": 0.78,
+      "verify": 1.29
+     }
+    }
+   ]
+  }
+ ],
+ "timeout": {
+  "morto": {
+   "job": "timeout",
+   "s": 2.72,
+   "pico_mb": 224,
+   "codigo": 1,
+   "morto": true
+  },
+  "lo_vivos_apos_matar": 0,
+  "proximo_job": {
+   "job": "pos-timeout",
+   "s": 12.69,
+   "pico_mb": 432,
+   "codigo": 0,
+   "gate": "ok",
+   "tempos_s": {
+    "extracao": 1.04,
+    "render_docx": 0.12,
+    "pdf": 11.02,
+    "encaixe": 0.03,
+    "verify": 0.04
+   }
+  },
+  "perfis_no_pool": [
+   "perfil0-15f95956",
+   "perfil1-3d7feeb9",
+   "perfil2-3a3e2fc1",
+   "perfil3-f842bb73",
+   "perfil4-ba5786f0",
+   "perfil5-edea333a",
+   "perfil6-f4bfc1ce",
+   "perfil7-6681d6f7"
+  ]
+ },
+ "pico_por_processo_mb": {
+  "python.exe": 365,
+  "soffice.bin": 544,
+  "soffice.com": 6
+ },
+ "lo_fim": 0
+}
