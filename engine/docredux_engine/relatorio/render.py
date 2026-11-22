@@ -409,39 +409,57 @@ def itens_sumario(model):
     return [i["text"] for e in model["elementos"] if e["t"] == "toc" for i in e["itens"]]
 
 
-def find_toc_pages(pdf, h1s, h1_pt=15):
+def paginas_sumario(pdf, h1s, h1_pt=15):
+    """Pagina de cada item do sumario, na ordem dos itens (None se o titulo nao foi achado).
+    So conta linhas do tamanho do H1 (ignora o proprio sumario). Cada linha serve a um item so: o k-esimo item com
+    um texto casa com a k-esima ocorrencia, como o marcador do PAGEREF (story 2.15)."""
     import pymupdf
-    res, start = {}, 0
+    res, start, usadas, linhas = [], 0, set(), {}
     with pymupdf.open(pdf) as d:
-        # ignora paginas ate o fim do proprio sumario: so conta spans do tamanho do H1
         for t in h1s:
+            achou = None
             for pno in range(start, d.page_count):
-                hit = False
-                for b in d[pno].get_text("dict", flags=DICT)["blocks"]:
-                    for ln in b.get("lines", []):
-                        s = ln["spans"][0] if ln["spans"] else None
-                        if s and abs(s["size"] - h1_pt) < 0.3:
-                            tx = "".join(x["text"] for x in ln["spans"]).strip()
-                            if tx and t.startswith(tx[:25]):
-                                hit = True
-                if hit:
-                    res[t] = pno + 1; start = pno; break
+                if pno not in linhas:
+                    linhas[pno] = []
+                    for b in d[pno].get_text("dict", flags=DICT)["blocks"]:
+                        for ln in b.get("lines", []):
+                            s = ln["spans"][0] if ln["spans"] else None
+                            if s and abs(s["size"] - h1_pt) < 0.3:
+                                tx = "".join(x["text"] for x in ln["spans"]).strip()
+                                if tx:
+                                    linhas[pno].append(tx)
+                achou = next(((pno, i) for i, tx in enumerate(linhas[pno])
+                              if (pno, i) not in usadas and t.startswith(tx[:25])), None)
+                if achou:
+                    break
+            if achou:
+                usadas.add(achou); start = achou[0]
+            res.append(achou[0] + 1 if achou else None)
+    return res
+
+
+def find_toc_pages(pdf, h1s, h1_pt=15):
+    """{texto: pagina}; com titulo repetido, vale a 1a ocorrencia. A pagina por item e `paginas_sumario`."""
+    res = {}
+    for t, p in zip(h1s, paginas_sumario(pdf, h1s, h1_pt)):
+        if p is not None:
+            res.setdefault(t, p)
     return res
 
 
 def preencher_sumario(docx, pdf, model):
     """Depois da conversao: grava no DOCX o resultado dos campos PAGEREF (quem abre no Word ve os numeros sem
     atualizar campos). O PDF nao muda: o LibreOffice ja calculou a pagina de cada marcador. As paginas vem do PDF
-    final, pelo mesmo criterio de antes (tamanho do H1 + texto). Devolve {texto do item: pagina}."""
+    final, pelo mesmo criterio de antes (tamanho do H1 + texto), uma por item. Devolve {texto do item: pagina}."""
     itens = itens_sumario(model)
     if not itens:
         return {}
-    pages = find_toc_pages(pdf, itens)
+    pages = paginas_sumario(pdf, itens)  # por item: titulo repetido tem a pagina de cada ocorrencia
     doc = Document(docx)
     mudou = False
     for instr in doc.element.body.iter(qn("w:instrText")):
         m = PAGEREF.search(instr.text or "")
-        valor = str(pages.get(itens[int(m.group(1))], "")) if m else ""
+        valor = str(pages[int(m.group(1))] or "") if m else ""
         if not valor:
             continue
         depois_separate = False
@@ -457,7 +475,11 @@ def preencher_sumario(docx, pdf, model):
                 depois_separate = True
     if mudou:
         doc.save(docx)
-    return pages
+    res = {}  # relatorio.json: {texto: pagina}, 1a ocorrencia em titulo repetido (formato de antes)
+    for t, p in zip(itens, pages):
+        if p is not None:
+            res.setdefault(t, p)
+    return res
 
 
 def run(out, model, name):

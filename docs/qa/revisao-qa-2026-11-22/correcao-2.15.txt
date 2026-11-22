@@ -1,0 +1,19 @@
+Correção do achado do gate 2.15 (título repetido no sumário), 2026-11-22.
+Comparação da saída da correção com a da main 095b7e6, nos 10 casos (cmp por arquivo):
+
+Padrão:
+01 modelo.json= verificacao.json= relatorio.json= pdf 19/19p texto= docx_texto= document.xml=
+02 modelo.json= verificacao.json= relatorio.json= pdf 14/14p texto= docx_texto= document.xml=
+03 modelo.json= verificacao.json= relatorio.json= pdf 5/5p texto= docx_texto= document.xml=
+04 modelo.json= verificacao.json= relatorio.json= pdf 12/12p texto= docx_texto= document.xml=
+05 modelo.json= verificacao.json= relatorio.json= pdf 142/142p texto= docx_texto= document.xml=
+
+Preservação (manter_capa_elementos):
+01 modelo.json= verificacao.json= relatorio.json= pdf 26/26p texto= docx_texto= document.xml=
+02 modelo.json= verificacao.json= relatorio.json= pdf 18/18p texto= docx_texto= document.xml=
+03 modelo.json= verificacao.json= relatorio.json= pdf 8/8p texto= docx_texto= document.xml=
+04 modelo.json= verificacao.json= relatorio.json= pdf 17/17p texto= docx_texto= document.xml=
+05 modelo.json= verificacao.json= relatorio.json= pdf 174/174p texto= docx_texto= document.xml=
+
+relatorio.json comparado sem tempos_s. Suíte do motor: 193 passed, 1 skipped.
+Regressão padrão 5/5 (19/14/5/12/142); preservação 5/5 (26/18/8/17/174).

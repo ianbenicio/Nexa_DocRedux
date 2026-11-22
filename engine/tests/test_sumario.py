@@ -83,6 +83,32 @@ def test_preencher_grava_o_resultado_dos_campos(tmp_path):
     assert _instr(docx) == [r"PAGEREF _DocRedux_sum0 \h", r"PAGEREF _DocRedux_sum2 \h"]  # campo continua campo
 
 
+def test_titulo_repetido_grava_a_pagina_de_cada_ocorrencia(tmp_path):
+    """QA 2026-11-22: o 2o "Anexo" gravava a página do 1o no DOCX (o PDF, calculado pelo PAGEREF, saía certo)."""
+    model = _modelo(["Anexo", "Anexo"], [_h1("Anexo"), _p("um"), _h1("Anexo"), _p("dois")])
+    docx = _render(tmp_path, model)
+    pdf = tmp_path / "s.pdf"
+    with pymupdf.open() as d:
+        for _ in range(5):
+            d.new_page()
+        d[1].insert_text((72, 100), "Anexo", fontsize=15)
+        d[4].insert_text((72, 100), "Anexo", fontsize=15)
+        d.save(pdf)
+    assert RR.paginas_sumario(pdf, ["Anexo", "Anexo"]) == [2, 5]
+    assert RR.preencher_sumario(docx, pdf, model) == {"Anexo": 2}  # relatorio.json: formato de antes
+    assert [p.text for p in Document(docx).paragraphs[:2]] == ["Anexo\t2", "Anexo\t5"]
+
+
+def test_titulos_na_mesma_pagina_e_titulo_ausente(tmp_path):
+    pdf = tmp_path / "s.pdf"
+    with pymupdf.open() as d:
+        d.new_page()
+        d[0].insert_text((72, 100), "Alfa", fontsize=15)
+        d[0].insert_text((72, 200), "Beta", fontsize=15)
+        d.save(pdf)
+    assert RR.paginas_sumario(pdf, ["Alfa", "Sem título", "Beta", "Alfa"]) == [1, None, 1, None]
+
+
 def test_sem_sumario_nao_mexe_no_docx(tmp_path):
     model = {"meta": {"tipo": "relatorio"}, "elementos": [_h1("Alfa")]}
     docx = _render(tmp_path, model)
