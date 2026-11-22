@@ -1,0 +1,103 @@
+{
+ "ambiente": {
+  "motor": "0.2.0",
+  "python": "3.13.13",
+  "so": "Windows-10-10.0.19045-SP0",
+  "maquina": "AMD64",
+  "libreoffice": "LibreOffice 26.8.3.1 861effc5289d539f15c4c18d1ba8579ffd78728b",
+  "manter_capa_elementos": true
+ },
+ "exemplos": [
+  {
+   "exemplo": "01-mathema-saeb-5ano-lp-p3",
+   "ok": true,
+   "paginas": "52→26",
+   "paginas_baseline": "52→19",
+   "cobertura_pct": 99.96,
+   "cobertura_min": 99.96,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 21.9,
+   "tempos_s": {
+    "extracao": 3.54,
+    "render_docx": 0.47,
+    "pdf": 11.48,
+    "encaixe": 6.29,
+    "verify": 0.12
+   }
+  },
+  {
+   "exemplo": "02-mathema-saeb-4ano-lp-p3",
+   "ok": true,
+   "paginas": "34→18",
+   "paginas_baseline": "34→14",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 13.5,
+   "tempos_s": {
+    "extracao": 1.8,
+    "render_docx": 0.29,
+    "pdf": 5.51,
+    "encaixe": 5.79,
+    "verify": 0.1
+   }
+  },
+  {
+   "exemplo": "03-mathema-saeb-4ano-mat-p3",
+   "ok": true,
+   "paginas": "16→8",
+   "paginas_baseline": "16→5",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 6.7,
+   "tempos_s": {
+    "extracao": 1.54,
+    "render_docx": 0.18,
+    "pdf": 4.91,
+    "encaixe": 0.04,
+    "verify": 0.05
+   }
+  },
+  {
+   "exemplo": "04-mathema-saeb-5ano-mat-p3",
+   "ok": true,
+   "paginas": "26→17",
+   "paginas_baseline": "26→12",
+   "cobertura_pct": 100.0,
+   "cobertura_min": 100.0,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 9.8,
+   "tempos_s": {
+    "extracao": 3.79,
+    "render_docx": 0.46,
+    "pdf": 5.33,
+    "encaixe": 0.07,
+    "verify": 0.07
+   }
+  },
+  {
+   "exemplo": "05-diagnostico-educacao-nacional",
+   "ok": true,
+   "paginas": "294→174",
+   "paginas_baseline": "294→142",
+   "cobertura_pct": 99.97,
+   "cobertura_min": 99.97,
+   "gate": "ok",
+   "motivo_gate": null,
+   "tempo_s": 29.1,
+   "tempos_s": {
+    "extracao": 11.83,
+    "render_docx": 3.97,
+    "pdf": 10.84,
+    "sumario": 0.83,
+    "verify": 1.43
+   }
+  }
+ ],
+ "falhas": 0
+}

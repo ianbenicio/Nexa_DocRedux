@@ -77,6 +77,8 @@ class Relatorio:
     regras_disparadas: list[str]
     tempos_s: dict[str, float]
     avisos: list[str] = field(default_factory=list)
+    # M11, story 2.16: checagem estrutural do relatório no modo original (None em ficha e síntese)
+    verificacao_estrutural: dict | None = None
 
     def to_dict(self):
         return asdict(self)
@@ -284,6 +286,25 @@ def _regras(meta, model, perfil) -> list[str]:
     return sorted(r, key=lambda x: int(re.sub(r"\D", "", x)))
 
 
+_PARES_ESTRUTURA = (("h1_capitulos", "capítulos"), ("legendas", "legendas"), ("fontes", "Fontes"), ("notas", "notas"))
+
+
+def _verificacao_estrutural(v) -> dict | None:
+    """M11, story 2.16: resultado estrutural do verify do relatório, com cada divergência descrita.
+
+    None quando o verificador não faz a checagem (ficha)."""
+    if "estrutura_ok" not in v:
+        return None
+    est = v.get("estrutura") or {}
+    divs = [f"{nome}: {est[k]['pdf']} no original, {est[k]['modelo']} na saída"
+            for k, nome in _PARES_ESTRUTURA if k in est and est[k]["pdf"] != est[k]["modelo"]]
+    if est.get("figuras_sem_legenda"):
+        divs.append(f"{est['figuras_sem_legenda']} figura(s) sem legenda")
+    if est.get("legendas_sem_visual"):
+        divs.append(f"{est['legendas_sem_visual']} legenda(s) sem figura")
+    return {"ok": bool(v["estrutura_ok"]), "divergencias": divs, "contagens": est}
+
+
 def _estrutura(meta, model) -> dict[str, int]:
     els = model["elementos"]
     st = meta.get("stats", {})
@@ -363,12 +384,14 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
         if num is not None and num.get("fora_de_contexto"):  # M12, story 2.13: número fora do lugar de origem
             itens = "; ".join(f"“{t}”" for t in num["fora_de_contexto_trechos"][:3])
             motivos.append(f"{num['fora_de_contexto']} número(s) do original fora do lugar de origem: {itens}")
+        vest = _verificacao_estrutural(v)
+        if vest is not None and not vest["ok"]:  # M11, story 2.16: estrutura divergente vai para revisão
+            itens = "; ".join(vest["divergencias"][:5]) or "capítulos, legendas, Fontes ou notas"
+            motivos.append(f"estrutura divergente do original: {itens}")
         gate, motivo = ("bloqueado", "; ".join(motivos)) if motivos else ("ok", None)
-        if v.get("estrutura_ok") is False:
-            avisos.append("verificação estrutural divergente (legendas, Fonte, notas ou capítulos)")
     else:  # FR-13: sem gate de cobertura na síntese; vale o relatório de síntese
         rel = estado["rel"]
-        cobertura, gate, motivo = None, "ok", None
+        cobertura, gate, motivo, vest = None, "ok", None, None
         palavras_original = contar_palavras(pdf, perfil, modelo=estado["modelo_original"])
         fracao_real = rel["fracao_real"]
         condensado = rel["condensado"]
@@ -383,6 +406,7 @@ def processar(pdf: Path, opcoes: Opcoes, perfil: dict, saida_dir: Path, *,
         cobertura=cobertura, fracao_real=fracao_real, condensado=condensado,
         gate=gate, motivo_gate=motivo, estrutura=_estrutura(meta, model), modificacoes=mods,
         regras_disparadas=_regras(meta, model, perfil), tempos_s=res["tempos_s"], avisos=avisos,
+        verificacao_estrutural=vest,
     )
     (saida_dir / "relatorio.json").write_text(relatorio.to_json(indent=1), encoding="utf-8")
     return Resultado(pdf=res["pdf"], docx=res["docx"] if opcoes.docx else None, relatorio=relatorio)

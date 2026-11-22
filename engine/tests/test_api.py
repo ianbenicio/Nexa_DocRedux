@@ -156,7 +156,7 @@ def test_perfil_invalido(tmp_path, pdf_desconhecido):
 
 CAMPOS_RELATORIO = {"versao_motor", "perfil_id", "paginas_antes", "paginas_depois", "palavras_original",
                     "palavras_saida", "cobertura", "fracao_real", "condensado", "gate", "motivo_gate", "estrutura",
-                    "modificacoes", "regras_disparadas", "tempos_s", "avisos"}
+                    "modificacoes", "regras_disparadas", "tempos_s", "avisos", "verificacao_estrutural"}
 
 
 def test_relatorio_tem_campos_do_spec():
@@ -173,6 +173,7 @@ def test_processar_ficha_ex03(tmp_path, perfil_por_nome):
     assert r.palavras_original > 0 and r.palavras_saida >= r.palavras_original * 0.99
     assert {"extracao", "render_docx", "pdf", "verify"} <= set(r.tempos_s)
     assert r.estrutura.get("questoes", 0) > 0
+    assert r.verificacao_estrutural is None  # M11: a checagem estrutural é do relatório
     assert any(m.tipo == "removido" for m in r.modificacoes)
     assert any(m.tipo == "reorganizado" for m in r.modificacoes)
     assert {"R10", "R32", "R33"} <= set(r.regras_disparadas)
