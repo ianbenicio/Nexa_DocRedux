@@ -67,6 +67,7 @@ def palavras(textos_original, textos_saida, limite=10):
 
 # ----------------------------------------------------------------------------------------------- 2. rotulos
 ROT = re.compile(r"^\s*([^\W\d_]+)\s+(\d+(?:\s+[EeAa]\s+\d+)?)\s*$")
+PAR = re.compile(r"(?<![^\W\d_])([^\W\d_]+)\s+((\d+)(?:\s+[EeAa]\s+\d+)?)(?!\d)")  # "palavra número" em qualquer lugar
 
 
 def _linhas_pdf(doc, fora):
@@ -87,27 +88,31 @@ def _norm_rotulo(w, n):
 
 def rotulos(doc, fora, textos_saida, limite=10, minimo=0.8):
     """Parágrafo da saída que começa com um rótulo do original: >= 80% das demais palavras vêm das páginas onde o
-    rótulo aparece no original. Começar com a palavra de um rótulo ("Aula") e um número que não é rótulo no original
-    também conta: o selo foi alterado."""
+    rótulo aparece no original. Começar com a palavra de um rótulo ("Aula") e um número que não aparece junto dela em
+    lugar nenhum do original também conta: o selo foi alterado. "Tabela 2 - Matrículas" na linha do original, com
+    "Tabela 1" solto noutra página, não é selo alterado (QA da 2.17)."""
     pag = collections.defaultdict(collections.Counter)
     rot = collections.defaultdict(set)
+    no_texto = set()  # todo "palavra número" do original, solto ou dentro da linha
     for pno, _, t in _linhas_pdf(doc, fora):
         pag[pno].update(words(t))
         m = ROT.match(t)
         if m:
             rot[_norm_rotulo(m.group(1), m.group(2))].add(pno)
+        for x in PAR.finditer(t):
+            no_texto.add(_norm_rotulo(x.group(1), x.group(2)))
+            no_texto.add(_norm_rotulo(x.group(1), x.group(3)))  # "Tabelas 2 e 3" também vale "Tabelas 2"
     if not rot:
         return {"total": 0, "trechos": []}
-    pat = re.compile(r"^\s*([^\W\d_]+)\s+(\d+(?:\s+[EeAa]\s+\d+)?)(?!\d)")
     nomes = {k.split()[0] for k in rot}
     total, trechos = 0, []
     for t in textos_saida:
-        m = pat.match(t)
+        m = re.match(r"\s*" + PAR.pattern, t)
         if not m:
             continue
         chave = _norm_rotulo(m.group(1), m.group(2))
         if chave not in rot:
-            if m.group(1).lower() in nomes:
+            if m.group(1).lower() in nomes and chave not in no_texto:
                 total += 1
                 if len(trechos) < limite:
                     trechos.append(" ".join(t.split())[:90])

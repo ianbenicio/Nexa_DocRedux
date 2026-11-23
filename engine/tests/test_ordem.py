@@ -82,6 +82,23 @@ def test_rotulo_em_pagina_removida_nao_conta(aulas):
         assert ordem.rotulos(doc, {"1": "capa", "2": "capa", "3": "capa"}, ["AULA 11 · VAMOS CANTAR?"])["total"] == 0
 
 
+@pytest.mark.parametrize("paginas, saida", [
+    ([[(60, 60, "Tabela 1"), (60, 80, "Escolas por rede")], [(60, 60, "Tabela 2 - Matrículas por região")]],
+     "Tabela 2 - Matrículas por região"),
+    ([[(60, 60, "QUESTÃO 1"), (60, 80, "Observe a figura.")], [(60, 60, "QUESTÃO 2 Leia o texto abaixo.")]],
+     "QUESTÃO 2 Leia o texto abaixo."),
+    ([[(60, 60, "Ano 2022"), (60, 80, "dados do censo")], [(60, 60, "Em 2023 houve queda. Ano 2023 houve alta.")]],
+     "Ano 2023 houve alta."),
+    ([[(60, 60, "AULAS 1 E 2"), (60, 80, "Leitura em voz alta")], [(60, 60, "Nas aulas 3 e 4 vamos ler poemas.")]],
+     "Aulas 3 · poemas"),
+], ids=["legenda-na-linha", "questao-na-linha", "ano-no-texto", "par-com-e"])
+def test_numero_que_existe_no_original_dentro_da_linha_nao_e_selo_alterado(tmp_path, paginas, saida):
+    """QA da 2.17: a palavra de um rótulo solto ("Tabela 1") não transforma em selo alterado o mesmo "palavra número"
+    que o original traz dentro da linha."""
+    with pymupdf.open(_pdf(tmp_path, paginas)) as doc:
+        assert ordem.rotulos(doc, {}, [saida])["total"] == 0
+
+
 # ----------------------------------------------------------------------------------------------- imagens
 def _png(tmp_path, nome):
     """Bytes distintos por nome: python-docx reaproveita (e renomeia igual) imagem de conteúdo idêntico."""
