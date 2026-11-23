@@ -89,7 +89,7 @@ Descartados nesta consulta: `classmate-connect-13-reparo-de-historico-*` e `runb
 | 1 ✅ | Spec da plataforma de testes — **concluída em 2026-11-18** | Spec Pipeline / @pm + @architect + @qa | `docs/spec/spec.md` + critique | Critique ≥ 4,0; cada requisito rastreia para `saas/piloto.md` ou `processos.md` | ~180k |
 | 2 ✅ | Motor como biblioteca — **concluída em 2026-11-18** | SDC / @dev | `engine/` com `processar(pdf, opcoes) → saida + relatorio`; `git init` + monorepo | Ex. 01–05 reproduzem as saídas aprovadas (cobertura e páginas iguais) | ~180k |
 | 3 ✅ | Banco e RLS — **concluída em 2026-11-19** | SDC / @data-engineer | `db/` com migrations: perfis, documentos, jobs, ledger de créditos, avaliações, feedback; buckets | Teste de RLS: usuário não lê documento alheio nem altera saldo | ~180k |
-| 4 | API + worker | SDC / @dev | `api/` FastAPI + worker com fila (SKIP LOCKED), estimativa de créditos, reserva e estorno | Upload → job → PDF/DOCX ponta a ponta em dev; falha estorna crédito | ~180k |
+| 4 ✅ | API + worker — **concluída em 2026-11-19** | SDC / @dev | `api/` FastAPI + worker com fila (SKIP LOCKED), estimativa de créditos, reserva e estorno | Upload → job → PDF/DOCX ponta a ponta em dev; falha estorna crédito | ~180k |
 | 5 | Front do usuário | SDC / @dev (+ impeccable sob demanda) | `web/` Next.js: login, upload + opções + custo, status, visualizador/impressão, nota e "marcar problema", histórico | Fluxo completo no browser embutido, no desktop e no celular | ~180k |
 | 6 | Juiz Opus + backoffice | SDC / @dev | Juiz automático por entrega; telas de fila, revisão, recarga e reprocessamento | Juiz roda em 100% das entregas; custo por entrega registrado | ~180k |
 | 7 | Deploy | @devops | Infraestrutura gratuita (DT-17): Supabase Free sa-east-1; web e API na Vercel Hobby; worker (LibreOffice) no PC ou na Oracle A1 São Paulo; termo do piloto | Health check verde; segredos fora do repositório; sem backups (Q16) | ~120k |
@@ -145,6 +145,39 @@ Descartados nesta consulta: `classmate-connect-13-reparo-de-historico-*` e `runb
 - Decisões: **DT-21** aplicada no motor (a triagem conta como o verify); spec **v1.6**: timeout da triagem de 60 s para 5 min (a contagem da DT-21 extrai o texto inteiro). O E2E achou e corrigiu 3 bugs de operação: alvo do `spawn` no `__main__`, `worker_id` repetido após reinício do container e uvicorn sem ler `api/.env`.
 - Ambiente: o Storage local do CLI 3.2.0 dá 500 (42P10) em todo upload sem o índice único `(bucket_id, name)`; `dev_setup.py` recria só no container local. O LibreOffice, o PyMuPDF global e o cache do npx deste PC foram danificados às 08:49 de 2026-11-19 (fora do escopo): o motor completo roda no container. `supabase stop` ao fim.
 - Para a unidade 5: o front sobe as partes direto ao Storage com o JWT do usuário, sem `x-upsert` (não há política de UPDATE) e trata "já existe" como parte enviada; usa o contrato do §9 (`/documentos`, `upload-concluido`, `orcamento`, `confirmar`, `arquivo`, `avaliacao`, `problemas`, `/me`). Para a unidade 7: senha do `docredux_backend`, chaves do projeto real, conta Resend e domínio (responsável + @devops), upload no Storage real, tempo do ex. 05 na Oracle A1 e limites das funções Python na Vercel Hobby. Q19 (prazo do e-mail de revisão) segue aberta.
+
+**Motor — auditoria de integridade (stories 2.6–2.17), resultado (2026-11-22):**
+- Origem: auditoria do motor de 2026-11-19 (`docs/qa/motor-auditoria-2026-11-19.md`, achados M01–M13). Os achados foram tratados em 12 stories, todas com gate PASS aceito pelo responsável e publicadas em `origin/main` (último commit `a9e9915`).
+- Stories:
+  - **2.6:** integridade com a rodada do Codex (M01–M08, M13 e M10 inicial). Página com figura preservada, capa sem texto pela R1, filete de sangria, síntese e contagem DT-21, CLI em UTF-8, PDF vazio recusado.
+  - **2.7:** integridade numérica no gate (M09).
+  - **2.8:** pool de perfis do LibreOffice e extração sem bytes de imagem.
+  - **2.9:** conversor com código de erro, PDF entregue com < 99,5% das palavras do DOCX falha a entrega, sinais na checagem numérica.
+  - **2.10 e 2.11:** grade de contas (R51) e encaixe de imagem no fim da página (R52).
+  - **2.12:** texto gerado pelo motor fora da comparação (A5).
+  - **2.13:** número do original volta no seu lugar (parte do M12).
+  - **2.14:** bancada de eficiência sustentada.
+  - **2.15:** sumário do relatório numa conversão só, com PAGEREF.
+  - **2.16:** divergência estrutural do relatório bloqueia o gate (M11); campo novo `verificacao_estrutural`.
+  - **2.17:** ordem de palavras, selo de aula, imagem↔texto e célula de tabela bloqueiam o gate (resto do M12). O gate deu CONCERNS por um falso positivo do selo, corrigido na mesma story.
+- Gate atual (modo original), em §4 da spec v1.7: o documento é bloqueado (`em_revisao`) por qualquer uma destas causas, e o `motivo_gate` soma os motivos.
+  - cobertura < 99,5%;
+  - número ou sinal faltando;
+  - número fora do lugar;
+  - ordem ou associação divergente;
+  - estrutura divergente (só no relatório).
+- Verificação final: suíte do motor com 223 passed e 1 skipped. Regressão padrão 5/5 (19/14/5/12/142) e preservação 5/5 (26/18/8/17/174), sem mudança de baseline. Evidências em `docs/qa/<tema>-<data>/`.
+- Pontos low abertos nos gates (backlog, nenhum bloqueia):
+  - Repro da auditoria (`docs/qa/motor_auditoria_repro.py`) com 5 casos vermelhos que já não refletem o estado (M09 valor alterado, M10, M12 ordem, síntese DT-21). Migrar para a suíte normal ou marcar o que segue aberto.
+  - Nenhum teste afirma `verificacao_estrutural=None` na síntese (`test_processar_sintese_ex05`).
+  - O motivo da fila e o enum se chamam `gate_cobertura`, mas o gate já bloqueia por números, estrutura e ordem (nome legado).
+  - As tolerâncias do gate saíram dos 5 exemplos. No piloto, acompanhar "gate na primeira passagem" (§12) separado por motivo.
+
+**Próxima sessão — unidade 5 (front do usuário):**
+- Começar pela Fase 0 (skill `fase-0`): sessão concorrente, enquadramento, precedentes no Engram e plano preliminar da unidade 5 neste arquivo.
+- Escopo em `docs/spec/implementation.yaml` (unidade 5, stories 5.1–5.4) e spec §10 U1–U7: Next.js 15 (App Router), supabase-js só para auth, tus-js-client (DT-18) e pdf.js (DT-12). `web/` tem só o README.
+- Fluxo AIOX: @sm `*draft` 5.1–5.4 → @po `*validate` → @dev (com `/impeccable` quando a UI começar) → @qa `*qa-gate`. Verificação no browser embutido, em 375 px e no desktop, com capturas.
+- Base pronta: a API da unidade 4 (§9) e o banco da unidade 3. O Supabase local roda via `npx supabase@3.2.0` em `db/` (portas 553xx) e precisa do Docker Desktop, que estava parado no fim desta sessão. `api/.env` tem chaves: nunca imprimir.
 
 **Capacidades por fase** (fonte: `H:\King\Harness\docs\catalogo\mapa-fases.md`):
 
