@@ -1,0 +1,33 @@
+schema: 1
+story: "2.17"
+story_title: "ordem-e-associacao"
+gate: "CONCERNS"
+status_reason: "Os 5 ACs cumpridos e verificados por mutação; os exemplos reais não mudam (regressão 5/5 nos dois modos, ordem.ok=true). Uma regra gera falso positivo em template novo: o 'selo com número desconhecido' bloqueia parágrafo correto quando o mesmo 'palavra número' aparece dentro de uma linha do original, e não sozinho. Correção pequena, recomendada antes do Done."
+reviewer: "Quinn (@qa)"
+updated: "2026-11-22"
+top_issues:
+  - severity: "medium"
+    refs: ["engine/docredux_engine/verify/ordem.py:110"]
+    finding: "rotulos(): a palavra de qualquer rótulo solto do original (ex.: 'Tabela 1', 'QUESTÃO 1', 'Ano 2022') vira 'nome de selo'. Daí todo parágrafo da saída que começa com essa palavra e um número fora da lista de rótulos é contado como selo alterado, mesmo quando o original tem exatamente aquele texto na linha. Reproduzido com PDF sintético: 'Tabela 2 - Matrículas por região', 'QUESTÃO 2 Leia o texto abaixo.' e 'Ano 2023 houve queda.' bloqueiam o gate, idênticos ao original. Os ex. 01–05 não têm o padrão (0 falsos positivos), mas legenda de tabela ou figura no relatório e questão numerada na ficha são comuns em template novo."
+    suggested_action: "Contar 'número desconhecido' só quando o par 'palavra número' não aparece em lugar nenhum do texto do original (como palavras seguidas de qualquer linha). Acrescentar os 3 casos como testes de não-bloqueio."
+  - severity: "low"
+    refs: ["engine/docredux_engine/verify/ordem.py", "docs/stories/2.17.ordem-e-associacao.story.md"]
+    finding: "As tolerâncias (80% no selo, 120 pt na imagem, 4 pt e 8 pt na tabela) saíram dos 5 exemplos. Com 'Bloqueia', o falso positivo em documento novo vira revisão humana. A taxa é desconhecida."
+    suggested_action: "Acompanhar 'gate na primeira passagem' (§12) separando o motivo 'ordem ou associação'"
+  - severity: "low"
+    refs: ["docs/stories/2.17.ordem-e-associacao.story.md"]
+    finding: "Três limites documentados ficam sem checagem: troca entre imagens da mesma página, grade só de números repetidos (ex. 02, 0/100 na mutação) e parágrafo que é só o selo. Os números dessas grades seguem cobertos pela contagem (2.7)."
+    suggested_action: "Nenhuma agora; reavaliar se aparecer caso real"
+  - severity: "low"
+    refs: ["docs/qa/motor_auditoria_repro.py"]
+    finding: "test_cobertura_nao_pode_ignorar_a_ordem_das_palavras segue vermelho: testa o Counter da cobertura direto, que não mudou. O caso está coberto por test_palavras_trocadas_na_frase_sao_detectadas. Mesmo item já aberto na 2.16 (repro desatualizado)."
+    suggested_action: "Migrar o caso do repro para apontar para verify.ordem.palavras"
+history: []
+evidence:
+  tests: "Motor 219 passed, 1 skipped (197 s; 199 antes; +20 em test_ordem.py). Mutação dos testes: bloqueio desligado → 2 testes de gate falham; cada checagem zerada → palavras 2, rotulos 2, imagens 1, tabelas 2 testes falham; arquivos restaurados e conferidos com cmp. Regressão (que falha com gate ≠ ok) padrão 5/5 (19/14/5/12/142) e preservação 5/5 (26/18/8/17/174); ordem.ok=true e as quatro contagens em 0 em todos. Mutação na saída real (mutacao.json): selos 100%, imagens 96–100%, palavras 89–100%, tabelas 79–99% (0% na grade numérica do ex. 02). Custo: verify do ex. 05 de 1,4 s para 3,2 s; tempo total da regressão igual. Síntese não roda verify: a checagem não se aplica. Sondas de borda: modelo sem imagem, DOCX sem tabela, tabela de 1 linha, hífen de quebra e caixa/pontuação diferentes dão 0, como esperado. Repro da auditoria: mesmas 5 falhas da 2.16."
+nfr_validation:
+  security: {status: "PASS", notes: "Sem segredos nem caminhos pessoais no diff ou nas evidências; nenhum PDF/DOCX/imagem versionado"}
+  reliability: {status: "CONCERNS", notes: "Gate mais restritivo; o falso positivo vai para em_revisao, sem perda de entrega. A regra do selo desconhecido bloqueia conteúdo correto num padrão comum"}
+  performance: {status: "PASS", notes: "+1,8 s no verify do ex. 05 (294 páginas), dentro do ruído do tempo total"}
+  maintainability: {status: "PASS", notes: "Regra na spec §4 (v1.7); módulo isolado com docstring por checagem; script de mutação versionado"}
+  coderabbit: {status: "NOT_RUN", notes: "CodeRabbit não executado; revisão manual do diff, sondas de borda e testes de mutação"}
